@@ -2,8 +2,8 @@
 
 void KeyboardInit(struct Keyboard* keyboard)
 {
-	keyboard->Keys = malloc(sizeof(WPARAM) * Keys_Num);
-	keyboard->States = malloc(sizeof(uint32_t) * Keys_Num);
+	keyboard->Keys = (WPARAM*) malloc(sizeof(WPARAM) * Keys_Num);
+	keyboard->States = (uint32_t*) malloc(sizeof(uint32_t) * Keys_Num);
 	memset(keyboard->States, 0, sizeof(uint32_t) * Keys_Num);
 	WPARAM* keys = keyboard->Keys;
 	keys[0] = Keys_W;
