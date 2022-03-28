@@ -78,42 +78,6 @@ void RenderDataDeinit(struct RenderData* rd)
 	}
 }
 
-Game* GameNew(void)
-{
-	Game* g = (Game*) malloc(sizeof(Game));
-	memset(g, 0, sizeof(Game));
-	g->DR = DRNew();
-	const size_t bytes = sizeof(struct Model) * MODEL_PULL;
-	g->Models = (Model**) malloc(bytes);
-	memset(g->Models, 0, bytes);
-
-	return g;
-}
-
-void GameFree(Game* game)
-{
-	COM_FREE(game->VS);
-	COM_FREE(game->PS);
-	COM_FREE(game->VertexBuffer);
-	COM_FREE(game->IndexBuffer);
-	COM_FREE(game->InputLayout);
-	COM_FREE(game->DefaultSampler);
-	COM_FREE(game->PhongPS);
-	COM_FREE(game->LightPS);
-	RenderDataDeinit(&game->RenderData);
-	KeyboardDeinit(&game->Keyboard);
-	DRFree(game->DR);
-	for (uint32_t i = 0; i < game->NumModels; ++i)
-	{
-		ModelFree(game->Models[i]);
-	}
-	free(game->Models);
-	
-	memset(game, 0, sizeof(Game));
-	free(game);
-	DRReportLiveObjects();
-}
-
 static void GameClear(Game* game)
 {
 	ID3D11DeviceContext1* ctx = game->DR->Context;
@@ -702,4 +666,52 @@ void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct T
 	}
 
 	stbi_image_free(bytes);
+}
+
+Game::Game() :
+	DR(DRNew()),
+	VS(nullptr),
+	PS(nullptr),
+	PhongPS(nullptr),
+	LightPS(nullptr),
+	VertexBuffer(nullptr),
+	IndexBuffer(nullptr),
+	InputLayout(nullptr),
+	DefaultSampler(nullptr),
+	Models(new Model* [MODEL_PULL]),
+	NumModels(0),
+	NumMeshes(0),
+	TickTimer{},
+	PerFrameConstants{},
+	Cam{},
+	Keyboard{},
+	Mouse{},
+	gWorldMat{},
+	gViewMat{},
+	gProjMat{},
+	RenderData{},
+	Renderer{}
+{
+}
+
+Game::~Game()
+{
+	COM_FREE(VS);
+	COM_FREE(PS);
+	COM_FREE(VertexBuffer);
+	COM_FREE(IndexBuffer);
+	COM_FREE(InputLayout);
+	COM_FREE(DefaultSampler);
+	COM_FREE(PhongPS);
+	COM_FREE(LightPS);
+	RenderDataDeinit(&RenderData);
+	KeyboardDeinit(&Keyboard);
+	DRFree(DR);
+	for (uint32_t i = 0; i < NumModels; ++i)
+	{
+		ModelFree(Models[i]);
+	}
+	free(Models);
+
+	DRReportLiveObjects();
 }

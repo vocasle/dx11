@@ -49,7 +49,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    Game* pGame = GameNew();
+    Game* pGame = new Game();
 
     // Initialize global strings
     LoadStringW(NULL, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -81,7 +81,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
-    GameFree(pGame);
+    delete pGame;
 #if _DEBUG
     _CrtDumpMemoryLeaks();
 #endif

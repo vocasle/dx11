@@ -73,8 +73,10 @@ struct RenderData
 void RenderDataInit(struct RenderData* rd, Vec3D* cameraPos);
 void RenderDataDeinit(struct RenderData* rd);
 
-typedef struct Game
+struct Game
 {
+	Game();
+	~Game();
 	DeviceResources* DR;
 	ID3D11VertexShader* VS;
 	ID3D11PixelShader* PS;
@@ -83,7 +85,6 @@ typedef struct Game
 	ID3D11Buffer* VertexBuffer;
 	ID3D11Buffer* IndexBuffer;
 	ID3D11InputLayout* InputLayout;
-	//ID3D11Buffer* PerFrameConstantsCB;
 	ID3D11SamplerState* DefaultSampler;
 	struct Model** Models;
 	uint32_t NumModels;
@@ -98,11 +99,7 @@ typedef struct Game
 	Mat4X4 gProjMat;
 	struct RenderData RenderData;
 	struct Renderer Renderer;
-} Game;
-
-Game* GameNew(void);
-
-void GameFree(Game* game);
+};
 
 void GameTick(Game* game);
 
