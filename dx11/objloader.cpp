@@ -50,6 +50,7 @@ uint32_t OLReadLine(FILE* f, char* out, uint32_t sz)
 
 struct MeshInfo
 {
+	MeshInfo(): NumPositions(0), NumNormals(0), NumTexCoords(0), NumFaces(0) {}
 	uint32_t NumPositions;
 	uint32_t NumNormals;
 	uint32_t NumTexCoords;
@@ -378,3 +379,14 @@ void ModelDeinit(struct Model* model)
 	free(model->Meshes);
 }
 
+Mesh::Mesh():
+	Name(nullptr),
+	Positions(nullptr),
+	NumPositions(0),
+	TexCoords(nullptr),
+	NumTexCoords(0),
+	Normals(nullptr),
+	NumNormals(0),
+	Faces(nullptr),
+	NumFaces(0)
+{}
