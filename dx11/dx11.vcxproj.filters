@@ -42,37 +42,37 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.c">
+    <ClCompile Include="Camera.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="DeviceResources.c">
+    <ClCompile Include="DeviceResources.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="dx11.c">
+    <ClCompile Include="dx11.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Game.c">
+    <ClCompile Include="Game.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Keyboard.c">
+    <ClCompile Include="Keyboard.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Math.c">
+    <ClCompile Include="Math.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Mouse.c">
+    <ClCompile Include="Mouse.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="stb_image.c">
+    <ClCompile Include="stb_image.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="objloader.c">
+    <ClCompile Include="objloader.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Utils.c">
+    <ClCompile Include="Utils.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer.c">
+    <ClCompile Include="Renderer.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
