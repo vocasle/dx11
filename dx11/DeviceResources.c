@@ -208,7 +208,7 @@ void DRCreateWindowSizeDependentResources(DeviceResources* dr)
 	}
 
 	{
-		D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = { 0 };
+		D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = {};
 		renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 		renderTargetViewDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 		if (FAILED(dr->Device->CreateRenderTargetView(dr->Device, (ID3D11Resource*)dr->RenderTarget, &renderTargetViewDesc, &dr->RenderTargetView)))
@@ -219,7 +219,7 @@ void DRCreateWindowSizeDependentResources(DeviceResources* dr)
 	}
 
 	{
-		D3D11_TEXTURE2D_DESC depthStencilDesc = { 0 };
+		D3D11_TEXTURE2D_DESC depthStencilDesc = {};
 		depthStencilDesc.Width = backBufferWidth;
 		depthStencilDesc.Height = backBufferHeight;
 		depthStencilDesc.ArraySize = 1;
@@ -237,7 +237,7 @@ void DRCreateWindowSizeDependentResources(DeviceResources* dr)
 			ExitProcess(EXIT_FAILURE);
 		}
 
-		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc = { 0 };
+		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc = {};
 		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 		depthStencilViewDesc.Format = depthStencilDesc.Format;
 

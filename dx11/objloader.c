@@ -126,7 +126,7 @@ static void OLParseMeshes(struct Mesh* meshes, uint32_t numMeshes, struct MeshIn
 	int32_t meshIdx = -1;
 	struct Mesh* mesh = NULL;
 	struct MeshInfo* info = NULL;
-	struct Face face = { 0 };
+	struct Face face = {};
 	
 	while(OLReadLine(objfile, line, 128))
 	{

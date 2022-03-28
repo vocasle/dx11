@@ -65,7 +65,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_DX11));
 
-    MSG msg = { 0 };
+    MSG msg = {};
 
     // Main message loop:
     while (WM_QUIT != msg.message)

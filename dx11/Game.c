@@ -15,7 +15,7 @@ struct Vertex
 
 void GameCreateDefaultSampler(Game* game)
 {
-	D3D11_SAMPLER_DESC samplerDesc = { 0 };
+	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -43,7 +43,7 @@ void TextureDeinit(struct Texture* texture)
 void RenderDataInit(struct RenderData* rd, Vec3D* cameraPos)
 {
 	memset(rd, 0, sizeof(struct RenderData));
-	struct PointLight pl = { 0 };
+	struct PointLight pl = {};
 	pl.Position = MathVec3DFromXYZ(2.0f, 0.0f, -2.0f);
 	pl.Ambient = MathVec4DFromXYZW(0.1f, 0.1f, 0.1f, 1.0f);
 	pl.Diffuse = MathVec4DFromXYZW(0.5f, 0.5f, 0.5f, 1.0f);
@@ -162,7 +162,7 @@ static void GameClear(Game* game)
 //			game->PerFrameConstants.World = MathMat4X4TranslateFromVec3D(&offset);
 //
 //			{
-//				D3D11_MAPPED_SUBRESOURCE mapped = { 0 };
+//				D3D11_MAPPED_SUBRESOURCE mapped = {};
 //
 //				ID3D11DeviceContext1* ctx = game->DR->Context;
 //				if (FAILED(ctx->Map(ctx, (ID3D11Resource*)game->PerFrameConstantsCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
@@ -247,7 +247,7 @@ static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
 	void* data,
 	ID3D11Buffer* dest)
 {
-	D3D11_MAPPED_SUBRESOURCE mapped = { 0 };
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
 
 	if (FAILED(context->Map(context, 
 		(ID3D11Resource*)dest, 
@@ -356,7 +356,7 @@ static void GameCreateConstantBuffer(ID3D11Device* device,
 	size_t byteWidth,
 	ID3D11Buffer** pDest)
 {
-	D3D11_BUFFER_DESC bufferDesc = { 0 };
+	D3D11_BUFFER_DESC bufferDesc = {};
 	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bufferDesc.ByteWidth = byteWidth;
 	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -528,10 +528,10 @@ static void GameCreateVertexShader(const char* filepath, ID3D11Device* device, I
 
 static void GameCreateVertexBuffer(const void* vertexData, const uint32_t numVertices, ID3D11Device* device, ID3D11Buffer** vb)
 {
-	D3D11_SUBRESOURCE_DATA subresourceData = { 0 };
+	D3D11_SUBRESOURCE_DATA subresourceData = {};
 	subresourceData.pSysMem = vertexData;
 
-	D3D11_BUFFER_DESC bufferDesc = { 0 };
+	D3D11_BUFFER_DESC bufferDesc = {};
 	bufferDesc.ByteWidth = sizeof(struct Vertex) * (uint32_t)numVertices;
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bufferDesc.StructureByteStride = sizeof(struct Vertex);
@@ -546,10 +546,10 @@ static void GameCreateVertexBuffer(const void* vertexData, const uint32_t numVer
 
 static void GameCreateIndexBuffer(const void* indexData, const uint32_t numIndices, ID3D11Device* device, ID3D11Buffer** ib)
 {
-	D3D11_SUBRESOURCE_DATA subresourceData = { 0 };
+	D3D11_SUBRESOURCE_DATA subresourceData = {};
 	subresourceData.pSysMem = indexData;
 
-	D3D11_BUFFER_DESC bufferDesc = { 0 };
+	D3D11_BUFFER_DESC bufferDesc = {};
 	bufferDesc.ByteWidth = sizeof(uint32_t) * numIndices;
 	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bufferDesc.StructureByteStride = 0;
@@ -663,7 +663,7 @@ void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct T
 	}
 
 	{
-		D3D11_TEXTURE2D_DESC desc = { 0 };
+		D3D11_TEXTURE2D_DESC desc = {};
 		desc.Width = width;
 		desc.Height = height;
 		desc.MipLevels = 1;
@@ -675,7 +675,7 @@ void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct T
 		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
 		desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
-		D3D11_SUBRESOURCE_DATA subresourceData = { 0 };
+		D3D11_SUBRESOURCE_DATA subresourceData = {};
 		subresourceData.pSysMem = bytes;
 		subresourceData.SysMemPitch = width * sizeof(unsigned char) * desiredChannels;
 
@@ -687,7 +687,7 @@ void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct T
 	}
 
 	{
-		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = { 0 };
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		memset(&srvDesc, 0, sizeof(srvDesc));
 		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
