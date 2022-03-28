@@ -13,6 +13,8 @@
 
 struct Renderer
 {
+	Renderer();
+	~Renderer();
 	D3D11_PRIMITIVE_TOPOLOGY Topology;
 	ID3D11InputLayout* InputLayout;
 	ID3D11RasterizerState* RasterizerState;

@@ -162,3 +162,24 @@ void RPresent(struct Renderer* renderer)
 		ExitProcess(EXIT_FAILURE);
 	}
 }
+
+Renderer::Renderer():
+	Topology(R_DEFAULT_PRIMTIVE_TOPOLOGY),
+	InputLayout(nullptr),
+	RasterizerState(nullptr),
+	SamplerState(nullptr),
+	PS(nullptr),
+	VS(nullptr),
+	PS_SRV(),
+	NumPS_SRV(0),
+	PS_CB(),
+	NumPS_CB(0),
+	VS_CB(),
+	NumVS_CB(0),
+	DR(nullptr)
+{
+}
+
+Renderer::~Renderer()
+{
+}
