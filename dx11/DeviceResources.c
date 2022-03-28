@@ -6,7 +6,7 @@
 
 DeviceResources* DRNew(void)
 {
-	DeviceResources* dr = malloc(sizeof(DeviceResources));
+	DeviceResources* dr = (DeviceResources*) malloc(sizeof(DeviceResources));
 	memset(dr, 0, sizeof(DeviceResources));
 	dr->BackbufferHeight = DEFAULT_WIN_HEIGHT;
 	dr->BackbufferWidth = DEFAULT_WIN_WIDTH;
@@ -47,8 +47,8 @@ void DRCreateFactory(DeviceResources* dr)
 		{
 			dxgiFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 
-			infoQueue->lpVtbl->SetBreakOnSeverity(infoQueue, DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, TRUE);
-			infoQueue->lpVtbl->SetBreakOnSeverity(infoQueue, DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+			infoQueue->SetBreakOnSeverity(infoQueue, DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, TRUE);
+			infoQueue->SetBreakOnSeverity(infoQueue, DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, TRUE);
 			COM_FREE(infoQueue);
 		}
 	}
@@ -67,7 +67,7 @@ void DRCreateRasterizerState(DeviceResources* dr)
 	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	rasterizerDesc.CullMode = D3D11_CULL_BACK;
 
-	if (FAILED(dr->Device->lpVtbl->CreateRasterizerState1(dr->Device, &rasterizerDesc, &dr->RasterizerState)))
+	if (FAILED(dr->Device->CreateRasterizerState1(dr->Device, &rasterizerDesc, &dr->RasterizerState)))
 	{
 		OutputDebugStringA("ERROR: Failed to create rasterizer state\n");
 		ExitProcess(EXIT_FAILURE);
@@ -95,7 +95,7 @@ void DRCreateDeviceResources(DeviceResources* dr)
 
 	IDXGIAdapter1* adapter;
 
-	if (FAILED(dr->Factory->lpVtbl->EnumAdapters1(dr->Factory, 0, &adapter)))
+	if (FAILED(dr->Factory->EnumAdapters1(dr->Factory, 0, &adapter)))
 	{
 		OutputDebugStringA("ERROR: Failed to enumerate adapter\n");
 		ExitProcess(EXIT_FAILURE);
@@ -130,7 +130,7 @@ void DRCreateWindowSizeDependentResources(DeviceResources* dr)
 	ID3D11DeviceContext1* ctx = dr->Context;
 
 	ID3D11RenderTargetView* nullViews[] = { NULL };
-	ctx->lpVtbl->OMSetRenderTargets(ctx, _countof(nullViews), nullViews, NULL);
+	ctx->OMSetRenderTargets(ctx, _countof(nullViews), nullViews, NULL);
 	if (dr->RenderTargetView)
 		COM_FREE(dr->RenderTargetView);
 	if (dr->DepthStencilView)
@@ -139,14 +139,14 @@ void DRCreateWindowSizeDependentResources(DeviceResources* dr)
 		COM_FREE(dr->RenderTarget);
 	if (dr->DepthStencil)
 		COM_FREE(dr->DepthStencil);
-	ctx->lpVtbl->Flush(ctx);
+	ctx->Flush(ctx);
 
 	const UINT backBufferWidth = max(dr->OutputSize.right - dr->OutputSize.left, 1u);
 	const UINT backBufferHeight = max(dr->OutputSize.bottom - dr->OutputSize.top, 1u);
 	const DXGI_FORMAT backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
 
 	UINT numQualityLevels = 0;
-	if (FAILED(dr->Device->lpVtbl->CheckMultisampleQualityLevels(dr->Device, DXGI_FORMAT_B8G8R8A8_UNORM, 4, &numQualityLevels)))
+	if (FAILED(dr->Device->CheckMultisampleQualityLevels(dr->Device, DXGI_FORMAT_B8G8R8A8_UNORM, 4, &numQualityLevels)))
 	{
 		OutputDebugStringA("ERROR: Failed to query multisample quality levels\n");
 		ExitProcess(EXIT_FAILURE);
@@ -155,7 +155,7 @@ void DRCreateWindowSizeDependentResources(DeviceResources* dr)
 
 	if (dr->SwapChain)
 	{
-		if (FAILED(dr->SwapChain->lpVtbl->ResizeBuffers(dr->SwapChain, 2, backBufferWidth, backBufferHeight, backBufferFormat, 0)))
+		if (FAILED(dr->SwapChain->ResizeBuffers(dr->SwapChain, 2, backBufferWidth, backBufferHeight, backBufferFormat, 0)))
 		{
 			OutputDebugStringA("ERROR: Failed to resize buffers\n");
 			ExitProcess(EXIT_FAILURE);
@@ -180,7 +180,7 @@ void DRCreateWindowSizeDependentResources(DeviceResources* dr)
 		fsSwapChainDesc.Windowed = TRUE;
 
 		// Create a SwapChain from a Win32 window.
-		if (FAILED(dr->Factory->lpVtbl->CreateSwapChainForHwnd(dr->Factory,
+		if (FAILED(dr->Factory->CreateSwapChainForHwnd(dr->Factory,
 			(IUnknown*)dr->Device,
 			dr->hWnd,
 			&swapChainDesc,
@@ -194,14 +194,14 @@ void DRCreateWindowSizeDependentResources(DeviceResources* dr)
 		}
 
 		// This class does not support exclusive full-screen mode and prevents DXGI from responding to the ALT+ENTER shortcut
-		if (FAILED(dr->Factory->lpVtbl->MakeWindowAssociation(dr->Factory, dr->hWnd, DXGI_MWA_NO_ALT_ENTER)))
+		if (FAILED(dr->Factory->MakeWindowAssociation(dr->Factory, dr->hWnd, DXGI_MWA_NO_ALT_ENTER)))
 		{
 			OutputDebugStringA("ERROR: Failed to make window association\n");
 			ExitProcess(EXIT_FAILURE);
 		}
 	}
 
-	if (FAILED(dr->SwapChain->lpVtbl->GetBuffer(dr->SwapChain, 0, &IID_ID3D11Texture2D, (void**)&dr->RenderTarget)))
+	if (FAILED(dr->SwapChain->GetBuffer(dr->SwapChain, 0, &IID_ID3D11Texture2D, (void**)&dr->RenderTarget)))
 	{
 		OutputDebugStringA("ERROR: Failed to get render target\n");
 		ExitProcess(EXIT_FAILURE);
@@ -211,7 +211,7 @@ void DRCreateWindowSizeDependentResources(DeviceResources* dr)
 		D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc = { 0 };
 		renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 		renderTargetViewDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-		if (FAILED(dr->Device->lpVtbl->CreateRenderTargetView(dr->Device, (ID3D11Resource*)dr->RenderTarget, &renderTargetViewDesc, &dr->RenderTargetView)))
+		if (FAILED(dr->Device->CreateRenderTargetView(dr->Device, (ID3D11Resource*)dr->RenderTarget, &renderTargetViewDesc, &dr->RenderTargetView)))
 		{
 			OutputDebugStringA("ERROR: Failed to create render target view\n");
 			ExitProcess(EXIT_FAILURE);
@@ -231,7 +231,7 @@ void DRCreateWindowSizeDependentResources(DeviceResources* dr)
 
 		ID3D11Device1* device = dr->Device;
 
-		if (FAILED(device->lpVtbl->CreateTexture2D(device, &depthStencilDesc, NULL, &dr->DepthStencil)))
+		if (FAILED(device->CreateTexture2D(device, &depthStencilDesc, NULL, &dr->DepthStencil)))
 		{
 			OutputDebugStringA("ERROR: Failed to create depth stencil texture\n");
 			ExitProcess(EXIT_FAILURE);
@@ -241,7 +241,7 @@ void DRCreateWindowSizeDependentResources(DeviceResources* dr)
 		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 		depthStencilViewDesc.Format = depthStencilDesc.Format;
 
-		if (FAILED(device->lpVtbl->CreateDepthStencilView(device, (ID3D11Resource*)dr->DepthStencil, &depthStencilViewDesc, &dr->DepthStencilView)))
+		if (FAILED(device->CreateDepthStencilView(device, (ID3D11Resource*)dr->DepthStencil, &depthStencilViewDesc, &dr->DepthStencilView)))
 		{
 			OutputDebugStringA("ERROR: Failed to create depth stencil view\n");
 			ExitProcess(EXIT_FAILURE);
@@ -264,7 +264,7 @@ void DRReportLiveObjects(void)
 		IDXGIDebug1* dxgiDebug;
 		if (SUCCEEDED(DXGIGetDebugInterface1(0, &IID_IDXGIDebug1,(void**)&dxgiDebug)))
 		{
-			dxgiDebug->lpVtbl->ReportLiveObjects(dxgiDebug, DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL);
+			dxgiDebug->ReportLiveObjects(dxgiDebug, DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL);
 		}
 	}
 #endif

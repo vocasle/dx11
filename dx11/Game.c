@@ -27,7 +27,7 @@ void GameCreateDefaultSampler(Game* game)
 
 	ID3D11Device1* device = game->DR->Device;
 
-	if (FAILED(device->lpVtbl->CreateSamplerState(device, &samplerDesc, &game->DefaultSampler)))
+	if (FAILED(device->CreateSamplerState(device, &samplerDesc, &game->DefaultSampler)))
 	{
 		UtilsDebugPrint("ERROR: Failed to create default sampler state\n");
 		ExitProcess(EXIT_FAILURE);
@@ -122,12 +122,12 @@ static void GameClear(Game* game)
 
 	static const float CLEAR_COLOR[4] = {0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f};
 
-	ctx->lpVtbl->Flush(ctx);
+	ctx->Flush(ctx);
 
-	ctx->lpVtbl->ClearRenderTargetView(ctx, rtv, CLEAR_COLOR);
-	ctx->lpVtbl->ClearDepthStencilView(ctx, dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	ctx->lpVtbl->OMSetRenderTargets(ctx, 1, &rtv, dsv);
-	ctx->lpVtbl->RSSetViewports(ctx, 1, &game->DR->ScreenViewport);
+	ctx->ClearRenderTargetView(ctx, rtv, CLEAR_COLOR);
+	ctx->ClearDepthStencilView(ctx, dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	ctx->OMSetRenderTargets(ctx, 1, &rtv, dsv);
+	ctx->RSSetViewports(ctx, 1, &game->DR->ScreenViewport);
 }
 
 //static void GameRender(Game* game)
@@ -139,14 +139,14 @@ static void GameClear(Game* game)
 //	const UINT strides = sizeof(struct Vertex);
 //	const UINT offsets = 0;
 //
-//	ctx->lpVtbl->IASetPrimitiveTopology(ctx, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//	ctx->lpVtbl->IASetInputLayout(ctx, game->InputLayout);
-//	ctx->lpVtbl->IASetVertexBuffers(ctx, 0, 1, &game->VertexBuffer, &strides, &offsets);
-//	ctx->lpVtbl->IASetIndexBuffer(ctx, game->IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-//	ctx->lpVtbl->RSSetState(ctx, (ID3D11RasterizerState*) game->DR->RasterizerState);
-//	ctx->lpVtbl->PSSetSamplers(ctx, 0, 1, &game->DefaultSampler);
-//	ctx->lpVtbl->VSSetShader(ctx, game->VS, NULL, 0);
-//	ctx->lpVtbl->PSSetShader(ctx, game->DefaultPS, NULL, 0);
+//	ctx->IASetPrimitiveTopology(ctx, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//	ctx->IASetInputLayout(ctx, game->InputLayout);
+//	ctx->IASetVertexBuffers(ctx, 0, 1, &game->VertexBuffer, &strides, &offsets);
+//	ctx->IASetIndexBuffer(ctx, game->IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+//	ctx->RSSetState(ctx, (ID3D11RasterizerState*) game->DR->RasterizerState);
+//	ctx->PSSetSamplers(ctx, 0, 1, &game->DefaultSampler);
+//	ctx->VSSetShader(ctx, game->VS, NULL, 0);
+//	ctx->PSSetShader(ctx, game->DefaultPS, NULL, 0);
 //
 //	uint32_t vertexOffset = 0;
 //	uint32_t indexOffset = 0;
@@ -165,49 +165,49 @@ static void GameClear(Game* game)
 //				D3D11_MAPPED_SUBRESOURCE mapped = { 0 };
 //
 //				ID3D11DeviceContext1* ctx = game->DR->Context;
-//				if (FAILED(ctx->lpVtbl->Map(ctx, (ID3D11Resource*)game->PerFrameConstantsCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
+//				if (FAILED(ctx->Map(ctx, (ID3D11Resource*)game->PerFrameConstantsCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped)))
 //				{
 //					OutputDebugStringA("ERROR: Failed to map per frame constants cbuffer\n");
 //					ExitProcess(EXIT_FAILURE);
 //				}
 //				memcpy(mapped.pData, &game->PerFrameConstants, sizeof(PerFrameConstants));
-//				ctx->lpVtbl->Unmap(ctx, (ID3D11Resource*)game->PerFrameConstantsCB, 0);
+//				ctx->Unmap(ctx, (ID3D11Resource*)game->PerFrameConstantsCB, 0);
 //			}
 //
 //			if (game->RenderData.DefaultTexture.SRV)
 //			{
-//				ctx->lpVtbl->PSSetShaderResources(ctx, 0, 1, &game->RenderData.DefaultTexture.SRV);
+//				ctx->PSSetShaderResources(ctx, 0, 1, &game->RenderData.DefaultTexture.SRV);
 //				if (game->RenderData.SpecularTexture.SRV)
 //				{
-//					ctx->lpVtbl->PSSetShaderResources(ctx, 1, 1, &game->RenderData.SpecularTexture.SRV);
+//					ctx->PSSetShaderResources(ctx, 1, 1, &game->RenderData.SpecularTexture.SRV);
 //				}
 //				if (game->RenderData.GlossTexture.SRV)
 //				{
-//					ctx->lpVtbl->PSSetShaderResources(ctx, 2, 1, &game->RenderData.GlossTexture.SRV);
+//					ctx->PSSetShaderResources(ctx, 2, 1, &game->RenderData.GlossTexture.SRV);
 //				}
 //				if (game->RenderData.NormalTexture.SRV)
 //				{
-//					ctx->lpVtbl->PSSetShaderResources(ctx, 3, 1, &game->RenderData.NormalTexture.SRV);
+//					ctx->PSSetShaderResources(ctx, 3, 1, &game->RenderData.NormalTexture.SRV);
 //				}
 //			}
 //			else
 //			{
-//				ctx->lpVtbl->PSSetShaderResources(ctx, 0, 1, nullSRV);
+//				ctx->PSSetShaderResources(ctx, 0, 1, nullSRV);
 //			}
-//			ctx->lpVtbl->VSSetConstantBuffers(ctx, 0, 1, &game->PerFrameConstantsCB);
-//			ctx->lpVtbl->DrawIndexed(ctx, (uint32_t)mesh->NumFaces, indexOffset, (int32_t)vertexOffset);
+//			ctx->VSSetConstantBuffers(ctx, 0, 1, &game->PerFrameConstantsCB);
+//			ctx->DrawIndexed(ctx, (uint32_t)mesh->NumFaces, indexOffset, (int32_t)vertexOffset);
 //			indexOffset += mesh->NumFaces;
 //			vertexOffset += mesh->NumFaces;
 //			meshGlobIdx++;
 //		}
 //	}
 //
-//	const HRESULT hr = game->DR->SwapChain->lpVtbl->Present(game->DR->SwapChain, 1, 0);
+//	const HRESULT hr = game->DR->SwapChain->Present(game->DR->SwapChain, 1, 0);
 //
-//	ctx->lpVtbl->DiscardView(ctx, (ID3D11View*) game->DR->RenderTargetView);
+//	ctx->DiscardView(ctx, (ID3D11View*) game->DR->RenderTargetView);
 //	if (game->DR->DepthStencilView)
 //	{
-//		ctx->lpVtbl->DiscardView(ctx, (ID3D11View*)game->DR->DepthStencilView);
+//		ctx->DiscardView(ctx, (ID3D11View*)game->DR->DepthStencilView);
 //	}
 //
 //	if (FAILED(hr))
@@ -249,7 +249,7 @@ static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
 {
 	D3D11_MAPPED_SUBRESOURCE mapped = { 0 };
 
-	if (FAILED(context->lpVtbl->Map(context, 
+	if (FAILED(context->Map(context, 
 		(ID3D11Resource*)dest, 
 		0, 
 		D3D11_MAP_WRITE_DISCARD, 
@@ -259,7 +259,7 @@ static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
 		UtilsFatalError("ERROR: Failed to map constant buffer\n");
 	}
 	memcpy(mapped.pData, data, bufferSize);
-	context->lpVtbl->Unmap(context, (ID3D11Resource*)dest, 0);
+	context->Unmap(context, (ID3D11Resource*)dest, 0);
 }
 
 static void GameUpdatePerFrameConstants(Game* game)
@@ -362,7 +362,7 @@ static void GameCreateConstantBuffer(ID3D11Device* device,
 	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 
-	if (FAILED(device->lpVtbl->CreateBuffer(device, &bufferDesc, NULL, pDest)))
+	if (FAILED(device->CreateBuffer(device, &bufferDesc, NULL, pDest)))
 	{
 		UtilsFatalError("ERROR: Failed to create per frame constants cbuffer\n");
 	}
@@ -468,7 +468,7 @@ static void GameCreatePixelShader(const char* filepath, ID3D11Device* device, ID
 	unsigned int bufferSize = 0;
 	unsigned char* bytes = UtilsReadData(filepath, &bufferSize);
 
-	if (FAILED(device->lpVtbl->CreatePixelShader(device, bytes, bufferSize, NULL, ps)))
+	if (FAILED(device->CreatePixelShader(device, bytes, bufferSize, NULL, ps)))
 	{
 		UTILS_FATAL_ERROR("Failed to create pixel shader from %s", filepath);
 	}
@@ -507,7 +507,7 @@ static void GameCreateInputLayout(ID3D11Device* device, ID3D11InputLayout** il, 
 			}
 	};
 
-	if (FAILED(device->lpVtbl->CreateInputLayout(device, inputElementDesc, sizeof(inputElementDesc) / sizeof(*inputElementDesc), bytes, bufferSize, il)))
+	if (FAILED(device->CreateInputLayout(device, inputElementDesc, sizeof(inputElementDesc) / sizeof(*inputElementDesc), bytes, bufferSize, il)))
 	{
 		UtilsFatalError("Failed to create input layout");
 	}
@@ -518,7 +518,7 @@ static void GameCreateVertexShader(const char* filepath, ID3D11Device* device, I
 	unsigned int bufferSize = 0;
 	unsigned char* bytes = UtilsReadData(filepath, &bufferSize);
 
-	if (FAILED(device->lpVtbl->CreateVertexShader(device, bytes, bufferSize, NULL, vs)))
+	if (FAILED(device->CreateVertexShader(device, bytes, bufferSize, NULL, vs)))
 	{
 		UTILS_FATAL_ERROR("Failed to create vertex shader from %s", filepath);
 	}
@@ -537,7 +537,7 @@ static void GameCreateVertexBuffer(const void* vertexData, const uint32_t numVer
 	bufferDesc.StructureByteStride = sizeof(struct Vertex);
 	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 
-	if (FAILED(device->lpVtbl->CreateBuffer(device, &bufferDesc, &subresourceData, vb)))
+	if (FAILED(device->CreateBuffer(device, &bufferDesc, &subresourceData, vb)))
 	{
 		OutputDebugStringA("ERROR: Failed to create vertex buffer\n");
 		ExitProcess(EXIT_FAILURE);
@@ -555,7 +555,7 @@ static void GameCreateIndexBuffer(const void* indexData, const uint32_t numIndic
 	bufferDesc.StructureByteStride = 0;
 	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 
-	if (FAILED(device->lpVtbl->CreateBuffer(device, &bufferDesc, &subresourceData, ib)))
+	if (FAILED(device->CreateBuffer(device, &bufferDesc, &subresourceData, ib)))
 	{
 		OutputDebugStringA("ERROR: Failed to create index buffer\n");
 		ExitProcess(EXIT_FAILURE);
@@ -679,7 +679,7 @@ void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct T
 		subresourceData.pSysMem = bytes;
 		subresourceData.SysMemPitch = width * sizeof(unsigned char) * desiredChannels;
 
-		if (FAILED(dr->Device->lpVtbl->CreateTexture2D(dr->Device, &desc, &subresourceData, &texture->Resource)))
+		if (FAILED(dr->Device->CreateTexture2D(dr->Device, &desc, &subresourceData, &texture->Resource)))
 		{
 			UtilsDebugPrint("ERROR: Failed to create texture from file %s\n", filename);
 			ExitProcess(EXIT_FAILURE);
@@ -692,13 +692,13 @@ void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct T
 		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = -1;
-		if (FAILED(dr->Device->lpVtbl->CreateShaderResourceView(dr->Device, (ID3D11Resource*)texture->Resource, &srvDesc, &texture->SRV)))
+		if (FAILED(dr->Device->CreateShaderResourceView(dr->Device, (ID3D11Resource*)texture->Resource, &srvDesc, &texture->SRV)))
 		{
 			UtilsDebugPrint("ERROR: Failed to create SRV from file %s\n", filename);
 			ExitProcess(EXIT_FAILURE);
 		}
 
-		dr->Context->lpVtbl->GenerateMips(dr->Context, texture->SRV);
+		dr->Context->GenerateMips(dr->Context, texture->SRV);
 	}
 
 	stbi_image_free(bytes);

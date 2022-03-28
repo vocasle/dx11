@@ -98,35 +98,35 @@ void RDrawIndexed(struct Renderer* renderer,
 	static ID3D11ShaderResourceView* nullSRV[] = { NULL };
 	ID3D11DeviceContext* context = renderer->DR->Context;
 
-	context->lpVtbl->IASetPrimitiveTopology(context, renderer->Topology);
-	context->lpVtbl->IASetInputLayout(context, renderer->InputLayout);
-	context->lpVtbl->IASetVertexBuffers(context, 0, 1, &vertexBuffer, &strides, &offsets);
-	context->lpVtbl->IASetIndexBuffer(context, indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-	context->lpVtbl->RSSetState(context, renderer->RasterizerState);
-	context->lpVtbl->PSSetSamplers(context, 0, 1, &renderer->SamplerState);
-	context->lpVtbl->VSSetShader(context, renderer->VS, NULL, 0);
-	context->lpVtbl->PSSetShader(context, renderer->PS, NULL, 0);
+	context->IASetPrimitiveTopology(context, renderer->Topology);
+	context->IASetInputLayout(context, renderer->InputLayout);
+	context->IASetVertexBuffers(context, 0, 1, &vertexBuffer, &strides, &offsets);
+	context->IASetIndexBuffer(context, indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	context->RSSetState(context, renderer->RasterizerState);
+	context->PSSetSamplers(context, 0, 1, &renderer->SamplerState);
+	context->VSSetShader(context, renderer->VS, NULL, 0);
+	context->PSSetShader(context, renderer->PS, NULL, 0);
 
 	if (renderer->NumPS_SRV > 0)
 	{
-		context->lpVtbl->PSSetShaderResources(context, 0, renderer->NumPS_SRV, renderer->PS_SRV);
+		context->PSSetShaderResources(context, 0, renderer->NumPS_SRV, renderer->PS_SRV);
 	}
 	else
 	{
-		context->lpVtbl->PSSetShaderResources(context, 0, 1, nullSRV);
+		context->PSSetShaderResources(context, 0, 1, nullSRV);
 	}
 
 	if (renderer->NumPS_CB > 0)
 	{
-		context->lpVtbl->PSSetConstantBuffers(context, 0, renderer->NumPS_CB, renderer->PS_CB);
+		context->PSSetConstantBuffers(context, 0, renderer->NumPS_CB, renderer->PS_CB);
 	}
 
 	if (renderer->NumVS_CB > 0)
 	{
-		context->lpVtbl->VSSetConstantBuffers(context, 0, renderer->NumVS_CB, renderer->VS_CB);
+		context->VSSetConstantBuffers(context, 0, renderer->NumVS_CB, renderer->VS_CB);
 	}
 
-	context->lpVtbl->DrawIndexed(context, indexCount, startIndexLocation, baseVertexLocation);
+	context->DrawIndexed(context, indexCount, startIndexLocation, baseVertexLocation);
 }
 
 void RClear(struct Renderer* renderer)
@@ -137,23 +137,23 @@ void RClear(struct Renderer* renderer)
 
 	static const float CLEAR_COLOR[4] = { 0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f };
 
-	ctx->lpVtbl->Flush(ctx);
+	ctx->Flush(ctx);
 
-	ctx->lpVtbl->ClearRenderTargetView(ctx, rtv, CLEAR_COLOR);
-	ctx->lpVtbl->ClearDepthStencilView(ctx, dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	ctx->lpVtbl->OMSetRenderTargets(ctx, 1, &rtv, dsv);
-	ctx->lpVtbl->RSSetViewports(ctx, 1, &renderer->DR->ScreenViewport);
+	ctx->ClearRenderTargetView(ctx, rtv, CLEAR_COLOR);
+	ctx->ClearDepthStencilView(ctx, dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	ctx->OMSetRenderTargets(ctx, 1, &rtv, dsv);
+	ctx->RSSetViewports(ctx, 1, &renderer->DR->ScreenViewport);
 }
 
 void RPresent(struct Renderer* renderer)
 {
-	const HRESULT hr = renderer->DR->SwapChain->lpVtbl->Present(renderer->DR->SwapChain, 1, 0);
+	const HRESULT hr = renderer->DR->SwapChain->Present(renderer->DR->SwapChain, 1, 0);
 
 	ID3D11DeviceContext1* ctx = renderer->DR->Context;
-	ctx->lpVtbl->DiscardView(ctx, (ID3D11View*)renderer->DR->RenderTargetView);
+	ctx->DiscardView(ctx, (ID3D11View*)renderer->DR->RenderTargetView);
 	if (renderer->DR->DepthStencilView)
 	{
-		ctx->lpVtbl->DiscardView(ctx, (ID3D11View*)renderer->DR->DepthStencilView);
+		ctx->DiscardView(ctx, (ID3D11View*)renderer->DR->DepthStencilView);
 	}
 
 	if (FAILED(hr))

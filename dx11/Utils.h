@@ -78,4 +78,4 @@ unsigned char* UtilsReadData(const char* filepath, unsigned int* bufferSize);
 
 // COM helpers
 
-#define COM_FREE(This) (This->lpVtbl->Release(This))
+#define COM_FREE(This) (This->Release())
