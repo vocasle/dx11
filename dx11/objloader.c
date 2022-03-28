@@ -214,7 +214,7 @@ static uint32_t OLValidateMeshes(const struct Mesh* meshes, const struct MeshInf
 
 static char* OLGetCwd(const char* filename)
 {
-	char* lastSlash = NULL;
+	const char* lastSlash = NULL;
 	uint32_t len = 0;
 	lastSlash = strrchr(filename, '/');
 	lastSlash = lastSlash ? lastSlash : strrchr(filename, '\\');
@@ -225,7 +225,7 @@ static char* OLGetCwd(const char* filename)
 	char* dir = NULL;
 	if (len > 0)
 	{
-		dir = malloc(len + 1);
+		dir = (char*) malloc(len + 1);
 		strncpy_s(dir, len + 1, filename, len);
 		return dir;
 	}
@@ -300,21 +300,21 @@ struct Model* OLLoad(const char* filename)
 	}
 
 	size_t bytes = sizeof(struct Mesh) * numMeshes;
-	struct Mesh* meshes = malloc(bytes);
+	struct Mesh* meshes = (Mesh*) malloc(bytes);
 	memset(meshes, 0, bytes);
 
 	bytes = sizeof(struct MeshInfo) * numMeshes;
-	struct MeshInfo* infos = malloc(bytes);
+	struct MeshInfo* infos = (MeshInfo*) malloc(bytes);
 	memset(infos, 0, bytes);
 
 	OLGetMeshInfos(infos, numMeshes, f);
 	//assert(numMeshes == 1);
 	for (uint32_t i = 0; i < numMeshes; ++i)
 	{
-		meshes[i].Faces = malloc(sizeof(struct Face) * infos[i].NumFaces);
-		meshes[i].Normals = malloc(sizeof(struct Normal) * infos[i].NumNormals);
-		meshes[i].Positions = malloc(sizeof(struct Position) * infos[i].NumPositions);
-		meshes[i].TexCoords = malloc(sizeof(struct TexCoord) * infos[i].NumTexCoords);
+		meshes[i].Faces = (Face*) malloc(sizeof(struct Face) * infos[i].NumFaces);
+		meshes[i].Normals = (Normal*)malloc(sizeof(struct Normal) * infos[i].NumNormals);
+		meshes[i].Positions = (Position*)malloc(sizeof(struct Position) * infos[i].NumPositions);
+		meshes[i].TexCoords = (TexCoord*)malloc(sizeof(struct TexCoord) * infos[i].NumTexCoords);
 	}
 	OLParseMeshes(meshes, numMeshes, infos, f);
 	fclose(f);
@@ -322,7 +322,7 @@ struct Model* OLLoad(const char* filename)
 	assert(OLValidateMeshes(meshes, infos, numMeshes));
 	free(infos);
 
-	struct Model* model = malloc(sizeof(struct Model));
+	struct Model* model = (Model*) malloc(sizeof(struct Model));
 	model->Meshes = meshes;
 	model->NumMeshes = numMeshes;
 	model->Directory = OLGetCwd(filename);
@@ -334,7 +334,7 @@ struct Model* OLLoad(const char* filename)
 struct Mesh* MeshNew(void)
 {
 	const size_t bytes = sizeof(struct Mesh);
-	struct Mesh* mesh = malloc(bytes);
+	struct Mesh* mesh = (Mesh*) malloc(bytes);
 	memset(mesh, 0, bytes);
 	return mesh;
 }
@@ -357,7 +357,7 @@ void MeshDeinit(struct Mesh* mesh)
 struct Model* ModelNew(void)
 {
 	const size_t bytes = sizeof(struct Model);
-	struct Model* model = malloc(bytes);
+	struct Model* model = (Model*) malloc(bytes);
 	memset(model, 0, bytes);
 	return model;
 }

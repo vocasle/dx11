@@ -62,14 +62,14 @@ Vec4D MathVec4DFromXYZW(float x, float y, float z, float w)
 
 Mat3X3 MathMat3X3Identity()
 {
-	Mat3X3 mat = {0};
+	Mat3X3 mat = {};
 	mat.A00 = mat.A11 = mat.A22 = 1.0f;
 	return mat;
 }
 
 Mat3X3 MathMat3X3Addition(const Mat3X3* mat1, const Mat3X3* mat2)
 {
-	Mat3X3 res = {0};
+	Mat3X3 res = {};
 	MathVec3DAddition(&mat1->V[0], &mat2->V[0]);
 	MathVec3DAddition(&mat1->V[1], &mat2->V[1]);
 	MathVec3DAddition(&mat1->V[2], &mat2->V[2]);
@@ -94,7 +94,7 @@ Vec3D MathMat3X3MultByVec3D(const Mat3X3* mat, const Vec3D* vec)
 
 Mat3X3 MathMat3X3MultByMat3X3(const Mat3X3* mat1, const Mat3X3* mat2)
 {
-	Mat3X3 res = {0};
+	Mat3X3 res = {};
 
 	float x = mat1->A00;
 	float y = mat1->A01;

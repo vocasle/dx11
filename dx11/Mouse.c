@@ -38,7 +38,7 @@ void MouseOnMouseMove(struct Mouse* mouse, uint32_t message, WPARAM wParam, LPAR
 Vec2D MouseGetMouseDelta(const struct Mouse* mouse)
 {
 
-	Vec2D delta = {0};
+	Vec2D delta = {};
 	delta.X = mouse->WinSize.X / 2.0f - mouse->MousePos.X;
 	delta.Y = mouse->WinSize.Y / 2.0f - mouse->MousePos.Y;
 
