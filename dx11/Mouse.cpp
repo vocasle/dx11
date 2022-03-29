@@ -46,3 +46,9 @@ Vec2D MouseGetMouseDelta(const struct Mouse* mouse)
 
 	return delta;
 }
+
+Mouse::Mouse():
+	MousePos{},
+	WinSize{}
+{
+}
