@@ -241,11 +241,11 @@ static struct Mesh* GameFindMeshByName(Game* game, const char* name, size_t* ind
 		for (uint32_t j = 0; j < model->NumMeshes; ++j)
 		{
 			struct Mesh* mesh = model->Meshes + j;
-			if (strcmp(mesh->Name, name) == 0)
+			if (strcmp(mesh->Name.c_str(), name) == 0)
 			{
 				return mesh;
 			}
-			*indexOffset += mesh->NumFaces;
+			*indexOffset += mesh->Faces.size();
 		}
 	}
 	return NULL;
@@ -266,7 +266,13 @@ static void GameRenderNew(Game* game)
 	size_t offset = 0;
 	const struct Mesh* cube = GameFindMeshByName(game, "Cube", &offset);
 	
-	RDrawIndexed(r, game->IndexBuffer, game->VertexBuffer, sizeof(struct Vertex), cube->NumFaces, offset, offset);
+	RDrawIndexed(r, 
+		game->IndexBuffer, 
+		game->VertexBuffer, 
+		sizeof(struct Vertex), 
+		cube->Faces.size(), 
+		offset, 
+		offset);
 
 	// Light properties
 	{
@@ -281,7 +287,13 @@ static void GameRenderNew(Game* game)
 	RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
 	offset = 0;
 	const struct Mesh* sphere = GameFindMeshByName(game, "Sphere", &offset);
-	RDrawIndexed(r, game->IndexBuffer, game->VertexBuffer, sizeof(struct Vertex), sphere->NumFaces, offset, offset);
+	RDrawIndexed(r, 
+		game->IndexBuffer, 
+		game->VertexBuffer, 
+		sizeof(struct Vertex), 
+		sphere->Faces.size(), 
+		offset, 
+		offset);
 
 	RPresent(r);
 }
@@ -353,7 +365,7 @@ static void GameCreateSharedBuffers(Game* game)
 		for (uint32_t i = 0; i < game->Models[j]->NumMeshes; ++i)
 		{
 			struct Mesh* mesh = game->Models[j]->Meshes + i;
-			numFaces += mesh->NumFaces;
+			numFaces += mesh->Faces.size();
 		}
 	}
 
@@ -375,12 +387,12 @@ static void GameCreateSharedBuffers(Game* game)
 		for (uint32_t i = 0; i < model->NumMeshes; ++i)
 		{
 			const struct Mesh* mesh = model->Meshes + i;
-			for (uint32_t j = 0; j < mesh->NumFaces; ++j)
+			for (uint32_t j = 0; j < mesh->Faces.size(); ++j)
 			{
-				const struct Face* face = model->Meshes[i].Faces + j;
-				const struct Position* pos = mesh->Positions + face->posIdx - 1 - posOffs;
-				const struct Normal* norm = mesh->Normals + face->normIdx - 1 - normOffs;
-				const struct TexCoord* tc = mesh->TexCoords + face->texIdx - 1 - tcOffs;
+				const struct Face* face = &model->Meshes[i].Faces[0] + j;
+				const struct Position* pos = &mesh->Positions[0] + face->posIdx - 1 - posOffs;
+				const struct Normal* norm = &mesh->Normals[0] + face->normIdx - 1 - normOffs;
+				const struct TexCoord* tc = &mesh->TexCoords[0] + face->texIdx - 1 - tcOffs;
 				struct Vertex* vert = vertices + game->RenderData.NumIndices;
 
 				vert->Position.X = pos->x;
@@ -398,9 +410,9 @@ static void GameCreateSharedBuffers(Game* game)
 
 				game->RenderData.NumVertices++;
 			}
-			posOffs += mesh->NumPositions;
-			normOffs += mesh->NumNormals;
-			tcOffs += mesh->NumTexCoords;
+			posOffs += mesh->Positions.size();
+			normOffs += mesh->Normals.size();
+			tcOffs += mesh->TexCoords.size();
 		}
 		posOffs = 0;
 		normOffs = 0;
@@ -709,7 +721,7 @@ Game::~Game()
 	DRFree(DR);
 	for (uint32_t i = 0; i < NumModels; ++i)
 	{
-		ModelFree(Models[i]);
+		//ModelFree(Models[i]);
 	}
 	free(Models);
 

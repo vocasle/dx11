@@ -125,9 +125,9 @@ static void OLParseMeshes(struct Mesh* meshes, uint32_t numMeshes, struct MeshIn
 	uint32_t idx[9];
 	int32_t result = 0;
 	int32_t meshIdx = -1;
-	struct Mesh* mesh = NULL;
-	struct MeshInfo* info = NULL;
-	struct Face face = {};
+	Mesh* mesh = NULL;
+	MeshInfo* info = NULL;
+	Face face = {};
 	
 	while(OLReadLine(objfile, line, 128))
 	{
@@ -143,32 +143,35 @@ static void OLParseMeshes(struct Mesh* meshes, uint32_t numMeshes, struct MeshIn
 		{
 			result = sscanf_s(line, "%s%f%f%f", prefix, 4, vec, vec + 1, vec + 2);
 			assert(result == 4);
-			mesh->Positions[mesh->NumPositions].x = vec[0];
-			mesh->Positions[mesh->NumPositions].y = vec[1];
-			mesh->Positions[mesh->NumPositions].z = vec[2];
-			++mesh->NumPositions;
-			assert(mesh->NumPositions <= info->NumPositions);
+			mesh->Positions.emplace_back(vec[0], vec[1], vec[2]);
+			//mesh->Positions[mesh->NumPositions].x = vec[0];
+			//mesh->Positions[mesh->NumPositions].y = vec[1];
+			//mesh->Positions[mesh->NumPositions].z = vec[2];
+			//++mesh->NumPositions;
+			assert(mesh->Positions.size() <= info->NumPositions);
 			OLLogInfo("Position { %f %f %f }", vec[0], vec[1], vec[2]); 	
 		}
 		else if (strcmp(prefix, "vt") == 0)
 		{
 			result = sscanf_s(line, "%s%f%f", prefix, 4, vec, vec + 1);
 			assert(result == 3);
-			mesh->TexCoords[mesh->NumTexCoords].u = vec[0];
-			mesh->TexCoords[mesh->NumTexCoords].v = vec[1];
-			++mesh->NumTexCoords;
-			assert(mesh->NumTexCoords <= info->NumTexCoords);
+			mesh->TexCoords.emplace_back(vec[0], vec[1]);
+			//mesh->TexCoords[mesh->NumTexCoords].u = vec[0];
+			//mesh->TexCoords[mesh->NumTexCoords].v = vec[1];
+			//++mesh->NumTexCoords;
+			assert(mesh->TexCoords.size() <= info->NumTexCoords);
 			OLLogInfo("TexCoord { pref: %s %f %f }", prefix, vec[0], vec[1]);
 		}
 		else if (strcmp(prefix, "vn") == 0)
 		{
 			result = sscanf_s(line, "%s%f%f%f", prefix, 4, vec, vec + 1, vec + 2);
 			assert(result == 4);
-			mesh->Normals[mesh->NumNormals].x = vec[0];
-			mesh->Normals[mesh->NumNormals].y = vec[1];
-			mesh->Normals[mesh->NumNormals].z = vec[2];
-			++mesh->NumNormals;
-			assert(mesh->NumNormals <= info->NumNormals);
+			mesh->Normals.emplace_back(vec[0], vec[1], vec[2]);
+			//mesh->Normals[mesh->NumNormals].x = vec[0];
+			//mesh->Normals[mesh->NumNormals].y = vec[1];
+			//mesh->Normals[mesh->NumNormals].z = vec[2];
+			//++mesh->NumNormals;
+			assert(mesh->Normals.size() <= info->NumNormals);
 			OLLogInfo("Normal { %f %f %f }", vec[0], vec[1], vec[2]);
 		}
 		else if (strcmp(prefix, "f ") == 0)
@@ -180,11 +183,12 @@ static void OLParseMeshes(struct Mesh* meshes, uint32_t numMeshes, struct MeshIn
 					idx[0], idx[1], idx[2], idx[3], idx[4], idx[5], idx[6], idx[7], idx[8]);
 			for (uint32_t i = 0; i < 9; i += 3)
 			{
-				face.posIdx = idx[i];
-				face.texIdx = idx[i + 1];
-				face.normIdx = idx[i + 2];
-				mesh->Faces[mesh->NumFaces++] = face;
-				assert(mesh->NumFaces <= info->NumFaces);
+				//face.posIdx = idx[i];
+				//face.texIdx = idx[i + 1];
+				//face.normIdx = idx[i + 2];
+				//mesh->Faces[mesh->NumFaces++] = face;
+				mesh->Faces.emplace_back(idx[i], idx[i + 1], idx[i + 2]);
+				assert(mesh->Faces.size() <= info->NumFaces);
 			}
 		}
 		else 
@@ -196,19 +200,19 @@ static void OLParseMeshes(struct Mesh* meshes, uint32_t numMeshes, struct MeshIn
 
 static uint32_t OLValidateMeshes(const struct Mesh* meshes, const struct MeshInfo* infos, uint32_t numMeshes)
 {
-	uint32_t areMeshesValid = 1;
+	bool areMeshesValid = 1;
 	for (uint32_t i = 0; i < numMeshes; ++i)
 	{
 		const struct Mesh* m = meshes + i;
 		const struct MeshInfo* mi = infos + i;
-		areMeshesValid = areMeshesValid && m->NumFaces == mi->NumFaces;
-		assert(m->NumFaces == mi->NumFaces);
-		areMeshesValid = areMeshesValid && m->NumNormals == mi->NumNormals;
-		assert(m->NumNormals == mi->NumNormals);
-		areMeshesValid = areMeshesValid && m->NumTexCoords == mi->NumTexCoords;
-		assert(m->NumTexCoords == mi->NumTexCoords);
-		areMeshesValid = areMeshesValid && m->NumPositions == mi->NumPositions;
-		assert(m->NumPositions == mi->NumPositions);
+		areMeshesValid = areMeshesValid && (m->Faces.size() == mi->NumFaces);
+		assert(m->Faces.size() == mi->NumFaces);
+		areMeshesValid = areMeshesValid && (m->Normals.size() == mi->NumNormals);
+		assert(m->Normals.size() == mi->NumNormals);
+		areMeshesValid = areMeshesValid && (m->TexCoords.size() == mi->NumTexCoords);
+		assert(m->TexCoords.size() == mi->NumTexCoords);
+		areMeshesValid = areMeshesValid && (m->Positions.size() == mi->NumPositions);
+		assert(m->Positions.size() == mi->NumPositions);
 	}
 	return areMeshesValid;
 }
@@ -244,6 +248,7 @@ void OLDumpModelToFile(const struct Model* model, const char* filename)
 	if (!f)
 	{
 		OLLogError("Failed to create file %s", filename);
+		return;
 	}
 	
 	fprintf(f, "NumMeshes: %d\nDirectory: %s\n", model->NumMeshes, model->Directory);
@@ -252,29 +257,29 @@ void OLDumpModelToFile(const struct Model* model, const char* filename)
 		struct Mesh* m = model->Meshes + i;
 		fprintf(f, "MeshName: %s\n", m->Name);
 
-		fprintf(f, "NumPositions: %d\n", m->NumPositions);
-		for (uint32_t j = 0; j < m->NumPositions; ++j)
+		fprintf(f, "NumPositions: %d\n", m->Positions.size());
+		for (uint32_t j = 0; j < m->Positions.size(); ++j)
 		{
 			fprintf(f, "Position { %f %f %f }\n", 
 					m->Positions[j].x, m->Positions[j].y, m->Positions[j].z);
 		}
 
-		fprintf(f, "NumTexCoords: %d\n", m->NumTexCoords);
-		for (uint32_t j = 0; j < m->NumTexCoords; ++j)
+		fprintf(f, "TexCoords.size(): %d\n", m->TexCoords.size());
+		for (uint32_t j = 0; j < m->TexCoords.size(); ++j)
 		{
 			fprintf(f, "TexCoord { %f %f }\n", 
 					m->TexCoords[j].u, m->TexCoords[j].v);
 		}
 
-		fprintf(f, "NumNormals: %d\n", m->NumNormals);
-		for (uint32_t j = 0; j < m->NumNormals; ++j)
+		fprintf(f, "NumNormals: %d\n", m->Normals.size());
+		for (uint32_t j = 0; j < m->Normals.size(); ++j)
 		{
 			fprintf(f, "Normal { %f %f %f }\n", 
 					m->Normals[j].x, m->Normals[j].x, m->Normals[j].y);
 		}
 
-		fprintf(f, "NumFaces: %llu\n", m->NumFaces);
-		for (uint32_t j = 0; j < m->NumFaces; ++j)
+		fprintf(f, "NumFaces: %llu\n", m->Faces.size());
+		for (uint32_t j = 0; j < m->Faces.size(); ++j)
 		{
 			fprintf(f, "Face { %d %d %d }\n", 
 					m->Faces[j].posIdx, m->Faces[j].texIdx, m->Faces[j].normIdx);
@@ -300,30 +305,25 @@ struct Model* OLLoad(const char* filename)
 		return NULL;
 	}
 
-	size_t bytes = sizeof(struct Mesh) * numMeshes;
-	struct Mesh* meshes = (Mesh*) malloc(bytes);
-	memset(meshes, 0, bytes);
-
-	bytes = sizeof(struct MeshInfo) * numMeshes;
-	struct MeshInfo* infos = (MeshInfo*) malloc(bytes);
-	memset(infos, 0, bytes);
+	Mesh* meshes = new Mesh[numMeshes];
+	MeshInfo* infos = new MeshInfo[numMeshes];
 
 	OLGetMeshInfos(infos, numMeshes, f);
 	//assert(numMeshes == 1);
 	for (uint32_t i = 0; i < numMeshes; ++i)
 	{
-		meshes[i].Faces = (Face*) malloc(sizeof(struct Face) * infos[i].NumFaces);
-		meshes[i].Normals = (Normal*)malloc(sizeof(struct Normal) * infos[i].NumNormals);
-		meshes[i].Positions = (Position*)malloc(sizeof(struct Position) * infos[i].NumPositions);
-		meshes[i].TexCoords = (TexCoord*)malloc(sizeof(struct TexCoord) * infos[i].NumTexCoords);
+		meshes[i].Faces.reserve(infos[i].NumFaces);
+		meshes[i].Normals.reserve(infos[i].NumNormals);
+		meshes[i].Positions.reserve(infos[i].NumPositions);
+		meshes[i].TexCoords.reserve(infos[i].NumTexCoords);
 	}
 	OLParseMeshes(meshes, numMeshes, infos, f);
 	fclose(f);
 
 	assert(OLValidateMeshes(meshes, infos, numMeshes));
-	free(infos);
+	delete[] infos;
 
-	struct Model* model = (Model*) malloc(sizeof(struct Model));
+	Model* model = new Model;
 	model->Meshes = meshes;
 	model->NumMeshes = numMeshes;
 	model->Directory = OLGetCwd(filename);
@@ -332,61 +332,10 @@ struct Model* OLLoad(const char* filename)
 	return model;
 }
 
-struct Mesh* MeshNew(void)
-{
-	const size_t bytes = sizeof(struct Mesh);
-	struct Mesh* mesh = (Mesh*) malloc(bytes);
-	memset(mesh, 0, bytes);
-	return mesh;
-}
-
-void MeshFree(struct Mesh* mesh)
-{
-	MeshDeinit(mesh);
-	free(mesh);
-}
-
-void MeshDeinit(struct Mesh* mesh)
-{
-	free(mesh->Name);
-	free(mesh->Normals);
-	free(mesh->Positions);
-	free(mesh->TexCoords);
-	free(mesh->Faces);
-}
-
-struct Model* ModelNew(void)
-{
-	const size_t bytes = sizeof(struct Model);
-	struct Model* model = (Model*) malloc(bytes);
-	memset(model, 0, bytes);
-	return model;
-}
-
-void ModelFree(struct Model* model)
-{
-	ModelDeinit(model);
-	free(model);
-}
-
-void ModelDeinit(struct Model* model)
-{
-	free(model->Directory);
-	for (uint32_t i = 0; i < model->NumMeshes; ++i)
-	{
-		MeshDeinit(model->Meshes + i);
-	}
-	free(model->Meshes);
-}
-
 Mesh::Mesh():
-	Name(nullptr),
-	Positions(nullptr),
-	NumPositions(0),
-	TexCoords(nullptr),
-	NumTexCoords(0),
-	Normals(nullptr),
-	NumNormals(0),
-	Faces(nullptr),
-	NumFaces(0)
+	Name(),
+	Positions(),
+	TexCoords(),
+	Normals(),
+	Faces()
 {}
