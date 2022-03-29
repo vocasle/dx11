@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <stdint.h>
+#include <vector>
 
 #include <Windows.h>
 
@@ -21,12 +22,10 @@ enum Keys
 
 struct Keyboard
 {
-	WPARAM* Keys;
-	uint32_t* States;
+	Keyboard();
+	std::vector<WPARAM> Keys;
+	std::vector<uint32_t> States;
 };
-
-void KeyboardInit(struct Keyboard* keyboard);
-void KeyboardDeinit(struct Keyboard* keyboard);
 
 void KeyboardOnKeyDown(struct Keyboard* keyboard, WPARAM wParam);
 void KeyboardOnKeyUp(struct Keyboard* keyboard, WPARAM wParam);

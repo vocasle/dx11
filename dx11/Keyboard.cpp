@@ -1,29 +1,17 @@
 ﻿#include "Keyboard.h"
 
 void KeyboardInit(struct Keyboard* keyboard)
-{
-	keyboard->Keys = (WPARAM*) malloc(sizeof(WPARAM) * Keys_Num);
-	keyboard->States = (uint32_t*) malloc(sizeof(uint32_t) * Keys_Num);
-	memset(keyboard->States, 0, sizeof(uint32_t) * Keys_Num);
-	WPARAM* keys = keyboard->Keys;
-	keys[0] = Keys_W;
-	keys[1] = Keys_A;
-	keys[2] = Keys_S;
-	keys[3] = Keys_D;
-	keys[4] = Keys_Up;
-	keys[5] = Keys_Left;
-	keys[6] = Keys_Down;
-	keys[7] = Keys_Right;
-	keys[8] = Keys_Plus;
-	keys[9] = Keys_Minus;
-}
-
-void KeyboardDeinit(struct Keyboard* keyboard)
-{
-	free(keyboard->Keys);
-	free(keyboard->States);
-	keyboard->Keys = NULL;
-	keyboard->States = NULL;
+{	
+	keyboard->Keys[0] = Keys_W;
+	keyboard->Keys[1] = Keys_A;
+	keyboard->Keys[2] = Keys_S;
+	keyboard->Keys[3] = Keys_D;
+	keyboard->Keys[4] = Keys_Up;
+	keyboard->Keys[5] = Keys_Left;
+	keyboard->Keys[6] = Keys_Down;
+	keyboard->Keys[7] = Keys_Right;
+	keyboard->Keys[8] = Keys_Plus;
+	keyboard->Keys[9] = Keys_Minus;
 }
 
 void KeyboardOnKeyDown(struct Keyboard* keyboard, WPARAM wParam)
@@ -58,4 +46,11 @@ uint32_t KeyboardIsKeyDown(const struct Keyboard* keyboard, WPARAM key)
 		}
 	}
 	return 0;
+}
+
+Keyboard::Keyboard():
+	Keys(Keys_Num),
+	States(Keys_Num)
+{
+	KeyboardInit(this);
 }

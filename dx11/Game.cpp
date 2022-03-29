@@ -555,7 +555,6 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	DRCreateDeviceResources(game->DR);
 	DRCreateWindowSizeDependentResources(game->DR);
 	TimerInitialize(&game->TickTimer);
-	KeyboardInit(&game->Keyboard);
 	MouseInit(&game->Mouse, game->DR->BackbufferWidth, game->DR->BackbufferHeight);
 	Vec3D cameraPos = { 0.0f, 0.0f, -5.0f };
 	CameraInit(&game->Cam, &cameraPos, &game->Keyboard, &game->Mouse);
@@ -717,7 +716,6 @@ Game::~Game()
 	COM_FREE(PhongPS);
 	COM_FREE(LightPS);
 	RenderDataDeinit(&RenderData);
-	KeyboardDeinit(&Keyboard);
 	DRFree(DR);
 	for (Model* model : Models)
 	{
