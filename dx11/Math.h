@@ -1,29 +1,36 @@
 #pragma once
 #include <stdint.h>
 
-typedef struct Vec2D
+struct Vec2D
 {
+	Vec2D() : X(0.0f), Y(0.0f) {}
+	Vec2D(float inX, float inY): X(inX), Y(inY) {}
 	float X;
 	float Y;
-} Vec2D;
+};
 
-typedef struct Vec3D
+struct Vec3D
 {
+	Vec3D() : X(0.0f), Y(0.0f), Z(0.0f) {}
+	Vec3D(float inX, float inY, float inZ) : X(inX), Y(inY), Z(inZ) {}
 	float X;
 	float Y;
 	float Z;
-} Vec3D;
+};
 
-typedef struct Vec4D
+struct Vec4D
 {
+	Vec4D() : X(0.0f), Y(0.0f), Z(0.0f), W(0.0f) {}
+	Vec4D(float inX, float inY, float inZ, float inW) : X(inX), Y(inY), Z(inZ), W(inW) {}
 	float X;
 	float Y;
 	float Z;
 	float W;
-} Vec4D;
+};
 
-typedef struct Mat3X3
+struct Mat3X3
 {
+	Mat3X3();
 	union
 	{
 		struct
@@ -35,10 +42,11 @@ typedef struct Mat3X3
 		Vec3D V[3];
 		float A[3][3];
 	};
-} Mat3X3;
+};
 
-typedef struct Mat4X4
+struct Mat4X4
 {
+	Mat4X4();
 	union
 	{
 		struct
@@ -51,7 +59,7 @@ typedef struct Mat4X4
 		Vec4D V[4];
 		float A[4][4];
 	};
-} Mat4X4;
+};
 
 // *** 2D vector math ***
 Vec2D MathVec2DZero(void);
