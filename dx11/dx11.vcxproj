@@ -148,7 +148,7 @@
     <ClCompile>
       <WarningLevel>EnableAllWarnings</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;MATH_TEST;REDIRECT_IO_TO_CONSOLE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;MATH_TEST;_CRTDBG_MAP_ALLOC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAs>CompileAsCpp</CompileAs>
       <LanguageStandard_C>stdc17</LanguageStandard_C>

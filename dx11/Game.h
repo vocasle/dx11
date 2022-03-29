@@ -10,6 +10,9 @@
 #include "objloader.h"
 #include "Renderer.h"
 
+#include <vector>
+#include <string>
+
 #define MODEL_PULL 10
 #define TEXTURE_PULL 4
 
@@ -86,8 +89,7 @@ struct Game
 	ID3D11Buffer* IndexBuffer;
 	ID3D11InputLayout* InputLayout;
 	ID3D11SamplerState* DefaultSampler;
-	struct Model** Models;
-	uint32_t NumModels;
+	std::vector<Model*> Models;
 	uint32_t NumMeshes;
 	Timer TickTimer;
 	PerFrameConstants PerFrameConstants;

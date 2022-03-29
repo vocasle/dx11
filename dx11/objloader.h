@@ -52,10 +52,9 @@ struct Mesh
 
 struct Model
 {
-	Model(): Meshes(nullptr), NumMeshes(0), Directory(nullptr) {}
-	struct Mesh* Meshes;
-	uint32_t NumMeshes;
-	char* Directory;
+	Model(): Meshes(), Directory() {}
+	std::vector<Mesh> Meshes;
+	std::string Directory;
 };
 
 struct Model* OLLoad(const char* filename);

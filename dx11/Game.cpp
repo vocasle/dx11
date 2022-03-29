@@ -233,14 +233,14 @@ static void GameUpdatePerFrameConstants(Game* game)
 		game->RenderData.VSConstBuffers[0]);
 }
 
-static struct Mesh* GameFindMeshByName(Game* game, const char* name, size_t* indexOffset)
+static const struct Mesh* GameFindMeshByName(Game* game, const char* name, size_t* indexOffset)
 {
-	for (uint32_t i = 0; i < game->NumModels; ++i)
+	for (uint32_t i = 0; i < game->Models.size(); ++i)
 	{
 		const struct Model* model = game->Models[i];
-		for (uint32_t j = 0; j < model->NumMeshes; ++j)
+		for (uint32_t j = 0; j < model->Meshes.size(); ++j)
 		{
-			struct Mesh* mesh = model->Meshes + j;
+			const struct Mesh* mesh = &model->Meshes[0] + j;
 			if (strcmp(mesh->Name.c_str(), name) == 0)
 			{
 				return mesh;
@@ -350,21 +350,21 @@ static void GameCreatePerFrameCB(Game* game)
 
 static void GameLoadModel(Game* game, const char* filename)
 {
-	assert(game->NumModels + 1 <= MODEL_PULL && "Mamimum models already loaded");
+	assert(game->Models.size() <= MODEL_PULL && "Mamimum models already loaded");
 	struct Model* model = OLLoad(filename);
 	assert(model && "Failed to load model");
-	game->NumMeshes += model->NumMeshes;
-	game->Models[game->NumModels++] = model;
+	game->NumMeshes += model->Meshes.size();
+	game->Models.push_back(model);
 }
 
 static void GameCreateSharedBuffers(Game* game)
 {
 	size_t numFaces = 0;
-	for (uint32_t j = 0; j < game->NumModels; ++j)
+	for (uint32_t j = 0; j < game->Models.size(); ++j)
 	{
-		for (uint32_t i = 0; i < game->Models[j]->NumMeshes; ++i)
+		for (uint32_t i = 0; i < game->Models[j]->Meshes.size(); ++i)
 		{
-			struct Mesh* mesh = game->Models[j]->Meshes + i;
+			struct Mesh* mesh = &game->Models[j]->Meshes[0] + i;
 			numFaces += mesh->Faces.size();
 		}
 	}
@@ -381,12 +381,12 @@ static void GameCreateSharedBuffers(Game* game)
 	size_t normOffs = 0;
 	size_t tcOffs = 0;
 
-	for (uint32_t k = 0; k < game->NumModels; ++k)
+	for (uint32_t k = 0; k < game->Models.size(); ++k)
 	{
 		struct Model* model = game->Models[k];
-		for (uint32_t i = 0; i < model->NumMeshes; ++i)
+		for (uint32_t i = 0; i < model->Meshes.size(); ++i)
 		{
-			const struct Mesh* mesh = model->Meshes + i;
+			const struct Mesh* mesh = &model->Meshes[0] + i;
 			for (uint32_t j = 0; j < mesh->Faces.size(); ++j)
 			{
 				const struct Face* face = &model->Meshes[i].Faces[0] + j;
@@ -690,8 +690,7 @@ Game::Game() :
 	IndexBuffer(nullptr),
 	InputLayout(nullptr),
 	DefaultSampler(nullptr),
-	Models(new Model* [MODEL_PULL]),
-	NumModels(0),
+	Models(),
 	NumMeshes(0),
 	TickTimer{},
 	PerFrameConstants{},
@@ -704,6 +703,7 @@ Game::Game() :
 	RenderData{},
 	Renderer{}
 {
+	Models.reserve(MODEL_PULL);
 }
 
 Game::~Game()
@@ -719,11 +719,10 @@ Game::~Game()
 	RenderDataDeinit(&RenderData);
 	KeyboardDeinit(&Keyboard);
 	DRFree(DR);
-	for (uint32_t i = 0; i < NumModels; ++i)
+	for (Model* model : Models)
 	{
-		//ModelFree(Models[i]);
+		delete model;
 	}
-	free(Models);
 
 	DRReportLiveObjects();
 }
