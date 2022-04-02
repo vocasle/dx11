@@ -75,6 +75,9 @@
     <ClCompile Include="Renderer.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -120,6 +123,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Renderer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSystem.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
