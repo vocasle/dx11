@@ -197,8 +197,9 @@ void GameUpdate(Game* game)
 	game->gProjMat = MathMat4X4PerspectiveFov(MathToRadians(45.0f), width / height, 0.1f, 100.0f);
 	
 	game->PerFrameConstants.World = game->gWorldMat;
-	game->PerFrameConstants.View = game->gViewMat;
-	game->PerFrameConstants.Proj = game->gProjMat;
+	game->PerFrameConstants.WorldViewProj = game->gWorldMat * game->gViewMat * game->gProjMat;
+	game->PerFrameConstants.WorldInvTranspose = MathMat4X4Inverse(&game->gWorldMat);
+	MathMat4X4Transpose(&game->PerFrameConstants.WorldInvTranspose);
 
 	GameUpdatePerFrameConstants(game);
 
@@ -280,6 +281,10 @@ static void GameRenderNew(Game* game)
 		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
 		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->RenderData.LightingData.PL.Position);
 		game->PerFrameConstants.World = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
+		game->PerFrameConstants.WorldInvTranspose = MathMat4X4Inverse(&game->PerFrameConstants.World);
+		MathMat4X4Inverse(&game->PerFrameConstants.WorldInvTranspose);
+		game->PerFrameConstants.WorldViewProj = game->PerFrameConstants.World * game->gViewMat * game->gProjMat;
+		
 		GameUpdatePerFrameConstants(game);
 	}
 

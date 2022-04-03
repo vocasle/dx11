@@ -16,12 +16,12 @@
 #define MODEL_PULL 10
 #define TEXTURE_PULL 4
 
-typedef struct PerFrameConstants
+struct PerFrameConstants
 {
 	Mat4X4 World;
-	Mat4X4 View;
-	Mat4X4 Proj;
-} PerFrameConstants;
+	Mat4X4 WorldViewProj;
+	Mat4X4 WorldInvTranspose;
+};
 
 struct PointLight
 {
