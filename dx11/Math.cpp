@@ -30,6 +30,11 @@ float MathRandom(float min, float max)
 	return ((float)rand() / (float)RAND_MAX) * (max - min) + min;
 }
 
+Mat4X4 operator*(const Mat4X4& lhs, const Mat4X4& rhs)
+{
+	return MathMat4X4MultMat4X4ByMat4X4(&lhs, &rhs);
+}
+
 Vec2D MathVec2DZero(void)
 {
 	const Vec2D vec = { 0.0f, 0.0f };

@@ -63,6 +63,8 @@ struct Mat4X4
 	};
 };
 
+Mat4X4 operator*(const Mat4X4& lhs, const Mat4X4& rhs);
+
 // *** 2D vector math ***
 Vec2D MathVec2DZero(void);
 
