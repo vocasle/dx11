@@ -399,6 +399,34 @@ Mat4X4 MathMat4X4PerspectiveFov(float fovAngleY, float aspectRatio, float nearZ,
 	return res;
 }
 
+static float MathMat4X4Minor(const Mat4X4* mat, int r0, int r1, int r2, int c0, int c1, int c2)
+{
+	return mat->M[4 * r0 + c0] * (mat->M[4 * r1 + c1] * mat->M[4 * r2 + c2] - mat->M[4 * r2 + c1] * mat->M[4 * r1 + c2]) -
+		mat->M[4 * r0 + c1] * (mat->M[4 * r1 + c0] * mat->M[4 * r2 + c2] - mat->M[4 * r2 + c0] * mat->M[4 * r1 + c2]) +
+		mat->M[4 * r0 + c2] * (mat->M[4 * r1 + c0] * mat->M[4 * r2 + c1] - mat->M[4 * r2 + c0] * mat->M[4 * r1 + c1]);
+}
+
+
+static void MathMat4X4Adjoint(const Mat4X4* m, Mat4X4* adjOut)
+{
+	adjOut->M[0] = MathMat4X4Minor(m, 1, 2, 3, 1, 2, 3); adjOut->M[1] = -MathMat4X4Minor(m, 0, 2, 3, 1, 2, 3); adjOut->M[2] = MathMat4X4Minor(m, 0, 1, 3, 1, 2, 3); adjOut->M[3] = -MathMat4X4Minor(m, 0, 1, 2, 1, 2, 3);
+	adjOut->M[4] = -MathMat4X4Minor(m, 1, 2, 3, 0, 2, 3); adjOut->M[5] = MathMat4X4Minor(m, 0, 2, 3, 0, 2, 3); adjOut->M[6] = -MathMat4X4Minor(m, 0, 1, 3, 0, 2, 3); adjOut->M[7] = MathMat4X4Minor(m, 0, 1, 2, 0, 2, 3);
+	adjOut->M[8] = MathMat4X4Minor(m, 1, 2, 3, 0, 1, 3); adjOut->M[9] = -MathMat4X4Minor(m, 0, 2, 3, 0, 1, 3); adjOut->M[10] = MathMat4X4Minor(m, 0, 1, 3, 0, 1, 3); adjOut->M[11] = -MathMat4X4Minor(m, 0, 1, 2, 0, 1, 3);
+	adjOut->M[12] = -MathMat4X4Minor(m, 1, 2, 3, 0, 1, 2); adjOut->M[13] = MathMat4X4Minor(m, 0, 2, 3, 0, 1, 2); adjOut->M[14] = -MathMat4X4Minor(m, 0, 1, 3, 0, 1, 2); adjOut->M[15] = MathMat4X4Minor(m, 0, 1, 2, 0, 1, 2);
+}
+
+Mat4X4 MathMat4X4Inverse(const Mat4X4* mat)
+{
+	Mat4X4 inverse = MathMat4X4Identity();
+	MathMat4X4Adjoint(mat, &inverse);
+	float invDet = 1.0f / MathMat4X4Determinant(mat);
+	for (uint32_t i = 0; i < 16; ++i)
+	{
+		inverse.M[i] = inverse.M[i] * invDet;
+	}
+	return inverse;
+}
+
 float MathClamp(float min, float max, float v)
 {
 	if (v > max)

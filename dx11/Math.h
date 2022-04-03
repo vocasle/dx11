@@ -41,6 +41,7 @@ struct Mat3X3
 		};
 		Vec3D V[3];
 		float A[3][3];
+		float M[9];
 	};
 };
 
@@ -58,6 +59,7 @@ struct Mat4X4
 		};
 		Vec4D V[4];
 		float A[4][4];
+		float M[16];
 	};
 };
 
@@ -180,6 +182,8 @@ Mat4X4 MathMat4X4RotateX(float angle);
 Mat4X4 MathMat4X4RotateY(float angle);
 
 Mat4X4 MathMat4X4PerspectiveFov(float fovAngleY, float aspectRatio, float nearZ, float farZ);
+
+Mat4X4 MathMat4X4Inverse(const Mat4X4* mat);
 
 // *** misc math helpers ***
 float MathClamp(float min, float max, float v);
