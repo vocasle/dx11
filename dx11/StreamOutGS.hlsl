@@ -1,14 +1,5 @@
-#define PT_EMITTER 0
-#define PT_FLARE 1
+#include "ParticleSystem.hlsli"
 
-struct Particle
-{
-	float3 InitPosW : POSITION;
-	float3 InitVelW : VELOCITY;
-	float2 SizeW : SIZE;
-	float Age : AGE;
-	uint Type : TYPE;
-};
 
 cbuffer cbPerFrame : register(b0)
 {
@@ -31,15 +22,15 @@ float3 RandomUnitVec3(float offset)
 
 [maxvertexcount(2)]
 void main(
-	point Particle p[1],
+	point Particle gin[1],
 	inout PointStream<Particle> ptStream
 )
 {
-	p[0].Age += gTimeStep;
+	gin[0].Age += gTimeStep;
 
-	if (p[0].Type == PT_EMITTER)
+	if (gin[0].Type == PT_EMITTER)
 	{
-		if (p[0].Age > 0.005f)
+		if (gin[0].Age > 0.005f)
 		{
 			float3 vRandom = RandomUnitVec3(0.0f);
 			vRandom.x *= 0.5f;
@@ -54,16 +45,16 @@ void main(
 
 			ptStream.Append(part);
 
-			p[0].Age = 0.0f;
+			gin[0].Age = 0.0f;
 		}
 
-		ptStream.Append(p[0]);
+		ptStream.Append(gin[0]);
 	}
 	else
 	{
-		if (p[0].Age <= 1.0f)
+		if (gin[0].Age <= 1.0f)
 		{
-			ptStream.Append(p[0]);
+			ptStream.Append(gin[0]);
 		}
 	}
 }

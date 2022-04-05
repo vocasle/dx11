@@ -13,14 +13,20 @@
     <FxCompile Include="VertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="ParticlePS.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="DrawVS.hlsl">
+      <Filter>Shaders\ParticleSystem</Filter>
+    </FxCompile>
+    <FxCompile Include="DrawGS.hlsl">
+      <Filter>Shaders\ParticleSystem</Filter>
     </FxCompile>
     <FxCompile Include="StreamOutVS.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\ParticleSystem</Filter>
     </FxCompile>
     <FxCompile Include="StreamOutGS.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\ParticleSystem</Filter>
+    </FxCompile>
+    <FxCompile Include="ParticlePS.hlsl">
+      <Filter>Shaders\ParticleSystem</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +49,9 @@
     </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{420ae037-8a99-4716-bd40-26233b539371}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\ParticleSystem">
+      <UniqueIdentifier>{57174213-c759-4bf9-9ea2-1a91e04d955b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -141,6 +150,9 @@
   <ItemGroup>
     <None Include="LightingHelper.hlsli">
       <Filter>Shaders</Filter>
+    </None>
+    <None Include="ParticleSystem.hlsli">
+      <Filter>Shaders\ParticleSystem</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -1,8 +1,9 @@
 struct PSIn
 {
-	float4 Pos :SV_POSITION;
+	float4 PosH : SV_POSITION;
 	float3 Normal : NORMAL;
 	float2 TexCoords : TEXCOORDS;
+	float3 PosW : POSITION;
 };
 
 sampler defaultSampler : register(s0);
