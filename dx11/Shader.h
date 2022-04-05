@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d11.h>
+#include <vector>
 
 enum class ShaderType
 {
@@ -16,15 +17,19 @@ public:
 	~Shader();
 
 	template <typename T>
-	T* GetAs() const;
+	T GetAs() const;
+
+	const void* GetByteCode() const;
+	size_t GetByteCodeLen() const;
 
 private:
 	IUnknown* m_shader;
 	ShaderType m_type;
+	std::vector<uint8_t> m_bytecode;
 };
 
 template<typename T>
-inline T* Shader::GetAs() const
+inline T Shader::GetAs() const
 {
-	return reinterpret_cast<T*>(m_shader);
+	return reinterpret_cast<T>(m_shader);
 }
