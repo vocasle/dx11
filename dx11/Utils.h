@@ -7,6 +7,8 @@
 #include <d3d11.h>
 #include <dinput.h>
 #include <stdint.h>
+#include <vector>
+#include <string>
 
 static const WORD MAX_CONSOLE_LINES = 500;
 
@@ -16,13 +18,13 @@ void UtilsFatalError(const char* fmt, ...);
 
 const char* UtilsFormatStr(const char* fmt, ...);
 
-#define UTILS_FATAL_ERROR(msg, ...) UtilsFatalError("ERROR: %s:%d: %s", __FILE__, __LINE__, UtilsFormatStr(msg, __VA_ARGS__))
+#define UTILS_FATAL_ERROR(msg, ...) UtilsFatalError("ERROR: %s:%d: %s\n", __FILE__, __LINE__, UtilsFormatStr(msg, __VA_ARGS__))
 
 int UtilStrFindLastChar(const char* str, const char ch);
 
 void UtilsStrSub(const char* str, uint32_t start, uint32_t end, char out[], uint32_t maxSize);
 
-unsigned char* UtilsReadData(const char* filepath, unsigned int* bufferSize);
+std::vector<uint8_t> UtilsReadData(const char* filepath);
 
 /* Dynamic Array */
 
@@ -79,3 +81,5 @@ unsigned char* UtilsReadData(const char* filepath, unsigned int* bufferSize);
 // COM helpers
 
 #define COM_FREE(This) (This->Release())
+
+std::wstring UtilsString2WideString(const std::string& str);

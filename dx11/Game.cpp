@@ -445,15 +445,12 @@ void GameGenerateRandomOffsets(Game* game)
 
 static void GameCreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps)
 {
-	unsigned int bufferSize = 0;
-	unsigned char* bytes = UtilsReadData(filepath, &bufferSize);
+	std::vector<uint8_t> bytes = UtilsReadData(filepath);
 
-	if (FAILED(device->CreatePixelShader(bytes, bufferSize, NULL, ps)))
+	if (FAILED(device->CreatePixelShader(&bytes[0], bytes.size(), NULL, ps)))
 	{
 		UTILS_FATAL_ERROR("Failed to create pixel shader from %s", filepath);
 	}
-
-	free(bytes);
 }
 
 static void GameCreateInputLayout(ID3D11Device* device, ID3D11InputLayout** il, unsigned char* bytes, size_t bufferSize)
@@ -496,15 +493,13 @@ static void GameCreateInputLayout(ID3D11Device* device, ID3D11InputLayout** il, 
 
 static void GameCreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs, ID3D11InputLayout** il)
 {
-	unsigned int bufferSize = 0;
-	unsigned char* bytes = UtilsReadData(filepath, &bufferSize);
+	std::vector<uint8_t> bytes = UtilsReadData(filepath);
 
-	if (FAILED(device->CreateVertexShader(bytes, bufferSize, NULL, vs)))
+	if (FAILED(device->CreateVertexShader(&bytes[0], bytes.size(), NULL, vs)))
 	{
 		UTILS_FATAL_ERROR("Failed to create vertex shader from %s", filepath);
 	}
-	GameCreateInputLayout(device, il, bytes, bufferSize);
-	free(bytes);
+	GameCreateInputLayout(device, il, &bytes[0], bytes.size());
 }
 
 static void GameCreateVertexBuffer(const void* vertexData, const uint32_t numVertices, ID3D11Device* device, ID3D11Buffer** vb)

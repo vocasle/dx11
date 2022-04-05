@@ -66,7 +66,7 @@ void UtilsStrSub(const char* str, uint32_t start, uint32_t end, char out[], uint
     out[max] = 0;
 }
 
-unsigned char* UtilsReadData(const char* filepath, unsigned int* bufferSize)
+std::vector<uint8_t> UtilsReadData(const char* filepath)
 {
     FILE* f;
     fopen_s(&f, filepath, "rb");
@@ -80,9 +80,16 @@ unsigned char* UtilsReadData(const char* filepath, unsigned int* bufferSize)
     {
         UTILS_FATAL_ERROR("Failed to get file stats from %s", filepath);
     }
-    unsigned char* bytes = (unsigned char*) malloc(sb.st_size);
-    fread(bytes, sb.st_size, 1, f);
+    std::vector<uint8_t> bytes(sb.st_size);
+    fread(&bytes[0], sb.st_size, 1, f);
     fclose(f);
-    *bufferSize = sb.st_size;
     return bytes;
+}
+
+std::wstring UtilsString2WideString(const std::string& str)
+{
+    int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
+    std::wstring wstrTo(size_needed, 0);
+    MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], size_needed);
+    return wstrTo;
 }
