@@ -160,5 +160,6 @@
     <None Include="ParticleSystem.hlsli">
       <Filter>Shaders\ParticleSystem</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
