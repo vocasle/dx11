@@ -283,6 +283,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="D3DHelper.h" />
     <ClInclude Include="DeviceResources.h" />
     <ClInclude Include="dx11.h" />
     <ClInclude Include="framework.h" />

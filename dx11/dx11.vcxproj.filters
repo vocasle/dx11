@@ -152,6 +152,9 @@
     <ClInclude Include="Shader.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="D3DHelper.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="LightingHelper.hlsli">
