@@ -80,6 +80,6 @@ std::vector<uint8_t> UtilsReadData(const char* filepath);
 
 // COM helpers
 
-#define COM_FREE(This) if (This) {(This)->Release();} static_assert(true, "") // this assert is to require semicolon
+#define COM_FREE(This) if (This) { (This)->Release(); (This) = nullptr; } static_assert(true, "") // this assert is to require semicolon
 
 std::wstring UtilsString2WideString(const std::string& str);
