@@ -6,6 +6,8 @@
 
 #include <windowsx.h>
 
+#include <DirectXTex.h>
+
 struct Vertex
 {
 	Vec3D Position;
@@ -303,11 +305,66 @@ static void GameRenderNew(Game* game)
 	RPresent(r);
 }
 
+static void GameRenderParticles(struct Game* game)
+{
+	struct Renderer* r = &game->Renderer;
+
+	RClear(r);
+
+	RBindPixelShader(r, game->PhongPS);
+	RBindVertexShader(r, game->VS);
+	RBindConstantBuffers(r, BindTargets_VS, game->RenderData.VSConstBuffers, 1);
+	RBindShaderResources(r, BindTargets_PS, game->RenderData.SRVs, TEXTURE_PULL);
+	RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
+
+	size_t offset = 0;
+	const struct Mesh* cube = GameFindMeshByName(game, "Cube", &offset);
+
+	RDrawIndexed(r,
+		game->IndexBuffer,
+		game->VertexBuffer,
+		sizeof(struct Vertex),
+		cube->Faces.size(),
+		offset,
+		offset);
+
+	// Light properties
+	{
+		const Vec3D scale = { 0.5f, 0.5f, 0.5f };
+		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
+		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->RenderData.LightingData.PL.Position);
+		game->PerFrameConstants.World = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
+		game->PerFrameConstants.WorldInvTranspose = MathMat4X4Inverse(&game->PerFrameConstants.World);
+		MathMat4X4Inverse(&game->PerFrameConstants.WorldInvTranspose);
+		game->PerFrameConstants.WorldViewProj = game->PerFrameConstants.World * game->gViewMat * game->gProjMat;
+
+		GameUpdatePerFrameConstants(game);
+	}
+
+	RBindPixelShader(r, game->LightPS);
+	RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
+	offset = 0;
+	const struct Mesh* sphere = GameFindMeshByName(game, "Sphere", &offset);
+	RDrawIndexed(r,
+		game->IndexBuffer,
+		game->VertexBuffer,
+		sizeof(struct Vertex),
+		sphere->Faces.size(),
+		offset,
+		offset);
+
+	game->m_ParticleSystem.SetCameraPos(game->Cam.CameraPos);
+	game->m_ParticleSystem.Draw(game->DR->Context, game->Cam);
+
+	RPresent(r);
+}
+
 void GameTick(Game* game)
 {
 	TimerTick(&game->TickTimer);
 	GameUpdate(game);
 	GameRenderNew(game);
+	//GameRenderParticles(game);
 }
 
 static void ErrorDescription(HRESULT hr)
@@ -545,7 +602,7 @@ static void RenderDataSetSRV(struct RenderData* rd)
 	rd->SRVs[2] = rd->GlossTexture.SRV;
 	rd->SRVs[3] = rd->NormalTexture.SRV;
 }
-
+static ID3D11ShaderResourceView* GameCreateRandomTexture1DSRV(ID3D11Device* device);
 void GameInitialize(Game* game, HWND hWnd, int width, int height)
 {
 #ifdef MATH_TEST
@@ -595,6 +652,20 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	RSetInputLayout(&game->Renderer, game->InputLayout);
 	RSetSamplerState(&game->Renderer, game->DefaultSampler);
 	RenderDataSetSRV(&game->RenderData);
+
+	// Particle System Init
+	game->m_ParticleSystemData = new ParticleSystemData(game->DR->Device);
+	game->m_ParticleSystem.InitShaders(game->m_ParticleSystemData->PS.GetAs<ID3D11PixelShader*>(),
+		game->m_ParticleSystemData->DrawGS.GetAs<ID3D11GeometryShader*>(),
+		game->m_ParticleSystemData->StreamOutGS.GetAs<ID3D11GeometryShader*>(),
+		game->m_ParticleSystemData->DrawVS.GetAs<ID3D11VertexShader*>(),
+		game->m_ParticleSystemData->StreamOutVS.GetAs<ID3D11VertexShader*>());
+	game->m_ParticleSystem.CreateInputLayout(game->DR->Device, 
+		game->m_ParticleSystemData->DrawVS.GetByteCode(),
+		game->m_ParticleSystemData->DrawVS.GetByteCodeLen());
+	GameLoadTextureFromFile(game->DR, "assets/textures/snow.dds", &game->m_ParticleSystemData->SnowTex);
+	//game->m_ParticleSystemData->RandomTex.SRV = GameCreateRandomTexture1DSRV(game->DR->Device);
+	game->m_ParticleSystem.Init(game->DR->Device, game->m_ParticleSystemData->SnowTex.SRV, game->m_ParticleSystemData->RandomTex.SRV, 100);
 }
 
 void GameGetDefaultSize(Game* game, int* width, int* height)
@@ -625,10 +696,43 @@ void GameOnMouseMove(Game* game, uint32_t message, WPARAM wParam, LPARAM lParam)
 
 void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct Texture* texture)
 {
+	const std::string fname = filename;
+	if (fname.ends_with(".dds"))
+	{
+		using namespace DirectX;
+
+		TexMetadata info = {};
+		ScratchImage image = {};
+		if (FAILED(LoadFromDDSFile(UtilsString2WideString(filename).c_str(), DDS_FLAGS_NONE, &info, image)))
+		{
+			UTILS_FATAL_ERROR("Failed to load texture from %s", filename);
+		}
+
+		// This line reports life object leaks. I hate to use 3rd party libs, but I have no time to write my own dds importer library
+		if (FAILED(CreateShaderResourceView(dr->Device, image.GetImages(), image.GetImageCount(), info, &texture->SRV)))
+		{
+			UTILS_FATAL_ERROR("Failed to create shader resource view from %s", filename);
+		}
+		
+		image.Release();
+		return;
+	}
+
 	int width = 0;
 	int height = 0;
 	int channelsInFile = 0;
 	const int desiredChannels = 4;
+
+	FILE* f = nullptr;
+	fopen_s(&f, filename, "r");
+	if (f)
+	{
+		fclose(f);
+	}
+	else
+	{
+		printf("Shit");
+	}
 
 	unsigned char* bytes = stbi_load(filename, &width, &height, &channelsInFile, desiredChannels);
 	if (!bytes)
@@ -663,7 +767,6 @@ void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct T
 
 	{
 		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		memset(&srvDesc, 0, sizeof(srvDesc));
 		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = -1;
@@ -700,7 +803,9 @@ Game::Game() :
 	gViewMat{},
 	gProjMat{},
 	RenderData{},
-	Renderer{}
+	Renderer{},
+	m_ParticleSystem{},
+	m_ParticleSystemData{nullptr}
 {
 	Models.reserve(MODEL_PULL);
 }
@@ -721,6 +826,73 @@ Game::~Game()
 	{
 		delete model;
 	}
-
+	delete m_ParticleSystemData;
 	DRReportLiveObjects();
+}
+
+static ID3D11ShaderResourceView* GameCreateRandomTexture1DSRV(ID3D11Device* device)
+{
+
+	std::vector<Vec4D> randomValues(1024);
+
+	for (uint32_t i = 0; i < 1024; ++i)
+	{
+		randomValues[i].X = MathRandom(-1.0f, 1.0f);
+		randomValues[i].Y = MathRandom(-1.0f, 1.0f);
+		randomValues[i].Z = MathRandom(-1.0f, 1.0f);
+		randomValues[i].W = MathRandom(-1.0f, 1.0f);
+	}
+
+	D3D11_SUBRESOURCE_DATA initData = {};
+	initData.pSysMem = &randomValues[0];
+	initData.SysMemPitch = 1024 * sizeof(Vec4D);
+	initData.SysMemSlicePitch = 0;
+
+	D3D11_TEXTURE1D_DESC texDesc = {};
+	texDesc.Width = 1024;
+	texDesc.MipLevels = 1;
+	texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	texDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	texDesc.CPUAccessFlags = 0;
+	texDesc.MiscFlags = 0;
+	texDesc.ArraySize = 1;
+
+	ID3D11Texture1D* randomTex = 0;
+	if (FAILED(device->CreateTexture1D(&texDesc, &initData, &randomTex)))
+	{
+		UTILS_FATAL_ERROR("Failed to create texture 1D");
+	}
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
+	viewDesc.Format = texDesc.Format;
+	viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
+	viewDesc.Texture1D.MipLevels = texDesc.MipLevels;
+	viewDesc.Texture1D.MostDetailedMip = 0;
+
+	ID3D11ShaderResourceView* randomTexSRV = 0;
+	if (FAILED(device->CreateShaderResourceView(randomTex, &viewDesc, &randomTexSRV)))
+	{
+		UTILS_FATAL_ERROR("Failed to create shader resource view");
+	}
+
+	COM_FREE(randomTex);
+
+	return randomTexSRV;
+}
+
+ParticleSystemData::ParticleSystemData(ID3D11Device* device):
+	PS{"ParticlePS.cso", device, ShaderType::Pixel},
+	DrawVS{ "DrawVS.cso", device, ShaderType::Vertex },
+	StreamOutVS{ "StreamOutVS.cso", device, ShaderType::Vertex },
+	DrawGS{ "DrawGS.cso", device, ShaderType::Geometry },
+	StreamOutGS{ "StreamOutGS.cso", device, ShaderType::Geometry },
+	RandomTex{},
+	SnowTex{}
+{
+	
+}
+
+ParticleSystemData::~ParticleSystemData()
+{
 }

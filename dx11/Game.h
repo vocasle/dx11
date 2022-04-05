@@ -9,6 +9,8 @@
 #include "Mouse.h"
 #include "objloader.h"
 #include "Renderer.h"
+#include "ParticleSystem.h"
+#include "Shader.h"
 
 #include <vector>
 #include <string>
@@ -76,6 +78,19 @@ struct RenderData
 void RenderDataInit(struct RenderData* rd, Vec3D* cameraPos);
 void RenderDataDeinit(struct RenderData* rd);
 
+struct ParticleSystemData
+{
+	ParticleSystemData(ID3D11Device* device);
+	~ParticleSystemData();
+	Shader PS;
+	Shader DrawVS;
+	Shader StreamOutVS;
+	Shader DrawGS;
+	Shader StreamOutGS;
+	Texture RandomTex;
+	Texture SnowTex;
+};
+
 struct Game
 {
 	Game();
@@ -101,6 +116,8 @@ struct Game
 	Mat4X4 gProjMat;
 	struct RenderData RenderData;
 	struct Renderer Renderer;
+	ParticleSystem m_ParticleSystem;
+	ParticleSystemData* m_ParticleSystemData;
 };
 
 void GameTick(Game* game);
