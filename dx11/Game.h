@@ -50,6 +50,8 @@ struct LightingData
 
 struct Texture
 {
+	Texture();
+	~Texture();
 	ID3D11Texture2D* Resource;
 	ID3D11ShaderResourceView* SRV;
 };

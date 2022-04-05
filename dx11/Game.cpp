@@ -664,7 +664,7 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 		game->m_ParticleSystemData->DrawVS.GetByteCode(),
 		game->m_ParticleSystemData->DrawVS.GetByteCodeLen());
 	GameLoadTextureFromFile(game->DR, "assets/textures/snow.dds", &game->m_ParticleSystemData->SnowTex);
-	//game->m_ParticleSystemData->RandomTex.SRV = GameCreateRandomTexture1DSRV(game->DR->Device);
+	game->m_ParticleSystemData->RandomTex.SRV = GameCreateRandomTexture1DSRV(game->DR->Device);
 	game->m_ParticleSystem.Init(game->DR->Device, game->m_ParticleSystemData->SnowTex.SRV, game->m_ParticleSystemData->RandomTex.SRV, 100);
 }
 
@@ -696,8 +696,7 @@ void GameOnMouseMove(Game* game, uint32_t message, WPARAM wParam, LPARAM lParam)
 
 void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct Texture* texture)
 {
-	const std::string fname = filename;
-	if (fname.ends_with(".dds"))
+	if (std::string(filename).ends_with(".dds"))
 	{
 		using namespace DirectX;
 
@@ -708,7 +707,6 @@ void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct T
 			UTILS_FATAL_ERROR("Failed to load texture from %s", filename);
 		}
 
-		// This line reports life object leaks. I hate to use 3rd party libs, but I have no time to write my own dds importer library
 		if (FAILED(CreateShaderResourceView(dr->Device, image.GetImages(), image.GetImageCount(), info, &texture->SRV)))
 		{
 			UTILS_FATAL_ERROR("Failed to create shader resource view from %s", filename);
@@ -895,4 +893,17 @@ ParticleSystemData::ParticleSystemData(ID3D11Device* device):
 
 ParticleSystemData::~ParticleSystemData()
 {
+	UtilsDebugPrint("~ParticleSystemData()");
+}
+
+Texture::Texture():
+	Resource{nullptr},
+	SRV{ nullptr }
+{
+}
+
+Texture::~Texture()
+{
+	COM_FREE(SRV);
+	COM_FREE(Resource);
 }
