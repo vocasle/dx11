@@ -84,13 +84,6 @@ struct ParticleSystemData
 {
 	ParticleSystemData(ID3D11Device* device);
 	~ParticleSystemData();
-	Shader PS;
-	Shader DrawVS;
-	Shader StreamOutVS;
-	Shader DrawGS;
-	Shader StreamOutGS;
-	Texture RandomTex;
-	Texture SnowTex;
 };
 
 struct Game

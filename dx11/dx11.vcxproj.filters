@@ -13,21 +13,6 @@
     <FxCompile Include="VertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="DrawVS.hlsl">
-      <Filter>Shaders\ParticleSystem</Filter>
-    </FxCompile>
-    <FxCompile Include="DrawGS.hlsl">
-      <Filter>Shaders\ParticleSystem</Filter>
-    </FxCompile>
-    <FxCompile Include="StreamOutVS.hlsl">
-      <Filter>Shaders\ParticleSystem</Filter>
-    </FxCompile>
-    <FxCompile Include="StreamOutGS.hlsl">
-      <Filter>Shaders\ParticleSystem</Filter>
-    </FxCompile>
-    <FxCompile Include="ParticlePS.hlsl">
-      <Filter>Shaders\ParticleSystem</Filter>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">
@@ -159,9 +144,6 @@
   <ItemGroup>
     <None Include="LightingHelper.hlsli">
       <Filter>Shaders</Filter>
-    </None>
-    <None Include="ParticleSystem.hlsli">
-      <Filter>Shaders\ParticleSystem</Filter>
     </None>
     <None Include="packages.config" />
   </ItemGroup>

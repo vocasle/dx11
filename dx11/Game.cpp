@@ -353,8 +353,8 @@ static void GameRenderParticles(struct Game* game)
 		offset,
 		offset);
 
-	game->m_ParticleSystem.SetCameraPos(game->Cam.CameraPos);
-	game->m_ParticleSystem.Draw(game->DR->Context, game->Cam);
+	//game->m_ParticleSystem.SetCameraPos(game->Cam.CameraPos);
+	//game->m_ParticleSystem.Draw(game->DR->Context, game->Cam);
 
 	RPresent(r);
 }
@@ -655,17 +655,17 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 
 	// Particle System Init
 	game->m_ParticleSystemData = new ParticleSystemData(game->DR->Device);
-	game->m_ParticleSystem.InitShaders(game->m_ParticleSystemData->PS.GetAs<ID3D11PixelShader*>(),
-		game->m_ParticleSystemData->DrawGS.GetAs<ID3D11GeometryShader*>(),
-		game->m_ParticleSystemData->StreamOutGS.GetAs<ID3D11GeometryShader*>(),
-		game->m_ParticleSystemData->DrawVS.GetAs<ID3D11VertexShader*>(),
-		game->m_ParticleSystemData->StreamOutVS.GetAs<ID3D11VertexShader*>());
-	game->m_ParticleSystem.CreateInputLayout(game->DR->Device, 
-		game->m_ParticleSystemData->DrawVS.GetByteCode(),
-		game->m_ParticleSystemData->DrawVS.GetByteCodeLen());
-	GameLoadTextureFromFile(game->DR, "assets/textures/snow.dds", &game->m_ParticleSystemData->SnowTex);
-	game->m_ParticleSystemData->RandomTex.SRV = GameCreateRandomTexture1DSRV(game->DR->Device);
-	game->m_ParticleSystem.Init(game->DR->Device, game->m_ParticleSystemData->SnowTex.SRV, game->m_ParticleSystemData->RandomTex.SRV, 100);
+	//game->m_ParticleSystem.InitShaders(game->m_ParticleSystemData->PS.GetAs<ID3D11PixelShader*>(),
+	//	game->m_ParticleSystemData->DrawGS.GetAs<ID3D11GeometryShader*>(),
+	//	game->m_ParticleSystemData->StreamOutGS.GetAs<ID3D11GeometryShader*>(),
+	//	game->m_ParticleSystemData->DrawVS.GetAs<ID3D11VertexShader*>(),
+	//	game->m_ParticleSystemData->StreamOutVS.GetAs<ID3D11VertexShader*>());
+	//game->m_ParticleSystem.CreateInputLayout(game->DR->Device, 
+	//	game->m_ParticleSystemData->DrawVS.GetByteCode(),
+	//	game->m_ParticleSystemData->DrawVS.GetByteCodeLen());
+	//GameLoadTextureFromFile(game->DR, "assets/textures/snow.dds", &game->m_ParticleSystemData->SnowTex);
+	//game->m_ParticleSystemData->RandomTex.SRV = GameCreateRandomTexture1DSRV(game->DR->Device);
+	//game->m_ParticleSystem.Init(game->DR->Device, game->m_ParticleSystemData->SnowTex.SRV, game->m_ParticleSystemData->RandomTex.SRV, 100);
 }
 
 void GameGetDefaultSize(Game* game, int* width, int* height)
@@ -879,21 +879,14 @@ static ID3D11ShaderResourceView* GameCreateRandomTexture1DSRV(ID3D11Device* devi
 	return randomTexSRV;
 }
 
-ParticleSystemData::ParticleSystemData(ID3D11Device* device):
-	PS{"ParticlePS.cso", device, ShaderType::Pixel},
-	DrawVS{ "DrawVS.cso", device, ShaderType::Vertex },
-	StreamOutVS{ "StreamOutVS.cso", device, ShaderType::Vertex },
-	DrawGS{ "DrawGS.cso", device, ShaderType::Geometry },
-	StreamOutGS{ "StreamOutGS.cso", device, ShaderType::Geometry },
-	RandomTex{},
-	SnowTex{}
+ParticleSystemData::ParticleSystemData(ID3D11Device* device)
 {
 	
 }
 
 ParticleSystemData::~ParticleSystemData()
 {
-	UtilsDebugPrint("~ParticleSystemData()");
+
 }
 
 Texture::Texture():
