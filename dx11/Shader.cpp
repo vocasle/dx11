@@ -6,6 +6,13 @@
 #include <exception>
 #include <vector>
 
+Shader::Shader():
+	m_bytecode{},
+	m_shader{nullptr},
+	m_type{ShaderType::None}
+{
+}
+
 Shader::Shader(const char* filepath, ID3D11Device* device, ShaderType type):
 	m_shader(nullptr),
 	m_type(type),
@@ -35,6 +42,25 @@ Shader::Shader(const char* filepath, ID3D11Device* device, ShaderType type):
 	{
 		UTILS_FATAL_ERROR("Failed to create shader %s", filepath);
 	}
+}
+
+Shader::Shader(const Shader& shader)
+{
+	m_bytecode = shader.m_bytecode;
+	m_shader = shader.m_shader;
+	m_type = shader.m_type;
+}
+
+Shader& Shader::operator=(const Shader& shader)
+{
+	if (this != &shader)
+	{
+		COM_FREE(m_shader);
+		m_type = shader.m_type;
+		m_bytecode = shader.m_bytecode;
+		m_shader = shader.m_shader;
+	}
+	return *this;
 }
 
 Shader::~Shader()

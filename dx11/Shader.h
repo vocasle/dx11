@@ -7,13 +7,17 @@ enum class ShaderType
 {
 	Vertex,
 	Pixel,
-	Geometry
+	Geometry,
+	None
 };
 
 class Shader
 {
 public:
+	Shader();
 	Shader(const char* filepath, ID3D11Device* device, ShaderType type);
+	Shader(const Shader& shader);
+	Shader& operator=(const Shader& shader);
 	~Shader();
 
 	template <typename T>
