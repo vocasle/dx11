@@ -1,4 +1,22 @@
-float4 main( float4 pos : POSITION ) : SV_POSITION
+struct VSIn
 {
-	return pos;
+	float3 Pos : POSITION;
+	float3 Velocity : VELOCITY;
+	float Age : AGE;
+	float2 Size : SIZE;
+};
+
+struct VSOut
+{
+	float3 Pos : POSITION;
+	float3 Velocity : VELOCITY;
+	float Age : AGE;
+	float2 Size : SIZE;
+};
+
+VSOut main(VSIn vin)
+{
+	VSOut vout = vin;
+
+	return vout;
 }

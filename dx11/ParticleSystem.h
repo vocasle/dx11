@@ -16,15 +16,17 @@ private:
 		Vec3D Position;
 		Vec3D Velocity;
 		float Age;
-		float Size;
+		Vec2D Size;
 	};
 
 	struct PerFrameConstants
 	{
-		Mat4X4 View;
 		Mat4X4 Proj;
+		Mat4X4 WorldInvTranspose;
 		Mat4X4 World;
+		Mat4X4 View;
 		Vec3D CamPosW;
+		float _Pad;
 	};
 
 public:
@@ -33,9 +35,14 @@ public:
 
 	void Init(ID3D11Device* device);
 	void Draw(ID3D11DeviceContext* context);
+	void Update(const Mat4X4& inView,
+		const Mat4X4& inProj,
+		const Mat4X4& inWorld,
+		const Vec3D& inCamPosW);
 
 private:
 	void InitParticles();
+	void CreateInputLayout(ID3D11Device* device);
 
 private:
 
@@ -44,7 +51,8 @@ private:
 	Shader m_ps;
 	Shader m_gs;
 	Shader m_vs;
-	//static constexpr
-
+	ID3D11InputLayout* m_inputLayout;
+	ID3D11Buffer* m_cb;
+	PerFrameConstants m_perFrameConstants;
 
 };

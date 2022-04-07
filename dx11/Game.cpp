@@ -196,7 +196,7 @@ void GameUpdate(Game* game)
 	const float height = (float)game->DR->BackbufferHeight;
 
 	game->gViewMat = CameraGetViewMat(&game->Cam);
-	game->gProjMat = MathMat4X4PerspectiveFov(MathToRadians(45.0f), width / height, 0.1f, 100.0f);
+	game->gProjMat = MathMat4X4PerspectiveFov(MathToRadians(45.0f), width / height, 0.1f, 10.0f);
 	
 	game->PerFrameConstants.World = game->gWorldMat;
 	game->PerFrameConstants.WorldViewProj = game->gWorldMat * game->gViewMat * game->gProjMat;
@@ -207,6 +207,11 @@ void GameUpdate(Game* game)
 
 	game->RenderData.LightingData.CameraPos = game->Cam.CameraPos;
 	GameUpdateConstantBuffer(game->DR->Context, sizeof(struct LightingData), &game->RenderData.LightingData, game->RenderData.PSConstBuffers[0]);
+
+	game->m_ParticleSystem.Update(game->gViewMat,
+		game->gProjMat,
+		game->gWorldMat,
+		game->Cam.CameraPos);
 }
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -311,50 +316,7 @@ static void GameRenderParticles(struct Game* game)
 
 	RClear(r);
 
-	RBindPixelShader(r, game->PhongPS);
-	RBindVertexShader(r, game->VS);
-	RBindConstantBuffers(r, BindTargets_VS, game->RenderData.VSConstBuffers, 1);
-	RBindShaderResources(r, BindTargets_PS, game->RenderData.SRVs, TEXTURE_PULL);
-	RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
-
-	size_t offset = 0;
-	const struct Mesh* cube = GameFindMeshByName(game, "Cube", &offset);
-
-	RDrawIndexed(r,
-		game->IndexBuffer,
-		game->VertexBuffer,
-		sizeof(struct Vertex),
-		cube->Faces.size(),
-		offset,
-		offset);
-
-	// Light properties
-	{
-		const Vec3D scale = { 0.5f, 0.5f, 0.5f };
-		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
-		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->RenderData.LightingData.PL.Position);
-		game->PerFrameConstants.World = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
-		game->PerFrameConstants.WorldInvTranspose = MathMat4X4Inverse(&game->PerFrameConstants.World);
-		MathMat4X4Inverse(&game->PerFrameConstants.WorldInvTranspose);
-		game->PerFrameConstants.WorldViewProj = game->PerFrameConstants.World * game->gViewMat * game->gProjMat;
-
-		GameUpdatePerFrameConstants(game);
-	}
-
-	RBindPixelShader(r, game->LightPS);
-	RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
-	offset = 0;
-	const struct Mesh* sphere = GameFindMeshByName(game, "Sphere", &offset);
-	RDrawIndexed(r,
-		game->IndexBuffer,
-		game->VertexBuffer,
-		sizeof(struct Vertex),
-		sphere->Faces.size(),
-		offset,
-		offset);
-
-	//game->m_ParticleSystem.SetCameraPos(game->Cam.CameraPos);
-	//game->m_ParticleSystem.Draw(game->DR->Context, game->Cam);
+	game->m_ParticleSystem.Draw(game->DR->Context);
 
 	RPresent(r);
 }
@@ -363,8 +325,8 @@ void GameTick(Game* game)
 {
 	TimerTick(&game->TickTimer);
 	GameUpdate(game);
-	GameRenderNew(game);
-	//GameRenderParticles(game);
+	//GameRenderNew(game);
+	GameRenderParticles(game);
 }
 
 static void ErrorDescription(HRESULT hr)
@@ -616,6 +578,7 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	Vec3D cameraPos = { 0.0f, 0.0f, -5.0f };
 	CameraInit(&game->Cam, &cameraPos, &game->Keyboard, &game->Mouse);
 	RenderDataInit(&game->RenderData, &cameraPos);
+	game->m_ParticleSystem.Init(game->DR->Device);
 
 	GameLoadModel(game, "assets/meshes/cube.obj");
 	GameLoadModel(game, "assets/meshes/sphere.obj");
@@ -654,7 +617,6 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	RenderDataSetSRV(&game->RenderData);
 
 	// Particle System Init
-	game->m_ParticleSystemData = new ParticleSystemData(game->DR->Device);
 	//game->m_ParticleSystem.InitShaders(game->m_ParticleSystemData->PS.GetAs<ID3D11PixelShader*>(),
 	//	game->m_ParticleSystemData->DrawGS.GetAs<ID3D11GeometryShader*>(),
 	//	game->m_ParticleSystemData->StreamOutGS.GetAs<ID3D11GeometryShader*>(),
@@ -802,8 +764,7 @@ Game::Game() :
 	gProjMat{},
 	RenderData{},
 	Renderer{},
-	m_ParticleSystem{},
-	m_ParticleSystemData{nullptr}
+	m_ParticleSystem{}
 {
 	Models.reserve(MODEL_PULL);
 }
@@ -824,7 +785,6 @@ Game::~Game()
 	{
 		delete model;
 	}
-	delete m_ParticleSystemData;
 	DRReportLiveObjects();
 }
 
@@ -877,16 +837,6 @@ static ID3D11ShaderResourceView* GameCreateRandomTexture1DSRV(ID3D11Device* devi
 	COM_FREE(randomTex);
 
 	return randomTexSRV;
-}
-
-ParticleSystemData::ParticleSystemData(ID3D11Device* device)
-{
-	
-}
-
-ParticleSystemData::~ParticleSystemData()
-{
-
 }
 
 Texture::Texture():

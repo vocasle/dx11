@@ -80,12 +80,6 @@ struct RenderData
 void RenderDataInit(struct RenderData* rd, Vec3D* cameraPos);
 void RenderDataDeinit(struct RenderData* rd);
 
-struct ParticleSystemData
-{
-	ParticleSystemData(ID3D11Device* device);
-	~ParticleSystemData();
-};
-
 struct Game
 {
 	Game();
@@ -112,7 +106,6 @@ struct Game
 	struct RenderData RenderData;
 	struct Renderer Renderer;
 	ParticleSystem m_ParticleSystem;
-	ParticleSystemData* m_ParticleSystemData;
 };
 
 void GameTick(Game* game);
