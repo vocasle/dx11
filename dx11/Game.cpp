@@ -196,7 +196,7 @@ void GameUpdate(Game* game)
 	const float height = (float)game->DR->BackbufferHeight;
 
 	game->gViewMat = CameraGetViewMat(&game->Cam);
-	game->gProjMat = MathMat4X4PerspectiveFov(MathToRadians(45.0f), width / height, 0.1f, 10.0f);
+	game->gProjMat = MathMat4X4PerspectiveFov(MathToRadians(45.0f), width / height, 0.1f, 100.0f);
 	
 	game->PerFrameConstants.World = game->gWorldMat;
 	game->PerFrameConstants.WorldViewProj = game->gWorldMat * game->gViewMat * game->gProjMat;

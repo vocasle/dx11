@@ -53,12 +53,12 @@ void main(
 		float2(1.0f, 0.0f)
 	};
 
-	const float4x4 viewProj = mul(view, proj);
+	const float4x4 projView = mul(proj, view);
 
 	[unroll]
 	for (int i = 0; i < 4; ++i)
 	{
-		gout.PosH = mul(v[i], /*viewProj*/ view);
+		gout.PosH = mul(projView, v[i]);
 		gout.PosW = v[i].xyz;
 		gout.Normal = look;
 		gout.TexCoords = gTexC[i];
