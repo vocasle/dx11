@@ -11,6 +11,7 @@
 #include "Renderer.h"
 #include "ParticleSystem.h"
 #include "Shader.h"
+#include "D3DCommonTypes.h"
 
 #include <vector>
 #include <string>
@@ -25,38 +26,12 @@ struct PerFrameConstants
 	Mat4X4 WorldInvTranspose;
 };
 
-struct PointLight
-{
-	Vec4D Ambient;
-	Vec4D Diffuse;
-	Vec4D Specular;
-	Vec3D Position;
-	float _Pad;
-};
-
-struct Material
-{
-	Vec4D Ambient;
-	Vec4D Diffuse;
-	Vec4D Specular;
-};
-
 struct LightingData
 {
 	struct PointLight PL;
 	Vec3D CameraPos;
 	float _Pad;
 };
-
-struct Texture
-{
-	Texture();
-	~Texture();
-	ID3D11Texture2D* Resource;
-	ID3D11ShaderResourceView* SRV;
-};
-
-void TextureDeinit(struct Texture* texture);
 
 struct Vertex;
 struct RenderData
