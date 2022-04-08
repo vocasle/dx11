@@ -27,10 +27,17 @@ inline void TimerInitialize(Timer* timer)
 
 inline void TimerTick(Timer* timer)
 {
+	static bool isFirstRun = true;
 	if (!QueryPerformanceCounter(&timer->EndTime))
 	{
 		OutputDebugStringA("ERROR: Failed to query performance counter\n");
 		ExitProcess(EXIT_FAILURE);
+	}
+
+	if (isFirstRun)
+	{
+		timer->StartTime = timer->EndTime;
+		isFirstRun = false;
 	}
 	
 	uint64_t timeDelta = timer->EndTime.QuadPart - timer->StartTime.QuadPart;

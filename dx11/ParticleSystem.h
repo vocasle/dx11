@@ -39,13 +39,15 @@ public:
 		const Mat4X4& inProj,
 		const Mat4X4& inWorld,
 		const Vec3D& inCamPosW,
-		double inDelta);
+		double inDelta,
+		double inGameTime);
 
 private:
 	void InitParticles();
 	void CreateInputLayout(ID3D11Device* device);
 	void UpdateParticles(double inDelta);
 	void ResetParticle(Particle& p);
+	void UpdateParticle(Particle& p, float t);
 
 private:
 
@@ -57,5 +59,8 @@ private:
 	ID3D11InputLayout* m_inputLayout;
 	ID3D11Buffer* m_cb;
 	PerFrameConstants m_perFrameConstants;
+
+	static constexpr float MAX_AGE = 2.0f;
+	static constexpr uint32_t MAX_PARTICLES = 1000;
 
 };

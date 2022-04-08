@@ -211,8 +211,9 @@ void GameUpdate(Game* game)
 	game->m_ParticleSystem.Update(game->gViewMat,
 		game->gProjMat,
 		game->gWorldMat,
-		game->Cam.CameraPos, 
-		game->TickTimer.DeltaMillis);
+		game->Cam.CameraPos,
+		game->TickTimer.DeltaMillis,
+		game->m_GameTime);
 }
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -325,6 +326,7 @@ static void GameRenderParticles(struct Game* game)
 void GameTick(Game* game)
 {
 	TimerTick(&game->TickTimer);
+	game->m_GameTime += game->TickTimer.DeltaMillis;
 	GameUpdate(game);
 	//GameRenderNew(game);
 	GameRenderParticles(game);
@@ -765,7 +767,8 @@ Game::Game() :
 	gProjMat{},
 	RenderData{},
 	Renderer{},
-	m_ParticleSystem{}
+	m_ParticleSystem{},
+	m_GameTime{0.0}
 {
 	Models.reserve(MODEL_PULL);
 }

@@ -29,10 +29,6 @@ void main(
 	inout TriangleStream<GSOutput> triStream
 )
 {
-	if (gin[0].Age > 1.0f)
-	{
-		return;
-	}
 
 	float3 up = float3(0.0f, 1.0f, 0.0f);
 	float3 look = camPosW - gin[0].Pos;

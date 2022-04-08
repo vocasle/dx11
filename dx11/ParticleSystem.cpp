@@ -27,7 +27,7 @@ void ParticleSystem::Init(ID3D11Device* device)
 
 	{
 		D3D11_BUFFER_DESC desc = {};
-		desc.ByteWidth = sizeof(Particle) * m_particles.size();
+		desc.ByteWidth = sizeof(Particle) * MAX_PARTICLES;
 		desc.StructureByteStride = sizeof(Particle);
 		desc.Usage = D3D11_USAGE_DYNAMIC;
 		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -76,8 +76,10 @@ void ParticleSystem::Update(const Mat4X4& inView,
 	const Mat4X4& inProj,
 	const Mat4X4& inWorld,
 	const Vec3D& inCamPosW, 
-	double inDelta)
+	double inDelta,
+	double inGameTime)
 {
+	//UtilsDebugPrint("delta: %f, game: %f\n", inDelta, inGameTime);
 	m_perFrameConstants.CamPosW = inCamPosW;
 	m_perFrameConstants.Proj = inProj;
 	m_perFrameConstants.WorldInvTranspose = MathMat4X4Inverse(&inWorld);
@@ -89,17 +91,10 @@ void ParticleSystem::Update(const Mat4X4& inView,
 
 void ParticleSystem::InitParticles()
 {
-	for (uint32_t i = 0; i < 10; ++i)
-	{
-		Particle p = {};
-		const float size = MathRandom(0.1f, 1.0f);
-		p.Position.X = MathRandom(-5.0f, 5.0f);
-		p.Position.Y = MathRandom(-5.0f, 5.0f);
-		p.Position.Z = MathRandom(-5.0f, 5.0f);
-		p.Size.X = size;
-		p.Size.Y = size;
-		m_particles.push_back(p);
-	}
+	m_particles.reserve(MAX_PARTICLES);
+	Particle p = {};
+	ResetParticle(p);
+	m_particles.push_back(p);
 }
 
 void ParticleSystem::CreateInputLayout(ID3D11Device* device)
@@ -123,20 +118,38 @@ void ParticleSystem::UpdateParticles(double inDelta)
 	for (Particle& p : m_particles)
 	{
 		p.Age += delta;
-		p.Position.Y += delta;
+		UpdateParticle(p, delta);
 
-		if (p.Age > 1.0f)
+		if (p.Age > MAX_AGE)
 		{
 			ResetParticle(p);
 		}
+	}
+
+	if (m_particles.size() < MAX_PARTICLES)
+	{
+		Particle p = {};
+		ResetParticle(p);
+		m_particles.push_back(p);
 	}
 }
 
 void ParticleSystem::ResetParticle(Particle& p)
 {
-	p.Age = 0.0f;
-	p.Position = { MathRandom(-5.0f, 5.0f), MathRandom(-5.0f, 5.0f), MathRandom(-5.0f, 5.0f) };
-	const float size = MathRandom(0.1f, 1.0f);
+	p.Position = { 0.0f, 0.0f , 0.0f };
+	const float size = MathRandom(0.01f, 0.1f);
 	p.Size = { size, size };
-	p.Velocity = { 0.0f, 0.0f, 0.0f };
+	p.Age = 0.0f;
+	p.Velocity = { MathRandom(-1.0f, 1.0f), MathRandom(-1.0f, 1.0f), MathRandom(-1.0f, 1.0f) };
+}
+
+void ParticleSystem::UpdateParticle(Particle& p, float t)
+{
+	Vec3D a = { 0.0f, -9.8f, 0.0f };
+
+	a = MathVec3DModulateByScalar(&a, p.Age * p.Age);
+
+	Vec3D velocity = MathVec3DModulateByScalar(&p.Velocity, p.Age);
+	p.Position = MathVec3DAddition(&a, &velocity);
+	p.Position = MathVec3DAddition(&p.Position, &p.Velocity);
 }

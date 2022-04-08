@@ -106,6 +106,7 @@ struct Game
 	struct RenderData RenderData;
 	struct Renderer Renderer;
 	ParticleSystem m_ParticleSystem;
+	double m_GameTime;
 };
 
 void GameTick(Game* game);
