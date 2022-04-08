@@ -3,10 +3,9 @@
 #include "Math.h"
 #include "Camera.h"
 #include "stb_image.h"
+#include "D3DHelper.h"
 
 #include <windowsx.h>
-
-#include <DirectXTex.h>
 
 struct Vertex
 {
@@ -585,10 +584,10 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 
 	GameLoadModel(game, "assets/meshes/cube.obj");
 	GameLoadModel(game, "assets/meshes/sphere.obj");
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_COL_VAR1_1K.jpg", &game->RenderData.DefaultTexture);
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_REFL_1K.jpg", &game->RenderData.SpecularTexture);
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_GLOSS_1K.jpg", &game->RenderData.GlossTexture);
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_NRM_1K.png", &game->RenderData.NormalTexture);
+	D3DHelper::LoadTextureFromFile(game->DR->Device, game->DR->Context, "assets/textures/BricksFlemishRed001_COL_VAR1_1K.jpg", &game->RenderData.DefaultTexture);
+	D3DHelper::LoadTextureFromFile(game->DR->Device, game->DR->Context, "assets/textures/BricksFlemishRed001_REFL_1K.jpg", &game->RenderData.SpecularTexture);
+	D3DHelper::LoadTextureFromFile(game->DR->Device, game->DR->Context, "assets/textures/BricksFlemishRed001_GLOSS_1K.jpg", &game->RenderData.GlossTexture);
+	D3DHelper::LoadTextureFromFile(game->DR->Device, game->DR->Context, "assets/textures/BricksFlemishRed001_NRM_1K.png", &game->RenderData.NormalTexture);
 	GameCreateSharedBuffers(game);
 	GameGenerateRandomOffsets(game);
 	ID3D11Device1* device = game->DR->Device;
@@ -657,92 +656,6 @@ void GameOnKeyUp(Game* game, WPARAM key)
 void GameOnMouseMove(Game* game, uint32_t message, WPARAM wParam, LPARAM lParam)
 {
 	MouseOnMouseMove(&game->Mouse, message, wParam, lParam);
-}
-
-void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct Texture* texture)
-{
-	if (std::string(filename).ends_with(".dds"))
-	{
-		using namespace DirectX;
-
-		TexMetadata info = {};
-		ScratchImage image = {};
-		if (FAILED(LoadFromDDSFile(UtilsString2WideString(filename).c_str(), DDS_FLAGS_NONE, &info, image)))
-		{
-			UTILS_FATAL_ERROR("Failed to load texture from %s", filename);
-		}
-
-		if (FAILED(CreateShaderResourceView(dr->Device, image.GetImages(), image.GetImageCount(), info, &texture->SRV)))
-		{
-			UTILS_FATAL_ERROR("Failed to create shader resource view from %s", filename);
-		}
-		
-		image.Release();
-		return;
-	}
-
-	int width = 0;
-	int height = 0;
-	int channelsInFile = 0;
-	const int desiredChannels = 4;
-
-	FILE* f = nullptr;
-	fopen_s(&f, filename, "r");
-	if (f)
-	{
-		fclose(f);
-	}
-	else
-	{
-		printf("Shit");
-	}
-
-	unsigned char* bytes = stbi_load(filename, &width, &height, &channelsInFile, desiredChannels);
-	if (!bytes)
-	{
-		UtilsDebugPrint("ERROR: Failed to load texture from %s\n", filename);
-		ExitProcess(EXIT_FAILURE);
-	}
-
-	{
-		D3D11_TEXTURE2D_DESC desc = {};
-		desc.Width = width;
-		desc.Height = height;
-		desc.MipLevels = 1;
-		desc.ArraySize = 1;
-		desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		desc.SampleDesc.Count = 1;
-		desc.SampleDesc.Quality = 0;
-		desc.Usage = D3D11_USAGE_DEFAULT;
-		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-		desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-
-		D3D11_SUBRESOURCE_DATA subresourceData = {};
-		subresourceData.pSysMem = bytes;
-		subresourceData.SysMemPitch = width * sizeof(unsigned char) * desiredChannels;
-
-		if (FAILED(dr->Device->CreateTexture2D(&desc, &subresourceData, &texture->Resource)))
-		{
-			UtilsDebugPrint("ERROR: Failed to create texture from file %s\n", filename);
-			ExitProcess(EXIT_FAILURE);
-		}
-	}
-
-	{
-		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MipLevels = -1;
-		if (FAILED(dr->Device->CreateShaderResourceView((ID3D11Resource*)texture->Resource, &srvDesc, &texture->SRV)))
-		{
-			UtilsDebugPrint("ERROR: Failed to create SRV from file %s\n", filename);
-			ExitProcess(EXIT_FAILURE);
-		}
-
-		dr->Context->GenerateMips(texture->SRV);
-	}
-
-	stbi_image_free(bytes);
 }
 
 Game::Game() :

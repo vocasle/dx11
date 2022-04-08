@@ -95,5 +95,3 @@ void GameOnKeyDown(Game* game, WPARAM key);
 void GameOnKeyUp(Game* game, WPARAM key);
 
 void GameOnMouseMove(Game* game, uint32_t message, WPARAM wParam, LPARAM lParam);
-
-void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct Texture* texture);
