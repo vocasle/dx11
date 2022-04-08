@@ -38,11 +38,13 @@ public:
 	void Update(const Mat4X4& inView,
 		const Mat4X4& inProj,
 		const Mat4X4& inWorld,
-		const Vec3D& inCamPosW);
+		const Vec3D& inCamPosW,
+		double inDelta);
 
 private:
 	void InitParticles();
 	void CreateInputLayout(ID3D11Device* device);
+	void UpdateParticles(double inDelta);
 
 private:
 

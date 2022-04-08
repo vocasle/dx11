@@ -211,7 +211,8 @@ void GameUpdate(Game* game)
 	game->m_ParticleSystem.Update(game->gViewMat,
 		game->gProjMat,
 		game->gWorldMat,
-		game->Cam.CameraPos);
+		game->Cam.CameraPos, 
+		game->TickTimer.DeltaMillis);
 }
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
