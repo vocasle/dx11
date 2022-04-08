@@ -580,7 +580,7 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	Vec3D cameraPos = { 0.0f, 0.0f, -5.0f };
 	CameraInit(&game->Cam, &cameraPos, &game->Keyboard, &game->Mouse);
 	RenderDataInit(&game->RenderData, &cameraPos);
-	game->m_ParticleSystem.Init(game->DR->Device);
+	game->m_ParticleSystem.Init(game->DR->Device, game->DR->Context);
 
 	GameLoadModel(game, "assets/meshes/cube.obj");
 	GameLoadModel(game, "assets/meshes/sphere.obj");

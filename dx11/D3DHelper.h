@@ -46,26 +46,6 @@ namespace D3DHelper
 
 	inline void LoadTextureFromFile(ID3D11Device* device, ID3D11DeviceContext* context, const char* filename, struct Texture* texture)
 	{
-		if (std::string(filename).ends_with(".dds"))
-		{
-			using namespace DirectX;
-
-			TexMetadata info = {};
-			ScratchImage image = {};
-			if (FAILED(LoadFromDDSFile(UtilsString2WideString(filename).c_str(), DDS_FLAGS_NONE, &info, image)))
-			{
-				UTILS_FATAL_ERROR("Failed to load texture from %s", filename);
-			}
-
-			if (FAILED(CreateShaderResourceView(device, image.GetImages(), image.GetImageCount(), info, &texture->SRV)))
-			{
-				UTILS_FATAL_ERROR("Failed to create shader resource view from %s", filename);
-			}
-
-			image.Release();
-			return;
-		}
-
 		int width = 0;
 		int height = 0;
 		int channelsInFile = 0;
@@ -128,5 +108,24 @@ namespace D3DHelper
 		}
 
 		stbi_image_free(bytes);
+	}
+
+	inline void LoadTextureFromDDSFile(ID3D11Device* device, const char* filename, struct Texture* texture)
+	{
+		using namespace DirectX;
+
+		TexMetadata info = {};
+		ScratchImage image = {};
+		if (FAILED(LoadFromDDSFile(UtilsString2WideString(filename).c_str(), DDS_FLAGS_NONE, &info, image)))
+		{
+			UTILS_FATAL_ERROR("Failed to load texture from %s", filename);
+		}
+
+		if (FAILED(CreateShaderResourceView(device, image.GetImages(), image.GetImageCount(), info, &texture->SRV)))
+		{
+			UTILS_FATAL_ERROR("Failed to create shader resource view from %s", filename);
+		}
+
+		image.Release();
 	}
 };

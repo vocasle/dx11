@@ -6,7 +6,10 @@ struct GSOutput
 	float3 PosW : POSITION;
 };
 
+Texture2D defaultTexture : register(t0);
+sampler defaultSampler : register(s0);
+
 float4 main(GSOutput pin) : SV_TARGET
 {
-	return float4(1.0f, 0.0f, 0.0f, 1.0f);
+	return defaultTexture.Sample(defaultSampler, pin.TexCoords) * float4(0.9450980392156863f, 0.3673469387755102f, 0.1333333333333333f, 1.0f);
 }

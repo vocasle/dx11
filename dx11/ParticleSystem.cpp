@@ -9,15 +9,20 @@ ParticleSystem::ParticleSystem():
 	m_gs{},
 	m_vs{},
 	m_inputLayout{nullptr},
-	m_cb{nullptr}
+	m_cb{nullptr},
+	m_texture{},
+	m_blendState{nullptr}
 {
 }
 
 ParticleSystem::~ParticleSystem()
 {
+	COM_FREE(m_inputLayout);
+	COM_FREE(m_cb);
+	COM_FREE(m_blendState);
 }
 
-void ParticleSystem::Init(ID3D11Device* device)
+void ParticleSystem::Init(ID3D11Device* device, ID3D11DeviceContext* context)
 {
 	m_ps = Shader{ "ParticlePS.cso", device, ShaderType::Pixel };
 	m_gs = Shader{ "ParticleGS.cso", device, ShaderType::Geometry };
@@ -46,6 +51,27 @@ void ParticleSystem::Init(ID3D11Device* device)
 	CreateInputLayout(device);
 
 	D3DHelper::CreateConstantBuffer(device, sizeof(PerFrameConstants), &m_cb);
+
+	D3DHelper::LoadTextureFromFile(device, context, "assets/textures/fire_01.png", &m_texture);
+
+	{
+		D3D11_BLEND_DESC transparentDesc = {};
+		transparentDesc.AlphaToCoverageEnable = false;
+		transparentDesc.IndependentBlendEnable = false;
+		transparentDesc.RenderTarget[0].BlendEnable = true;
+		transparentDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		transparentDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		transparentDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		transparentDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+		transparentDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+		transparentDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		transparentDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+		if (FAILED(device->CreateBlendState(&transparentDesc, &m_blendState)))
+		{
+			UTILS_FATAL_ERROR("Failed to create blend state");
+		}
+	}
 }
 
 void ParticleSystem::Draw(ID3D11DeviceContext* context)
@@ -68,6 +94,10 @@ void ParticleSystem::Draw(ID3D11DeviceContext* context)
 	uint32_t offsets = 0;
 	context->IASetVertexBuffers(0, 1, &m_vb, &strides, &offsets);
 	context->GSSetConstantBuffers(0, 1, &m_cb);
+	//context->PSSetSamplers(0, 1, nullptr);
+	context->PSSetShaderResources(0, 1, &m_texture.SRV);
+	constexpr float blendFactors[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	context->OMSetBlendState(m_blendState, blendFactors, 0xffffffff);
 
 	context->Draw(m_particles.size(), 0);
 }
@@ -79,7 +109,7 @@ void ParticleSystem::Update(const Mat4X4& inView,
 	double inDelta,
 	double inGameTime)
 {
-	//UtilsDebugPrint("delta: %f, game: %f\n", inDelta, inGameTime);
+	UtilsDebugPrint("delta: %f, game: %f\n", inDelta, inGameTime);
 	m_perFrameConstants.CamPosW = inCamPosW;
 	m_perFrameConstants.Proj = inProj;
 	m_perFrameConstants.WorldInvTranspose = MathMat4X4Inverse(&inWorld);
@@ -93,8 +123,13 @@ void ParticleSystem::InitParticles()
 {
 	m_particles.reserve(MAX_PARTICLES);
 	Particle p = {};
-	ResetParticle(p);
-	m_particles.push_back(p);
+
+	for (uint32_t i = 0; i < MAX_PARTICLES; ++i)
+	{
+		ResetParticle(p);
+		m_particles.push_back(p);
+	}
+	
 }
 
 void ParticleSystem::CreateInputLayout(ID3D11Device* device)
@@ -126,12 +161,12 @@ void ParticleSystem::UpdateParticles(double inDelta)
 		}
 	}
 
-	if (m_particles.size() < MAX_PARTICLES)
-	{
-		Particle p = {};
-		ResetParticle(p);
-		m_particles.push_back(p);
-	}
+	//if (m_particles.size() < MAX_PARTICLES)
+	//{
+	//	Particle p = {};
+	//	ResetParticle(p);
+	//	m_particles.push_back(p);
+	//}
 }
 
 void ParticleSystem::ResetParticle(Particle& p)
@@ -145,7 +180,7 @@ void ParticleSystem::ResetParticle(Particle& p)
 
 void ParticleSystem::UpdateParticle(Particle& p, float t)
 {
-	Vec3D a = { 0.0f, -9.8f, 0.0f };
+	Vec3D a = { 0.0f, 0.0f, 0.0f };
 
 	a = MathVec3DModulateByScalar(&a, p.Age * p.Age);
 

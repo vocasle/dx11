@@ -3,6 +3,7 @@
 #include "Math.h"
 #include "Camera.h"
 #include "Shader.h"
+#include "D3DCommonTypes.h"
 
 #include <d3d11.h>
 #include <stdint.h>
@@ -33,7 +34,7 @@ public:
 	ParticleSystem();
 	~ParticleSystem();
 
-	void Init(ID3D11Device* device);
+	void Init(ID3D11Device* device, ID3D11DeviceContext* context);
 	void Draw(ID3D11DeviceContext* context);
 	void Update(const Mat4X4& inView,
 		const Mat4X4& inProj,
@@ -59,8 +60,10 @@ private:
 	ID3D11InputLayout* m_inputLayout;
 	ID3D11Buffer* m_cb;
 	PerFrameConstants m_perFrameConstants;
+	Texture m_texture;
+	ID3D11BlendState* m_blendState;
 
-	static constexpr float MAX_AGE = 2.0f;
-	static constexpr uint32_t MAX_PARTICLES = 1000;
+	static constexpr float MAX_AGE = 100.0f;
+	static constexpr uint32_t MAX_PARTICLES = 10000;
 
 };
