@@ -119,10 +119,24 @@ void ParticleSystem::CreateInputLayout(ID3D11Device* device)
 
 void ParticleSystem::UpdateParticles(double inDelta)
 {
+	const float delta = static_cast<float>(inDelta / 1000.0);
 	for (Particle& p : m_particles)
 	{
-		p.Age -= static_cast<float>(inDelta);
-		const float delta = MathRandom(-1.0f, 1.0f);
-		p.Position.X += delta;
+		p.Age += delta;
+		p.Position.Y += delta;
+
+		if (p.Age > 1.0f)
+		{
+			ResetParticle(p);
+		}
 	}
+}
+
+void ParticleSystem::ResetParticle(Particle& p)
+{
+	p.Age = 0.0f;
+	p.Position = { MathRandom(-5.0f, 5.0f), MathRandom(-5.0f, 5.0f), MathRandom(-5.0f, 5.0f) };
+	const float size = MathRandom(0.1f, 1.0f);
+	p.Size = { size, size };
+	p.Velocity = { 0.0f, 0.0f, 0.0f };
 }

@@ -45,6 +45,7 @@ private:
 	void InitParticles();
 	void CreateInputLayout(ID3D11Device* device);
 	void UpdateParticles(double inDelta);
+	void ResetParticle(Particle& p);
 
 private:
 
