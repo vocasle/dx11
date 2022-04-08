@@ -80,6 +80,12 @@ std::vector<uint8_t> UtilsReadData(const char* filepath);
 
 // COM helpers
 
-#define COM_FREE(This) if (This) { (This)->Release(); (This) = nullptr; } static_assert(true, "") // this assert is to require semicolon
+#define COM_FREE(This) \
+	if (This) { \
+		uint32_t numRefs = (This)->Release(); \
+		if (numRefs != 0) UtilsDebugPrint("%s(%d): WARN: Reference is not zero after COM_FREE was called! Num of refs after COM_FREE (%d)\n", __FILE__, __LINE__, numRefs); \
+		(This) = nullptr; \
+	} \
+	static_assert(true, "") // this assert is to require semicolon
 
 std::wstring UtilsString2WideString(const std::string& str);
