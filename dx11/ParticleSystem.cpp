@@ -52,7 +52,7 @@ void ParticleSystem::Init(ID3D11Device* device, ID3D11DeviceContext* context)
 
 	D3DHelper::CreateConstantBuffer(device, sizeof(PerFrameConstants), &m_cb);
 
-	D3DHelper::LoadTextureFromFile(device, context, "assets/textures/fire_01.png", &m_texture);
+	D3DHelper::LoadTextureFromFile(device, context, "assets/textures/snow.dds", &m_texture);
 
 	{
 		D3D11_BLEND_DESC transparentDesc = {};
@@ -124,12 +124,8 @@ void ParticleSystem::InitParticles()
 	m_particles.reserve(MAX_PARTICLES);
 	Particle p = {};
 
-	for (uint32_t i = 0; i < MAX_PARTICLES; ++i)
-	{
-		ResetParticle(p);
-		m_particles.push_back(p);
-	}
-	
+	ResetParticle(p);
+	m_particles.push_back(p);
 }
 
 void ParticleSystem::CreateInputLayout(ID3D11Device* device)
@@ -161,12 +157,15 @@ void ParticleSystem::UpdateParticles(double inDelta)
 		}
 	}
 
-	//if (m_particles.size() < MAX_PARTICLES)
-	//{
-	//	Particle p = {};
-	//	ResetParticle(p);
-	//	m_particles.push_back(p);
-	//}
+	if (m_particles.size() + 10 < MAX_PARTICLES)
+	{
+		for (uint32_t i = 0; i < 10; ++i)
+		{
+			Particle p = {};
+			ResetParticle(p);
+			m_particles.push_back(p);
+		}
+	}
 }
 
 void ParticleSystem::ResetParticle(Particle& p)
@@ -186,5 +185,5 @@ void ParticleSystem::UpdateParticle(Particle& p, float t)
 
 	Vec3D velocity = MathVec3DModulateByScalar(&p.Velocity, p.Age);
 	p.Position = MathVec3DAddition(&a, &velocity);
-	p.Position = MathVec3DAddition(&p.Position, &p.Velocity);
+	//p.Position = MathVec3DAddition(&p.Position, &p.Velocity);
 }

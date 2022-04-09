@@ -63,7 +63,7 @@ private:
 	Texture m_texture;
 	ID3D11BlendState* m_blendState;
 
-	static constexpr float MAX_AGE = 100.0f;
-	static constexpr uint32_t MAX_PARTICLES = 10000;
+	static constexpr float MAX_AGE = 10.0f;
+	static constexpr uint32_t MAX_PARTICLES = 100000;
 
 };

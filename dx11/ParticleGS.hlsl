@@ -44,6 +44,7 @@ void main(
 	v[2] = float4(gin[0].Pos - halfWidth * right - halfHeight * up, 1.0f);
 	v[3] = float4(gin[0].Pos - halfWidth * right + halfHeight * up, 1.0f);
 
+
 	GSOutput gout;
 
 	float2 gTexC[4] =
