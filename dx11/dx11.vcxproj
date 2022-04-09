@@ -252,6 +252,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="D3DHelper.cpp" />
     <ClCompile Include="DeviceResources.cpp" />
     <ClCompile Include="dx11.cpp" />
     <ClCompile Include="Game.cpp" />

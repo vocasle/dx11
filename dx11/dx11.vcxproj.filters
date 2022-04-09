@@ -93,6 +93,9 @@
     <ClCompile Include="Shader.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="D3DHelper.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
