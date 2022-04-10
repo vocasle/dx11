@@ -290,6 +290,7 @@
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\README.md" />
     <None Include="LightingHelper.hlsli" />
     <None Include="packages.config" />
   </ItemGroup>

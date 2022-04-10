@@ -173,5 +173,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="..\README.md" />
   </ItemGroup>
 </Project>
