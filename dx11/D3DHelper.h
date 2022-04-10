@@ -16,4 +16,6 @@ namespace D3DHelper
 		ID3D11Buffer* dest);
 
 	void LoadTextureFromFile(ID3D11Device* device, ID3D11DeviceContext* context, const char* filename, struct Texture* texture);
+
+	ID3D11ShaderResourceView* CreateRandomTexture1DSRV(ID3D11Device* device);
 };

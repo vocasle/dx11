@@ -1,13 +1,14 @@
 #include "D3DHelper.h"
 
 #include <DirectXTex.h>
+#include <vector>
 
 #include "Utils.h"
 #include "stb_image.h"
 
 namespace D3DHelper
 {
-	static inline void LoadTextureFromDDSFile(ID3D11Device* device, const char* filename, struct Texture* texture)
+	static void LoadTextureFromDDSFile(ID3D11Device* device, const char* filename, struct Texture* texture)
 	{
 		using namespace DirectX;
 
@@ -131,5 +132,58 @@ namespace D3DHelper
 		{
 			UtilsFatalError("ERROR: Failed to create per frame constants cbuffer\n");
 		}
+	}
+
+	ID3D11ShaderResourceView* CreateRandomTexture1DSRV(ID3D11Device* device)
+	{
+		// 
+		// Create the random data.
+		//
+		std::vector<Vec4D> randomValues(1024);
+
+		for (Vec4D vec : randomValues)
+		{
+			vec.X = MathRandom(-1.0f, 1.0f);
+			vec.Y = MathRandom(-1.0f, 1.0f);
+			vec.Z = MathRandom(-1.0f, 1.0f);
+			vec.W = MathRandom(-1.0f, 1.0f);
+		}
+
+		D3D11_SUBRESOURCE_DATA initData = {};
+		initData.pSysMem = &randomValues[0];
+		initData.SysMemPitch = randomValues.size() * sizeof(Vec4D);
+		initData.SysMemSlicePitch = 0;
+
+		//
+		// Create the texture.
+		//
+		D3D11_TEXTURE1D_DESC texDesc = {};
+		texDesc.Width = 1024;
+		texDesc.MipLevels = 1;
+		texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		texDesc.Usage = D3D11_USAGE_IMMUTABLE;
+		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		texDesc.CPUAccessFlags = 0;
+		texDesc.MiscFlags = 0;
+		texDesc.ArraySize = 1;
+
+		ID3D11Texture1D* randomTex = 0;
+		HR(device->CreateTexture1D(&texDesc, &initData, &randomTex));
+
+		//
+		// Create the resource view.
+		//
+		D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
+		viewDesc.Format = texDesc.Format;
+		viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
+		viewDesc.Texture1D.MipLevels = texDesc.MipLevels;
+		viewDesc.Texture1D.MostDetailedMip = 0;
+
+		ID3D11ShaderResourceView* randomTexSRV = 0;
+		HR(device->CreateShaderResourceView(randomTex, &viewDesc, &randomTexSRV));
+
+		COM_FREE(randomTex);
+
+		return randomTexSRV;
 	}
 };
