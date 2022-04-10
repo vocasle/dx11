@@ -158,6 +158,7 @@ void ParticleSystem::UpdateParticles(double inDelta)
 	for (Particle& p : m_particles)
 	{
 		p.Age += delta;
+		//UpdateParticle(p, delta);
 
 		if (p.Age > MAX_AGE)
 		{
@@ -165,9 +166,9 @@ void ParticleSystem::UpdateParticles(double inDelta)
 		}
 	}
 
-	if (m_particles.size() + 100 < MAX_PARTICLES)
+	if (m_particles.size() /*+ 100*/ < MAX_PARTICLES)
 	{
-		for (uint32_t i = 0; i < 100; ++i)
+		//for (uint32_t i = 0; i < 100; ++i)
 		{
 			m_particles.emplace_back();
 		}
@@ -177,10 +178,11 @@ void ParticleSystem::UpdateParticles(double inDelta)
 void ParticleSystem::ResetParticle(Particle& p)
 {
 	p.Position = { 0.0f, 0.0f , 0.0f };
-	const float size = MathRandom(0.01f, 0.1f);
-	p.Size = { size, size };
+	p.Size = { 3.0f, 3.0f };
 	p.Age = 0.0f;
 	p.Velocity = { MathRandom(-1.0f, 1.0f), MathRandom(-1.0f, 1.0f), MathRandom(-1.0f, 1.0f) };
+	MathVec3DNormalize(&p.Velocity);
+	p.Velocity = MathVec3DModulateByScalar(&p.Velocity, 4.0f);
 }
 
 void ParticleSystem::UpdateParticle(Particle& p, float t)

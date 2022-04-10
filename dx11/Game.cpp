@@ -581,7 +581,6 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	CameraInit(&game->Cam, &cameraPos, &game->Keyboard, &game->Mouse);
 	RenderDataInit(&game->RenderData, &cameraPos);
 	game->m_ParticleSystem.Init(game->DR->Device, game->DR->Context);
-	game->m_ParticleSystem.SetSamplerState(game->DefaultSampler);
 
 	GameLoadModel(game, "assets/meshes/cube.obj");
 	GameLoadModel(game, "assets/meshes/sphere.obj");
@@ -618,6 +617,8 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	RSetInputLayout(&game->Renderer, game->InputLayout);
 	RSetSamplerState(&game->Renderer, game->DefaultSampler);
 	RenderDataSetSRV(&game->RenderData);
+
+	game->m_ParticleSystem.SetSamplerState(game->DefaultSampler);
 }
 
 void GameGetDefaultSize(Game* game, int* width, int* height)
