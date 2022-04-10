@@ -37,6 +37,7 @@ void main(
 	float4 v[4];
 	float halfWidth = 0.5f * gin[0].SizeW.x;
 	float halfHeight = 0.5f * gin[0].SizeW.y;
+
 	v[0] = float4(gin[0].PosW + halfWidth * right - halfHeight * up, 1.0f);
 	v[1] = float4(gin[0].PosW + halfWidth * right + halfHeight * up, 1.0f);
 	v[2] = float4(gin[0].PosW - halfWidth * right - halfHeight * up, 1.0f);
@@ -59,10 +60,7 @@ void main(
 	for (int i = 0; i < 4; ++i)
 	{
 		gout.PosH = mul(projView, v[i]);
-		//gout.PosW = v[i].xyz;
-		//gout.Normal = look;
 		gout.TexCoords = gTexC[i];
-		//gout.Age = gin[0].Age;
 		gout.Color = gin[0].Color;
 		triStream.Append(gout);
 	}
