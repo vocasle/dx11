@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <vector>
 #include <string>
+#include "dxut/dxerr.h"
 
 static const WORD MAX_CONSOLE_LINES = 500;
 
@@ -89,3 +90,21 @@ std::vector<uint8_t> UtilsReadData(const char* filepath);
 	static_assert(true, "") // this assert is to require semicolon
 
 std::wstring UtilsString2WideString(const std::string& str);
+
+#if defined(DEBUG) | defined(_DEBUG)
+#ifndef HR
+#define HR(x)                                              \
+	{                                                          \
+		HRESULT hr = (x);                                      \
+		if(FAILED(hr))                                         \
+		{                                                      \
+			DXTrace(__FILEW__, (DWORD)__LINE__, hr, L#x, true); \
+		}                                                      \
+	}
+#endif
+
+#else
+#ifndef HR
+#define HR(x) (x)
+#endif
+#endif 

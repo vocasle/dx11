@@ -255,6 +255,7 @@
     <ClCompile Include="D3DHelper.cpp" />
     <ClCompile Include="DeviceResources.cpp" />
     <ClCompile Include="dx11.cpp" />
+    <ClCompile Include="dxut\dxerr.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="Math.cpp" />
@@ -272,6 +273,7 @@
     <ClInclude Include="D3DHelper.h" />
     <ClInclude Include="DeviceResources.h" />
     <ClInclude Include="dx11.h" />
+    <ClInclude Include="dxut\dxerr.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Keyboard.h" />

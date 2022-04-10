@@ -47,6 +47,12 @@
     <Filter Include="Shaders\ParticleSystem">
       <UniqueIdentifier>{57174213-c759-4bf9-9ea2-1a91e04d955b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThirdParty">
+      <UniqueIdentifier>{fbfada0e-3ce0-43ea-be2e-6695e5856357}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\DXUT">
+      <UniqueIdentifier>{fb173867-9302-4f2a-a4ba-9a81406041a5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dx11.rc">
@@ -95,6 +101,9 @@
     </ClCompile>
     <ClCompile Include="D3DHelper.cpp">
       <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="dxut\dxerr.cpp">
+      <Filter>ThirdParty\DXUT</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +163,9 @@
     </ClInclude>
     <ClInclude Include="D3DCommonTypes.h">
       <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="dxut\dxerr.h">
+      <Filter>ThirdParty\DXUT</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
