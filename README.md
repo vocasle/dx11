@@ -6,7 +6,7 @@
 
 - [X] Load simple model without animation (teapot, statue, car, plane, tank etc.)
 
-- [ ] Load mip-mapped textures (diffuse, normal, specular, gloss)
+- [X] Load mip-mapped textures (diffuse, normal, specular, gloss)
 
 - [X] Calculate Phong lighting from direct and point lights in the pixel shader
 
