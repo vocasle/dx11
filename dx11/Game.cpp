@@ -581,6 +581,7 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	CameraInit(&game->Cam, &cameraPos, &game->Keyboard, &game->Mouse);
 	RenderDataInit(&game->RenderData, &cameraPos);
 	game->m_ParticleSystem.Init(game->DR->Device, game->DR->Context);
+	game->m_ParticleSystem.SetSamplerState(game->DefaultSampler);
 
 	GameLoadModel(game, "assets/meshes/cube.obj");
 	GameLoadModel(game, "assets/meshes/sphere.obj");
@@ -617,19 +618,6 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	RSetInputLayout(&game->Renderer, game->InputLayout);
 	RSetSamplerState(&game->Renderer, game->DefaultSampler);
 	RenderDataSetSRV(&game->RenderData);
-
-	// Particle System Init
-	//game->m_ParticleSystem.InitShaders(game->m_ParticleSystemData->PS.GetAs<ID3D11PixelShader*>(),
-	//	game->m_ParticleSystemData->DrawGS.GetAs<ID3D11GeometryShader*>(),
-	//	game->m_ParticleSystemData->StreamOutGS.GetAs<ID3D11GeometryShader*>(),
-	//	game->m_ParticleSystemData->DrawVS.GetAs<ID3D11VertexShader*>(),
-	//	game->m_ParticleSystemData->StreamOutVS.GetAs<ID3D11VertexShader*>());
-	//game->m_ParticleSystem.CreateInputLayout(game->DR->Device, 
-	//	game->m_ParticleSystemData->DrawVS.GetByteCode(),
-	//	game->m_ParticleSystemData->DrawVS.GetByteCodeLen());
-	//GameLoadTextureFromFile(game->DR, "assets/textures/snow.dds", &game->m_ParticleSystemData->SnowTex);
-	//game->m_ParticleSystemData->RandomTex.SRV = GameCreateRandomTexture1DSRV(game->DR->Device);
-	//game->m_ParticleSystem.Init(game->DR->Device, game->m_ParticleSystemData->SnowTex.SRV, game->m_ParticleSystemData->RandomTex.SRV, 100);
 }
 
 void GameGetDefaultSize(Game* game, int* width, int* height)

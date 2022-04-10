@@ -11,7 +11,9 @@ ParticleSystem::ParticleSystem():
 	m_inputLayout{nullptr},
 	m_cb{nullptr},
 	m_texture{},
-	m_blendState{nullptr}
+	m_velocityTexture{},
+	m_blendState{nullptr},
+	m_sampler{nullptr}
 {
 }
 
@@ -52,7 +54,9 @@ void ParticleSystem::Init(ID3D11Device* device, ID3D11DeviceContext* context)
 
 	D3DHelper::CreateConstantBuffer(device, sizeof(PerFrameConstants), &m_cb);
 
-	D3DHelper::LoadTextureFromFile(device, context, "assets/textures/snow.dds", &m_texture);
+	D3DHelper::LoadTextureFromFile(device, context, "assets/textures/flare0.dds", &m_texture);
+
+	m_velocityTexture.SRV = D3DHelper::CreateRandomTexture1DSRV(device);
 
 	{
 		D3D11_BLEND_DESC transparentDesc = {};
@@ -94,7 +98,7 @@ void ParticleSystem::Draw(ID3D11DeviceContext* context)
 	uint32_t offsets = 0;
 	context->IASetVertexBuffers(0, 1, &m_vb, &strides, &offsets);
 	context->GSSetConstantBuffers(0, 1, &m_cb);
-	//context->PSSetSamplers(0, 1, nullptr);
+	context->PSSetSamplers(0, 1, &m_sampler);
 	context->PSSetShaderResources(0, 1, &m_texture.SRV);
 	constexpr float blendFactors[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	context->OMSetBlendState(m_blendState, blendFactors, 0xffffffff);
@@ -117,6 +121,11 @@ void ParticleSystem::Update(const Mat4X4& inView,
 	m_perFrameConstants.World = inWorld;
 	m_perFrameConstants.View = inView;
 	UpdateParticles(inDelta);
+}
+
+void ParticleSystem::SetSamplerState(ID3D11SamplerState* inSampler)
+{
+	m_sampler = inSampler;
 }
 
 void ParticleSystem::InitParticles()
@@ -149,7 +158,6 @@ void ParticleSystem::UpdateParticles(double inDelta)
 	for (Particle& p : m_particles)
 	{
 		p.Age += delta;
-		UpdateParticle(p, delta);
 
 		if (p.Age > MAX_AGE)
 		{
@@ -157,13 +165,11 @@ void ParticleSystem::UpdateParticles(double inDelta)
 		}
 	}
 
-	if (m_particles.size() + 10 < MAX_PARTICLES)
+	if (m_particles.size() + 100 < MAX_PARTICLES)
 	{
-		for (uint32_t i = 0; i < 10; ++i)
+		for (uint32_t i = 0; i < 100; ++i)
 		{
-			Particle p = {};
-			ResetParticle(p);
-			m_particles.push_back(p);
+			m_particles.emplace_back();
 		}
 	}
 }

@@ -14,6 +14,7 @@ class ParticleSystem
 private:
 	struct Particle
 	{
+		Particle() : Position{}, Velocity{}, Age{ 0.0f }, Size{} {}
 		Vec3D Position;
 		Vec3D Velocity;
 		float Age;
@@ -42,6 +43,7 @@ public:
 		const Vec3D& inCamPosW,
 		double inDelta,
 		double inGameTime);
+	void SetSamplerState(ID3D11SamplerState* inSampler);
 
 private:
 	void InitParticles();
@@ -61,9 +63,11 @@ private:
 	ID3D11Buffer* m_cb;
 	PerFrameConstants m_perFrameConstants;
 	Texture m_texture;
+	Texture m_velocityTexture;
 	ID3D11BlendState* m_blendState;
+	ID3D11SamplerState* m_sampler;
 
-	static constexpr float MAX_AGE = 10.0f;
+	static constexpr float MAX_AGE = 1.0f;
 	static constexpr uint32_t MAX_PARTICLES = 100000;
 
 };
