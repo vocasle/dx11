@@ -14,11 +14,11 @@ class ParticleSystem
 private:
 	struct Particle
 	{
-		Particle() : Position{}, Velocity{}, Age{ 0.0f }, Size{} {}
-		Vec3D Position;
-		Vec3D Velocity;
+		Particle() : InitPosW{}, InitVelW{}, SizeW{}, Age{ 0.0f } {}
+		Vec3D InitPosW;
+		Vec3D InitVelW;
+		Vec2D SizeW;
 		float Age;
-		Vec2D Size;
 	};
 
 	struct PerFrameConstants
@@ -50,7 +50,6 @@ private:
 	void CreateInputLayout(ID3D11Device* device);
 	void UpdateParticles(double inDelta);
 	void ResetParticle(Particle& p);
-	void UpdateParticle(Particle& p, float t);
 
 private:
 
@@ -66,8 +65,9 @@ private:
 	Texture m_velocityTexture;
 	ID3D11BlendState* m_blendState;
 	ID3D11SamplerState* m_sampler;
+	ID3D11DepthStencilState* m_depthStencilState;
 
-	static constexpr float MAX_AGE = 1.0f;
-	static constexpr uint32_t MAX_PARTICLES = 100000;
+	static constexpr float MAX_AGE = 0.5f;
+	static constexpr uint32_t MAX_PARTICLES = 200;
 
 };

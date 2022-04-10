@@ -1,18 +1,15 @@
 struct GSOutput
 {
-	float4 PosH : SV_POSITION;
-	float3 Normal : NORMAL;
-	float2 TexCoords : TEXCOORDS;
-	float3 PosW : POSITION;
-	float Age : AGE;
+	float4 PosH  : SV_Position;
+	float4 Color : COLOR;
+	float2 TexCoords  : TEXCOORDS;
 };
 
 struct VSOut
 {
-	float3 Pos : POSITION;
-	float3 Velocity : VELOCITY;
-	float Age : AGE;
-	float2 Size : SIZE;
+	float3 PosW : POSITION;
+	float2 SizeW : SIZE;
+	float4 Color : COLOR;
 };
 
 cbuffer cbPerFrameConstants : register(b0)
@@ -32,23 +29,25 @@ void main(
 {
 
 	float3 up = float3(0.0f, 1.0f, 0.0f);
-	float3 look = camPosW - gin[0].Pos;
+	float3 look = camPosW - gin[0].PosW;
 	look.y = 0.0f; // y-axis aligned, so project to xz-plane
 	look = normalize(look);
 	float3 right = cross(up, look);
 
 	float4 v[4];
-	float halfWidth = 0.5f * gin[0].Size.x;
-	float halfHeight = 0.5f * gin[0].Size.y;
-	v[0] = float4(gin[0].Pos + halfWidth * right - halfHeight * up, 1.0f);
-	v[1] = float4(gin[0].Pos + halfWidth * right + halfHeight * up, 1.0f);
-	v[2] = float4(gin[0].Pos - halfWidth * right - halfHeight * up, 1.0f);
-	v[3] = float4(gin[0].Pos - halfWidth * right + halfHeight * up, 1.0f);
+	float halfWidth = 0.5f * gin[0].SizeW.x;
+	float halfHeight = 0.5f * gin[0].SizeW.y;
+	v[0] = float4(gin[0].PosW + halfWidth * right - halfHeight * up, 1.0f);
+	v[1] = float4(gin[0].PosW + halfWidth * right + halfHeight * up, 1.0f);
+	v[2] = float4(gin[0].PosW - halfWidth * right - halfHeight * up, 1.0f);
+	v[3] = float4(gin[0].PosW - halfWidth * right + halfHeight * up, 1.0f);
 
 
 	GSOutput gout;
 
-	float2 gTexC[4] =
+	const float4x4 projView = mul(proj, view);
+
+	static const float2 gTexC[4] =
 	{
 		float2(0.0f, 1.0f),
 		float2(0.0f, 0.0f),
@@ -56,16 +55,15 @@ void main(
 		float2(1.0f, 0.0f)
 	};
 
-	const float4x4 projView = mul(proj, view);
-
 	[unroll]
 	for (int i = 0; i < 4; ++i)
 	{
 		gout.PosH = mul(projView, v[i]);
-		gout.PosW = v[i].xyz;
-		gout.Normal = look;
+		//gout.PosW = v[i].xyz;
+		//gout.Normal = look;
 		gout.TexCoords = gTexC[i];
-		gout.Age = gin[0].Age;
+		//gout.Age = gin[0].Age;
+		gout.Color = gin[0].Color;
 		triStream.Append(gout);
 	}
 }

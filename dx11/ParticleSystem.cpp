@@ -13,7 +13,8 @@ ParticleSystem::ParticleSystem():
 	m_texture{},
 	m_velocityTexture{},
 	m_blendState{nullptr},
-	m_sampler{nullptr}
+	m_sampler{nullptr},
+	m_depthStencilState{nullptr}
 {
 }
 
@@ -67,7 +68,7 @@ void ParticleSystem::Init(ID3D11Device* device, ID3D11DeviceContext* context)
 		transparentDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 		transparentDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
 		transparentDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-		transparentDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+		transparentDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
 		transparentDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 		transparentDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
@@ -75,6 +76,13 @@ void ParticleSystem::Init(ID3D11Device* device, ID3D11DeviceContext* context)
 		{
 			UTILS_FATAL_ERROR("Failed to create blend state");
 		}
+	}
+
+	{
+		D3D11_DEPTH_STENCIL_DESC desc = {};
+		desc.DepthEnable = false;
+
+		HR(device->CreateDepthStencilState(&desc, &m_depthStencilState));
 	}
 }
 
@@ -102,6 +110,7 @@ void ParticleSystem::Draw(ID3D11DeviceContext* context)
 	context->PSSetShaderResources(0, 1, &m_texture.SRV);
 	constexpr float blendFactors[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	context->OMSetBlendState(m_blendState, blendFactors, 0xffffffff);
+	context->OMSetDepthStencilState(m_depthStencilState, 0);
 
 	context->Draw(m_particles.size(), 0);
 }
@@ -113,7 +122,7 @@ void ParticleSystem::Update(const Mat4X4& inView,
 	double inDelta,
 	double inGameTime)
 {
-	UtilsDebugPrint("delta: %f, game: %f\n", inDelta, inGameTime);
+	//UtilsDebugPrint("delta: %f, game: %f\n", inDelta, inGameTime);
 	m_perFrameConstants.CamPosW = inCamPosW;
 	m_perFrameConstants.Proj = inProj;
 	m_perFrameConstants.WorldInvTranspose = MathMat4X4Inverse(&inWorld);
@@ -132,9 +141,12 @@ void ParticleSystem::InitParticles()
 {
 	m_particles.reserve(MAX_PARTICLES);
 	Particle p = {};
-
-	ResetParticle(p);
-	m_particles.push_back(p);
+	
+	//for (uint32_t i = 0; i < MAX_PARTICLES; ++i)
+	{
+		ResetParticle(p);
+		m_particles.push_back(p);
+	}
 }
 
 void ParticleSystem::CreateInputLayout(ID3D11Device* device)
@@ -142,8 +154,8 @@ void ParticleSystem::CreateInputLayout(ID3D11Device* device)
 	D3D11_INPUT_ELEMENT_DESC desc[] = {
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"VELOCITY", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"AGE", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"SIZE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"SIZE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"AGE", 0, DXGI_FORMAT_R32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 
 	if (FAILED(device->CreateInputLayout(desc, 4, m_vs.GetByteCode(), m_vs.GetByteCodeLen(), &m_inputLayout)))
@@ -158,7 +170,6 @@ void ParticleSystem::UpdateParticles(double inDelta)
 	for (Particle& p : m_particles)
 	{
 		p.Age += delta;
-		//UpdateParticle(p, delta);
 
 		if (p.Age > MAX_AGE)
 		{
@@ -166,9 +177,9 @@ void ParticleSystem::UpdateParticles(double inDelta)
 		}
 	}
 
-	if (m_particles.size() /*+ 100*/ < MAX_PARTICLES)
+	if (m_particles.size() /*+ 5*/ < MAX_PARTICLES)
 	{
-		//for (uint32_t i = 0; i < 100; ++i)
+		//for (uint32_t i = 0; i < 5; ++i)
 		{
 			m_particles.emplace_back();
 		}
@@ -177,21 +188,10 @@ void ParticleSystem::UpdateParticles(double inDelta)
 
 void ParticleSystem::ResetParticle(Particle& p)
 {
-	p.Position = { 0.0f, 0.0f , 0.0f };
-	p.Size = { 3.0f, 3.0f };
+	p.InitPosW = { 0.0f, 0.0f , 0.0f };
+	p.SizeW = { 5.0f, 5.0f };
 	p.Age = 0.0f;
-	p.Velocity = { MathRandom(-1.0f, 1.0f), MathRandom(-1.0f, 1.0f), MathRandom(-1.0f, 1.0f) };
-	MathVec3DNormalize(&p.Velocity);
-	p.Velocity = MathVec3DModulateByScalar(&p.Velocity, 4.0f);
-}
-
-void ParticleSystem::UpdateParticle(Particle& p, float t)
-{
-	Vec3D a = { 0.0f, 0.0f, 0.0f };
-
-	a = MathVec3DModulateByScalar(&a, p.Age * p.Age);
-
-	Vec3D velocity = MathVec3DModulateByScalar(&p.Velocity, p.Age);
-	p.Position = MathVec3DAddition(&a, &velocity);
-	//p.Position = MathVec3DAddition(&p.Position, &p.Velocity);
+	p.InitVelW = { MathRandom(-1.0f, 1.0f), MathRandom(0.0f, 1.0f), MathRandom(-1.0f, 1.0f) };
+	MathVec3DNormalize(&p.InitVelW);
+	p.InitVelW = MathVec3DModulateByScalar(&p.InitVelW, 1.0f);
 }
