@@ -327,8 +327,8 @@ void GameTick(Game* game)
 	TimerTick(&game->TickTimer);
 	game->m_GameTime += game->TickTimer.DeltaMillis;
 	GameUpdate(game);
-	//GameRenderNew(game);
-	GameRenderParticles(game);
+	GameRenderNew(game);
+	//GameRenderParticles(game);
 }
 
 static void ErrorDescription(HRESULT hr)
