@@ -4,6 +4,7 @@ struct GSOutput
 	float3 Normal : NORMAL;
 	float2 TexCoords : TEXCOORDS;
 	float3 PosW : POSITION;
+	float Age : AGE;
 };
 
 struct VSOut
@@ -64,6 +65,7 @@ void main(
 		gout.PosW = v[i].xyz;
 		gout.Normal = look;
 		gout.TexCoords = gTexC[i];
+		gout.Age = gin[0].Age;
 		triStream.Append(gout);
 	}
 }
