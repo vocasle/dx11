@@ -74,7 +74,7 @@ static void _ActorLoadModel(Actor* actor, struct Model* model)
 			vert->TexCoords.Y = tc->v;
 
 			assert(actor->m_NumIndices + 1 <= numFaces);
-			actor->m_Indices[actor->m_NumIndices++] = j;
+			actor->m_Indices[actor->m_NumIndices] = actor->m_NumIndices++;
 
 			actor->m_NumVertices++;
 		}
