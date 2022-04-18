@@ -229,6 +229,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Actor.c" />
     <ClCompile Include="Camera.c" />
     <ClCompile Include="DeviceResources.c" />
     <ClCompile Include="dx11.c" />
@@ -242,6 +243,7 @@
     <ClCompile Include="Utils.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Actor.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DeviceResources.h" />
     <ClInclude Include="dx11.h" />
