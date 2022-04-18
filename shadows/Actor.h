@@ -19,6 +19,7 @@ typedef struct _Actor
 	size_t m_NumVertices;
 	uint32_t* m_Indices;
 	size_t m_NumIndices;
+	Mat4X4 m_World;
 } Actor;
 
 Actor* ActorNew(void);
@@ -31,3 +32,7 @@ void ActorLoadModel(Actor* actor, const char* filename);
 
 void ActorCreateVertexBuffer(Actor* actor, ID3D11Device* device);
 void ActorCreateIndexBuffer(Actor* actor, ID3D11Device* device);
+void ActorTranslate(Actor* actor, const Vec3D offset);
+void ActorRotate(Actor* actor, const float pitch, const float yaw, 
+	const float roll);
+void ActorScale(Actor* actor, const float s);

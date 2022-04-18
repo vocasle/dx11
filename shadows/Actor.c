@@ -17,6 +17,7 @@ void ActorFree(Actor* actor)
 void ActorInit(Actor* actor)
 {
 	memset(actor, 0, sizeof(Actor));
+	actor->m_World = MathMat4X4Identity();
 }
 
 void ActorDeinit(Actor* actor)
@@ -127,4 +128,28 @@ void ActorCreateIndexBuffer(Actor* actor, ID3D11Device* device)
 
 	HR(device->lpVtbl->CreateBuffer(device, &bufferDesc, &subresourceData, 
 		&actor->m_IndexBuffer));
+}
+
+void ActorTranslate(Actor* actor, const Vec3D offset)
+{
+	const Mat4X4 offsetMat = MathMat4X4TranslateFromVec3D(&offset);
+	actor->m_World = MathMat4X4MultMat4X4ByMat4X4(&actor->m_World,
+		&offsetMat);
+}
+
+void ActorRotate(Actor* actor, const float pitch, const float yaw,
+	const float roll)
+{
+	const Vec3D angles = { pitch, yaw, roll };
+	const Mat4X4 rotMat = MathMat4X4RotateFromVec3D(&angles);
+	actor->m_World = MathMat4X4MultMat4X4ByMat4X4(&actor->m_World,
+		&rotMat);
+}
+
+void ActorScale(Actor* actor, const float s)
+{
+	const Vec3D scale = { s, s, s };
+	const Mat4X4 scaleMat = MathMat4X4ScaleFromVec3D(&scale);
+	actor->m_World = MathMat4X4MultMat4X4ByMat4X4(&actor->m_World,
+		&scaleMat);
 }
