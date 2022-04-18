@@ -301,48 +301,45 @@ static void GameRenderNew(Game* game)
 
 	RBindPixelShader(r, game->PhongPS);
 	RBindVertexShader(r, game->VS);
+	
 	RBindConstantBuffers(r, BindTargets_VS, game->RenderData.VSConstBuffers, 1);
 	RBindShaderResources(r, BindTargets_PS, game->RenderData.SRVs, TEXTURE_PULL);
 	RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
 
-	for (size_t i = 0; i < 1/*game->m_NumActors*/; ++i)
+	for (size_t i = 0; i < game->m_NumActors; ++i)
 	{
 		const Actor* actor = game->m_Actors[i];
+
+		game->PerFrameConstants.World = actor->m_World;
+		GameUpdatePerFrameConstants(game);
+		RBindConstantBuffers(r, BindTargets_VS, game->RenderData.VSConstBuffers, 1);
+
 		RDrawIndexed(r, actor->m_IndexBuffer, actor->m_VertexBuffer, 
 			sizeof(struct Vertex), 
-			/*actor->m_NumIndices, */ 372,
-			222,
-			222);
-
-		RDrawIndexed(r, actor->m_IndexBuffer, actor->m_VertexBuffer,
-			sizeof(struct Vertex),
-			/*actor->m_NumIndices, */ 36,
+			actor->m_NumIndices,
 			0,
 			0);
-
-		RDrawIndexed(r, actor->m_IndexBuffer, actor->m_VertexBuffer,
-			sizeof(struct Vertex),
-			/*actor->m_NumIndices, */ 186,
-			36,
-			36);
 	}
 	
 	
 
 	//// Light properties
-	//{
-	//	const Vec3D scale = { 0.5f, 0.5f, 0.5f };
-	//	Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
-	//	Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->RenderData.LightingData.PL.Position);
-	//	game->PerFrameConstants.World = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
-	//	GameUpdatePerFrameConstants(game);
-	//}
+	{
+		const Vec3D scale = { 0.5f, 0.5f, 0.5f };
+		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
+		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->RenderData.LightingData.PL.Position);
+		game->PerFrameConstants.World = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
+		GameUpdatePerFrameConstants(game);
+	}
 
-	//RBindPixelShader(r, game->LightPS);
-	//RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
-	//offset = 0;
-	//const struct Mesh* sphere = GameFindMeshByName(game, "Sphere", &offset);
-	//RDrawIndexed(r, game->IndexBuffer, game->VertexBuffer, sizeof(struct Vertex), sphere->NumFaces, offset, offset);
+	RBindPixelShader(r, game->LightPS);
+	RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
+	const Actor* sphere = game->m_Actors[2];
+	RDrawIndexed(r, sphere->m_IndexBuffer, sphere->m_VertexBuffer, 
+		sizeof(struct Vertex), 
+		sphere->m_NumIndices, 
+		0, 
+		0);
 
 	RPresent(r);
 }
@@ -602,22 +599,26 @@ static void GameCreateActors(Game* game)
 		"assets/meshes/sphere.obj"
 	};
 
+	const Vec3D offsets[] = {
+		{MathRandom(-5.0f, 5.0f), 0.0f, MathRandom(-5.0f, 5.0f)},
+		{MathRandom(-5.0f, 5.0f), 0.0f, MathRandom(-5.0f, 5.0f)},
+		{MathRandom(-5.0f, 5.0f), 0.0f, MathRandom(-5.0f, 5.0f)}
+	};
+
 	game->m_Actors = realloc(game->m_Actors, 
 		sizeof(Actor*) * _countof(models));
 	assert(game->m_Actors);
 
 	for (size_t i = 0; i < _countof(models); ++i)
 	{
-		game->m_Actors[i] = ActorNew();
-		ActorInit(game->m_Actors[i]);
-		ActorLoadModel(game->m_Actors[game->m_NumActors],
-			models[i]);
-		ActorCreateIndexBuffer(game->m_Actors[game->m_NumActors],
-			game->DR->Device);
-		ActorCreateVertexBuffer(game->m_Actors[game->m_NumActors],
-			game->DR->Device);
+		Actor* actor = ActorNew();
+		ActorInit(actor);
+		ActorLoadModel(actor, models[i]);
+		ActorCreateIndexBuffer(actor, game->DR->Device);
+		ActorCreateVertexBuffer(actor, game->DR->Device);
+		ActorTranslate(actor, offsets[i]);
 
-		game->m_NumActors++;
+		game->m_Actors[game->m_NumActors++] = actor;
 	}
 }
 
