@@ -179,9 +179,9 @@ static void OLParseMeshes(struct Mesh* meshes, uint32_t numMeshes, struct MeshIn
 					idx[0], idx[1], idx[2], idx[3], idx[4], idx[5], idx[6], idx[7], idx[8]);
 			for (uint32_t i = 0; i < 9; i += 3)
 			{
-				face.posIdx = idx[i];
-				face.texIdx = idx[i + 1];
-				face.normIdx = idx[i + 2];
+				face.posIdx = idx[i] - 1;
+				face.texIdx = idx[i + 1] - 1;
+				face.normIdx = idx[i + 2] - 1;
 				mesh->Faces[mesh->NumFaces++] = face;
 				assert(mesh->NumFaces <= info->NumFaces);
 			}
