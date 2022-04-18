@@ -602,7 +602,7 @@ static void GameCreateActors(Game* game)
 		{0.0f, 0.0f, 0.0f},
 		{0.0f, MathToRadians(180.0f), 0.0f},
 	};
-
+	// TODO: Assemble scene for shadow mapping
 	const Vec3D offsets[] = {
 		{MathRandom(-10.0f, 10.0f), 0.0f, MathRandom(-10.0f, 10.0f)},
 		{MathRandom(-10.0f, 10.0f), 0.0f, MathRandom(-10.0f, 10.0f)},
