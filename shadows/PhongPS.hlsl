@@ -22,7 +22,7 @@ cbuffer LightingData : register(b0)
 
 float4 main(PSIn In) : SV_TARGET
 {
-	SurfaceProperties sp;
+	Material sp;
 	sp.Ambient = diffuseTexture.Sample(defaultSampler, In.TexCoords);
 	sp.Diffuse = diffuseTexture.Sample(defaultSampler, In.TexCoords);
 	sp.Specular = specularTexture.Sample(defaultSampler, In.TexCoords);
