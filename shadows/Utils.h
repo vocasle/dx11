@@ -76,6 +76,9 @@ unsigned char* UtilsReadData(const char* filepath, unsigned int* bufferSize);
 	\
 	void Array##ClassSuffix##FreeCustom(struct Array##ClassSuffix* arr, void (*CustomFree)(struct Array##ClassSuffix* arr))
 
-// COM helpers
-
 #define COM_FREE(This) (This->lpVtbl->Release(This))
+
+#define HR(x) \
+	if (FAILED(x)) { \
+		UTILS_FATAL_ERROR("%s:%d - Operation failed.", __FILE__, __LINE__); \
+	}
