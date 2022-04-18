@@ -73,7 +73,7 @@ static void _ActorLoadModel(Actor* actor, struct Model* model)
 			vert->TexCoords.X = tc->u;
 			vert->TexCoords.Y = tc->v;
 
-			assert(actor->m_NumIndices + 1 < numFaces);
+			assert(actor->m_NumIndices + 1 <= numFaces);
 			actor->m_Indices[actor->m_NumIndices++] = j;
 
 			actor->m_NumVertices++;
@@ -107,7 +107,7 @@ void ActorCreateVertexBuffer(Actor* actor, ID3D11Device* device)
 	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 
 	HR(device->lpVtbl->CreateBuffer(device, &bufferDesc, &subresourceData,
-		actor->m_VertexBuffer))
+		&actor->m_VertexBuffer))
 }
 
 void ActorCreateIndexBuffer(Actor* actor, ID3D11Device* device)
@@ -122,5 +122,5 @@ void ActorCreateIndexBuffer(Actor* actor, ID3D11Device* device)
 	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 
 	HR(device->lpVtbl->CreateBuffer(device, &bufferDesc, &subresourceData, 
-		actor->m_IndexBuffer));
+		&actor->m_IndexBuffer));
 }
