@@ -93,6 +93,10 @@ void ActorLoadModel(Actor* actor, const char* filename)
 	{
 		_ActorLoadModel(actor, model);
 	}
+	else
+	{
+		UTILS_FATAL_ERROR("Failed to load model %s", filename);
+	}
 }
 
 void ActorCreateVertexBuffer(Actor* actor, ID3D11Device* device)
