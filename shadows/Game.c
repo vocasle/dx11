@@ -585,13 +585,29 @@ static void GameCreateActors(Game* game)
 	const char* models[] = {
 		"assets/meshes/rocket.obj",
 		"assets/meshes/cube.obj",
-		"assets/meshes/sphere.obj"
+		"assets/meshes/sphere.obj",
+		"assets/meshes/bunny.obj",
+	};
+
+	const float scales[] = {
+		1.0f,
+		1.0f,
+		1.0f,
+		0.01f,
+	};
+
+	const Vec3D rotations[] = {
+		{0.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 0.0f},
+		{0.0f, MathToRadians(180.0f), 0.0f},
 	};
 
 	const Vec3D offsets[] = {
 		{MathRandom(-5.0f, 5.0f), 0.0f, MathRandom(-5.0f, 5.0f)},
 		{MathRandom(-5.0f, 5.0f), 0.0f, MathRandom(-5.0f, 5.0f)},
-		{MathRandom(-5.0f, 5.0f), 0.0f, MathRandom(-5.0f, 5.0f)}
+		{MathRandom(-5.0f, 5.0f), 0.0f, MathRandom(-5.0f, 5.0f)},
+		{MathRandom(-5.0f, 5.0f), 0.0f, MathRandom(-5.0f, 5.0f)},
 	};
 
 	game->m_Actors = realloc(game->m_Actors, 
@@ -605,6 +621,8 @@ static void GameCreateActors(Game* game)
 		ActorLoadModel(actor, models[i]);
 		ActorCreateIndexBuffer(actor, game->DR->Device);
 		ActorCreateVertexBuffer(actor, game->DR->Device);
+		ActorScale(actor, scales[i]);
+		ActorRotate(actor, rotations[i].X, rotations[i].Y, rotations[i].Z);
 		ActorTranslate(actor, offsets[i]);
 
 		game->m_Actors[game->m_NumActors++] = actor;
