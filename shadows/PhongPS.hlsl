@@ -1,18 +1,4 @@
-#include "LightingHelper.hlsli"
-
-struct PSIn
-{
-	float4 Pos : SV_POSITION;
-	float3 Normal : NORMAL;
-	float2 TexCoords : TEXCOORDS;
-	float3 PosW : POSITION;
-};
-
-sampler defaultSampler : register(s0);
-Texture2D<float4> diffuseTexture : register(t0);
-Texture2D<float4> specularTexture : register(t1);
-Texture2D<float4> glossTexture : register(t2);
-Texture2D<float4> normalTexture : register(t3);
+#include "Common.hlsli"
 
 cbuffer LightingData : register(b0)
 {
@@ -20,7 +6,7 @@ cbuffer LightingData : register(b0)
 	float3 CameraPos;
 }
 
-float4 main(PSIn In) : SV_TARGET
+float4 main(VSOut In) : SV_TARGET
 {
 	Material sp;
 	sp.Ambient = diffuseTexture.Sample(defaultSampler, In.TexCoords);
@@ -28,7 +14,7 @@ float4 main(PSIn In) : SV_TARGET
 	sp.Specular = specularTexture.Sample(defaultSampler, In.TexCoords);
 
 	const float3 L = normalize(PL.Position - In.PosW);
-	const float3 N = normalize(In.Normal);
+	const float3 N = normalize(In.NormalW);
 	const float4 D = sp.Diffuse * PL.Diffuse;
 	const float4 A = sp.Ambient * PL.Ambient;
 	const float Atten = Attenuation(0.5f, 0.1f, 0.01f, length(L));
