@@ -604,10 +604,10 @@ static void GameCreateActors(Game* game)
 	};
 
 	const Vec3D offsets[] = {
-		{MathRandom(-5.0f, 5.0f), 0.0f, MathRandom(-5.0f, 5.0f)},
-		{MathRandom(-5.0f, 5.0f), 0.0f, MathRandom(-5.0f, 5.0f)},
-		{MathRandom(-5.0f, 5.0f), 0.0f, MathRandom(-5.0f, 5.0f)},
-		{MathRandom(-5.0f, 5.0f), 0.0f, MathRandom(-5.0f, 5.0f)},
+		{MathRandom(-10.0f, 10.0f), 0.0f, MathRandom(-10.0f, 10.0f)},
+		{MathRandom(-10.0f, 10.0f), 0.0f, MathRandom(-10.0f, 10.0f)},
+		{MathRandom(-10.0f, 10.0f), 0.0f, MathRandom(-10.0f, 10.0f)},
+		{MathRandom(-10.0f, 10.0f), 0.0f, MathRandom(-10.0f, 10.0f)},
 	};
 
 	game->m_Actors = realloc(game->m_Actors, 
