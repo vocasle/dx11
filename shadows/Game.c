@@ -323,7 +323,7 @@ static void GameRenderNew(Game* game)
 
 	//// Light properties
 	{
-		const Vec3D scale = { 0.5f, 0.5f, 0.5f };
+		const Vec3D scale = { 0.2f, 0.2f, 0.2f };
 		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
 		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->RenderData.LightingData.PL.Position);
 		game->PerFrameConstants.World = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
