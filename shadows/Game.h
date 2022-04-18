@@ -81,10 +81,7 @@ typedef struct Game
 	ID3D11PixelShader* PS;
 	ID3D11PixelShader* PhongPS;
 	ID3D11PixelShader* LightPS;
-	ID3D11Buffer* VertexBuffer;
-	ID3D11Buffer* IndexBuffer;
 	ID3D11InputLayout* InputLayout;
-	//ID3D11Buffer* PerFrameConstantsCB;
 	ID3D11SamplerState* DefaultSampler;
 	struct Model** Models;
 	uint32_t NumModels;

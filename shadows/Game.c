@@ -94,8 +94,6 @@ void GameFree(Game* game)
 {
 	COM_FREE(game->VS);
 	COM_FREE(game->PS);
-	COM_FREE(game->VertexBuffer);
-	COM_FREE(game->IndexBuffer);
 	COM_FREE(game->InputLayout);
 	COM_FREE(game->DefaultSampler);
 	COM_FREE(game->PhongPS);
@@ -394,15 +392,6 @@ static void GameCreatePerFrameCB(Game* game)
 	GameCreateConstantBuffer(game->DR->Device, sizeof(PerFrameConstants), &game->RenderData.VSConstBuffers[0]);
 }
 
-static void GameLoadModel(Game* game, const char* filename)
-{
-	assert(game->NumModels + 1 <= MODEL_PULL && "Mamimum models already loaded");
-	struct Model* model = OLLoad(filename);
-	assert(model && "Failed to load model");
-	game->NumMeshes += model->NumMeshes;
-	game->Models[game->NumModels++] = model;
-}
-
 static void GameCreateSharedBuffers(Game* game)
 {
 	size_t numFaces = 0;
@@ -640,13 +629,11 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	// init actors
 	GameCreateActors(game);
 
-	GameLoadModel(game, "assets/meshes/cube.obj");
-	GameLoadModel(game, "assets/meshes/sphere.obj");
 	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_COL_VAR1_1K.jpg", &game->RenderData.DefaultTexture);
 	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_REFL_1K.jpg", &game->RenderData.SpecularTexture);
 	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_GLOSS_1K.jpg", &game->RenderData.GlossTexture);
 	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_NRM_1K.png", &game->RenderData.NormalTexture);
-	GameCreateSharedBuffers(game);
+	//GameCreateSharedBuffers(game);
 	GameGenerateRandomOffsets(game);
 	ID3D11Device1* device = game->DR->Device;
 	game->gWorldMat = MathMat4X4Identity();
@@ -657,12 +644,6 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	GameCreatePixelShader("PhongPS.cso", (ID3D11Device*)device, &game->PhongPS);
 	GameCreatePixelShader("LightPS.cso", (ID3D11Device*)device, &game->LightPS);
 	GameCreateVertexShader("VertexShader.cso", (ID3D11Device*)device, &game->VS, &game->InputLayout);
-
-	assert(game->RenderData.Vertices);
-	assert(game->RenderData.Indices);
-
-	GameCreateVertexBuffer(game->RenderData.Vertices, game->RenderData.NumVertices, (ID3D11Device*)device, &game->VertexBuffer);
-	GameCreateIndexBuffer(game->RenderData.Indices, game->RenderData.NumIndices, (ID3D11Device*)device, &game->IndexBuffer);
 
 	GameCreatePerFrameCB(game);
 	GameCreateConstantBuffer(game->DR->Device, sizeof(struct LightingData), &game->RenderData.PSConstBuffers[0]);
