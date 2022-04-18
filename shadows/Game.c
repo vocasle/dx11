@@ -305,25 +305,44 @@ static void GameRenderNew(Game* game)
 	RBindShaderResources(r, BindTargets_PS, game->RenderData.SRVs, TEXTURE_PULL);
 	RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
 
-	size_t offset = 0;
-	const struct Mesh* cube = GameFindMeshByName(game, "Cube", &offset);
-	
-	RDrawIndexed(r, game->IndexBuffer, game->VertexBuffer, sizeof(struct Vertex), cube->NumFaces, offset, offset);
-
-	// Light properties
+	for (size_t i = 0; i < 1/*game->m_NumActors*/; ++i)
 	{
-		const Vec3D scale = { 0.5f, 0.5f, 0.5f };
-		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
-		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->RenderData.LightingData.PL.Position);
-		game->PerFrameConstants.World = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
-		GameUpdatePerFrameConstants(game);
-	}
+		const Actor* actor = game->m_Actors[i];
+		RDrawIndexed(r, actor->m_IndexBuffer, actor->m_VertexBuffer, 
+			sizeof(struct Vertex), 
+			/*actor->m_NumIndices, */ 372,
+			222,
+			222);
 
-	RBindPixelShader(r, game->LightPS);
-	RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
-	offset = 0;
-	const struct Mesh* sphere = GameFindMeshByName(game, "Sphere", &offset);
-	RDrawIndexed(r, game->IndexBuffer, game->VertexBuffer, sizeof(struct Vertex), sphere->NumFaces, offset, offset);
+		RDrawIndexed(r, actor->m_IndexBuffer, actor->m_VertexBuffer,
+			sizeof(struct Vertex),
+			/*actor->m_NumIndices, */ 36,
+			0,
+			0);
+
+		RDrawIndexed(r, actor->m_IndexBuffer, actor->m_VertexBuffer,
+			sizeof(struct Vertex),
+			/*actor->m_NumIndices, */ 186,
+			36,
+			36);
+	}
+	
+	
+
+	//// Light properties
+	//{
+	//	const Vec3D scale = { 0.5f, 0.5f, 0.5f };
+	//	Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
+	//	Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->RenderData.LightingData.PL.Position);
+	//	game->PerFrameConstants.World = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
+	//	GameUpdatePerFrameConstants(game);
+	//}
+
+	//RBindPixelShader(r, game->LightPS);
+	//RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
+	//offset = 0;
+	//const struct Mesh* sphere = GameFindMeshByName(game, "Sphere", &offset);
+	//RDrawIndexed(r, game->IndexBuffer, game->VertexBuffer, sizeof(struct Vertex), sphere->NumFaces, offset, offset);
 
 	RPresent(r);
 }
