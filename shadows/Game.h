@@ -9,6 +9,7 @@
 #include "Mouse.h"
 #include "objloader.h"
 #include "Renderer.h"
+#include "Actor.h"
 
 #define MODEL_PULL 10
 #define TEXTURE_PULL 4
@@ -98,6 +99,10 @@ typedef struct Game
 	Mat4X4 gProjMat;
 	struct RenderData RenderData;
 	struct Renderer Renderer;
+
+	// new stuff
+	Actor** m_Actors;
+	size_t m_NumActors;
 } Game;
 
 Game* GameNew(void);

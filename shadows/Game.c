@@ -108,6 +108,11 @@ void GameFree(Game* game)
 		ModelFree(game->Models[i]);
 	}
 	free(game->Models);
+	for (size_t i = 0; i < game->m_NumActors; ++i)
+	{
+		ActorFree(game->m_Actors[i]);
+	}
+	free(game->m_Actors);
 	
 	memset(game, 0, sizeof(Game));
 	free(game);
@@ -415,9 +420,9 @@ static void GameCreateSharedBuffers(Game* game)
 			for (uint32_t j = 0; j < mesh->NumFaces; ++j)
 			{
 				const struct Face* face = model->Meshes[i].Faces + j;
-				const struct Position* pos = mesh->Positions + face->posIdx - 1 - posOffs;
-				const struct Normal* norm = mesh->Normals + face->normIdx - 1 - normOffs;
-				const struct TexCoord* tc = mesh->TexCoords + face->texIdx - 1 - tcOffs;
+				const struct Position* pos = mesh->Positions + face->posIdx - posOffs;
+				const struct Normal* norm = mesh->Normals + face->normIdx - normOffs;
+				const struct TexCoord* tc = mesh->TexCoords + face->texIdx - tcOffs;
 				struct Vertex* vert = vertices + game->RenderData.NumIndices;
 
 				vert->Position.X = pos->x;
@@ -570,6 +575,33 @@ static void RenderDataSetSRV(struct RenderData* rd)
 	rd->SRVs[3] = rd->NormalTexture.SRV;
 }
 
+static void GameCreateActors(Game* game)
+{
+	const char* models[] = {
+		"assets/meshes/rocket.obj",
+		"assets/meshes/cube.obj",
+		"assets/meshes/sphere.obj"
+	};
+
+	game->m_Actors = realloc(game->m_Actors, 
+		sizeof(Actor*) * _countof(models));
+	assert(game->m_Actors);
+
+	for (size_t i = 0; i < _countof(models); ++i)
+	{
+		game->m_Actors[i] = ActorNew();
+		ActorInit(game->m_Actors[i]);
+		ActorLoadModel(game->m_Actors[game->m_NumActors],
+			models[i]);
+		ActorCreateIndexBuffer(game->m_Actors[game->m_NumActors],
+			game->DR->Device);
+		ActorCreateVertexBuffer(game->m_Actors[game->m_NumActors],
+			game->DR->Device);
+
+		game->m_NumActors++;
+	}
+}
+
 void GameInitialize(Game* game, HWND hWnd, int width, int height)
 {
 #ifdef MATH_TEST
@@ -584,6 +616,9 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	const Vec3D cameraPos = { 0.0f, 0.0f, -5.0f };
 	CameraInit(&game->Cam, &cameraPos, &game->Keyboard, &game->Mouse);
 	RenderDataInit(&game->RenderData, &cameraPos);
+
+	// init actors
+	GameCreateActors(game);
 
 	GameLoadModel(game, "assets/meshes/cube.obj");
 	GameLoadModel(game, "assets/meshes/sphere.obj");
