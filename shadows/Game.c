@@ -45,9 +45,9 @@ void RenderDataInit(struct RenderData* rd, Vec3D* cameraPos)
 	memset(rd, 0, sizeof(struct RenderData));
 	struct PointLight pl = { 0 };
 	pl.Position = MathVec3DFromXYZ(2.0f, 0.0f, -2.0f);
-	pl.Ambient = MathVec4DFromXYZW(0.1f, 0.1f, 0.1f, 1.0f);
-	pl.Diffuse = MathVec4DFromXYZW(0.5f, 0.5f, 0.5f, 1.0f);
-	pl.Specular = MathVec4DFromXYZW(1.0f, 1.0f, 1.0f, 32.0f);
+	pl.Ambient = ColorFromRGBA(0.1f, 0.1f, 0.1f, 1.0f);
+	pl.Diffuse = ColorFromRGBA(0.5f, 0.5f, 0.5f, 1.0f);
+	pl.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 32.0f);
 	rd->LightingData.PL = pl;
 	rd->LightingData.CameraPos = *cameraPos;
 }

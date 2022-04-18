@@ -10,6 +10,7 @@
 #include "objloader.h"
 #include "Renderer.h"
 #include "Actor.h"
+#include "LightHelper.h"
 
 #define MODEL_PULL 10
 #define TEXTURE_PULL 4
@@ -21,25 +22,9 @@ typedef struct PerFrameConstants
 	Mat4X4 Proj;
 } PerFrameConstants;
 
-struct PointLight
-{
-	Vec4D Ambient;
-	Vec4D Diffuse;
-	Vec4D Specular;
-	Vec3D Position;
-	float _Pad;
-};
-
-struct Material
-{
-	Vec4D Ambient;
-	Vec4D Diffuse;
-	Vec4D Specular;
-};
-
 struct LightingData
 {
-	struct PointLight PL;
+	PointLight PL;
 	Vec3D CameraPos;
 	float _Pad;
 };
