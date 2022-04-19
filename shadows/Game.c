@@ -48,11 +48,31 @@ void RenderDataInit(struct RenderData* rd, Vec3D* cameraPos)
 {
 	memset(rd, 0, sizeof(struct RenderData));
 	struct PointLight pl = { 0 };
-	pl.Position = MathVec3DFromXYZ(2.0f, 0.0f, -2.0f);
-	pl.Ambient = ColorFromRGBA(0.1f, 0.1f, 0.1f, 1.0f);
-	pl.Diffuse = ColorFromRGBA(0.5f, 0.5f, 0.5f, 1.0f);
-	pl.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 32.0f);
-	rd->LightingData.PL = pl;
+	const Vec3D positions[] = {
+		{-4.0f, 2.0f, -4.0f},
+		{-4.0f, 2.0f, 4.0f},
+		{0.0f, 5.5f, 0.0f},
+		{4.0f, 2.0f, -4.0f},
+	};
+
+	const Color colors[4][3] = {
+		{ {0.1f, 0.1f, 0.1f, 1.0f}, {0.8f, 0.1f, 0.1f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f} },
+		{ {0.1f, 0.1f, 0.1f, 1.0f}, {0.1f, 0.8f, 0.1f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f} },
+		{ {0.1f, 0.1f, 0.1f, 1.0f}, {0.1f, 0.1f, 0.8f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f} },
+		{ {0.1f, 0.1f, 0.1f, 1.0f}, {0.8f, 0.1f, 0.8f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f} },
+	};
+
+	for (uint32_t i = 0; i < 4; ++i)
+	{
+		pl.Position = positions[i];
+		pl.Ambient = colors[i][0];
+		pl.Diffuse = colors[i][1];
+		pl.Specular = colors[i][2];
+		pl.Att = MathVec3DFromXYZ(1.0f, 0.7f, 1.8f);
+		pl.Range = MathRandom(3.0f, 5.0f);
+		rd->LightingData.PL[i] = pl;
+	}
+
 	rd->LightingData.CameraPos = *cameraPos;
 }
 
@@ -326,22 +346,25 @@ static void GameRenderNew(Game* game)
 	
 
 	//// Light properties
+	for (uint32_t i = 0; i < _countof(game->RenderData.LightingData.PL); ++i)
 	{
 		const Vec3D scale = { 0.2f, 0.2f, 0.2f };
 		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
-		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->RenderData.LightingData.PL.Position);
+		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->RenderData.LightingData.PL[i].Position);
 		game->PerFrameConstants.World = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
 		GameUpdatePerFrameConstants(game);
+
+		RBindPixelShader(r, game->LightPS);
+		RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
+		const Actor* sphere = game->m_Actors[2];
+		RDrawIndexed(r, sphere->m_IndexBuffer, sphere->m_VertexBuffer,
+			sizeof(struct Vertex),
+			sphere->m_NumIndices,
+			0,
+			0);
 	}
 
-	RBindPixelShader(r, game->LightPS);
-	RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
-	const Actor* sphere = game->m_Actors[2];
-	RDrawIndexed(r, sphere->m_IndexBuffer, sphere->m_VertexBuffer, 
-		sizeof(struct Vertex), 
-		sphere->m_NumIndices, 
-		0, 
-		0);
+
 
 	RPresent(r);
 }
@@ -597,7 +620,7 @@ static void GameCreateActors(Game* game)
 		1.0f,
 		1.0f,
 		1.0f,
-		0.01f,
+		0.008f,
 	};
 
 	const Vec3D rotations[] = {
@@ -606,12 +629,11 @@ static void GameCreateActors(Game* game)
 		{0.0f, 0.0f, 0.0f},
 		{0.0f, MathToRadians(180.0f), 0.0f},
 	};
-	// TODO: Assemble scene for shadow mapping
 	const Vec3D offsets[] = {
-		{MathRandom(-10.0f, 10.0f), 0.0f, MathRandom(-10.0f, 10.0f)},
-		{MathRandom(-10.0f, 10.0f), 0.0f, MathRandom(-10.0f, 10.0f)},
-		{MathRandom(-10.0f, 10.0f), 0.0f, MathRandom(-10.0f, 10.0f)},
-		{MathRandom(-10.0f, 10.0f), 0.0f, MathRandom(-10.0f, 10.0f)},
+		{0.0f, 0.0f, 0.0f},
+		{4.0f, 0.0f, -4.0f},
+		{-4.0f, 0.0f, 4.0f},
+		{0.0, 1.0f, 2.5f},
 	};
 
 	game->m_Actors = realloc(game->m_Actors, 

@@ -24,7 +24,7 @@ typedef struct PerFrameConstants
 
 struct LightingData
 {
-	PointLight PL;
+	PointLight PL[4];
 	Vec3D CameraPos;
 	float _Pad;
 };

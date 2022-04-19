@@ -2,7 +2,7 @@
 
 cbuffer LightingData : register(b0)
 {
-	PointLight PL;
+	PointLight PL[4];
 	float3 CameraPos;
 }
 
@@ -13,20 +13,32 @@ float4 main(VSOut In) : SV_TARGET
 	sp.Diffuse = diffuseTexture.Sample(defaultSampler, In.TexCoords);
 	sp.Specular = specularTexture.Sample(defaultSampler, In.TexCoords);
 
-	const float3 L = normalize(PL.Position - In.PosW);
 	const float3 N = normalize(In.NormalW);
-	const float4 D = sp.Diffuse * PL.Diffuse;
-	const float4 A = sp.Ambient * PL.Ambient;
-	const float Atten = Attenuation(0.5f, 0.1f, 0.01f, length(L));
-
-	float4 Kdiff = DiffuseLighting(D, A, Atten, N, L);
-
 	float3 V = normalize(CameraPos - In.PosW);
-	float3 H = L + V;
-	H = H / length(L + V);
 
-	float4 S = sp.Specular * PL.Specular;
-	float4 Kspec = SpecularReflection(S, Atten, N, H, 32.0f);
+	float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float4 specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
-	return Kdiff + Kspec;
+	for (int i = 0; i < 4; ++i)
+	{
+		const float3 L = normalize(PL[i].Position - In.PosW);
+
+		const float4 D = sp.Diffuse * PL[i].Diffuse;
+		const float4 A = sp.Ambient * PL[i].Ambient;
+
+		float4 Kdiff = DiffuseLighting(D, A, PL[i].Att, N, L);
+
+		float3 H = L + V;
+		H = H / length(L + V);
+		float4 S = sp.Specular * PL[i].Specular;
+		float4 Kspec = SpecularReflection(S, PL[i].Att, N, H, 32.0f);
+
+		diffuse += Kdiff;
+		specular += Kspec;
+	}
+
+
+
+	return diffuse + specular;
 }
