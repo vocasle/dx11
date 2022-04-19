@@ -15,12 +15,25 @@ struct VSOut
 	float3 PosW : POSITION;
 };
 
-cbuffer PerFrameConstants : register(b0)
+cbuffer PerObjectConstants : register(b0)
 {
 	float4x4 world;
+	Material material;
+};
+
+cbuffer PerFrameConstants : register(b1)
+{
 	float4x4 view;
 	float4x4 proj;
-}
+	float3 cameraPosW;
+};
+
+cbuffer PerSceneConstants : register(b2)
+{
+	PointLight pointLights[4];
+	DirectionalLight dirLight;
+	SpotLight spotLights[2];
+};
 
 sampler defaultSampler : register(s0);
 

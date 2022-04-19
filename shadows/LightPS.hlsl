@@ -1,9 +1,4 @@
-#include "LightingHelper.hlsli"
-
-cbuffer LightingData : register(b0)
-{
-	PointLight PL;
-}
+#include "Common.hlsli"
 
 float4 main() : SV_TARGET
 {
