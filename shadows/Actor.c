@@ -1,5 +1,6 @@
 #include "Actor.h"
 #include "Utils.h"
+#include "stb_image.h"
 
 Actor* ActorNew(void)
 {
@@ -199,4 +200,58 @@ void ActorScale(Actor* actor, const float s)
 	const Mat4X4 scaleMat = MathMat4X4ScaleFromVec3D(&scale);
 	actor->m_World = MathMat4X4MultMat4X4ByMat4X4(&actor->m_World,
 		&scaleMat);
+}
+
+void ActorLoadTexture(Actor* actor,
+	const char* filename,
+	enum TextureType type,
+	ID3D11Device* device,
+	ID3D11DeviceContext* context)
+{
+	int width = 0;
+	int height = 0;
+	int channelsInFile = 0;
+	const int desiredChannels = 4;
+
+	unsigned char* bytes = stbi_load(filename, &width, &height, &channelsInFile, desiredChannels);
+	if (!bytes)
+	{
+		UtilsDebugPrint("ERROR: Failed to load texture from %s\n", filename);
+		ExitProcess(EXIT_FAILURE);
+	}
+	ID3D11Texture2D* texture = NULL;
+	{
+		D3D11_TEXTURE2D_DESC desc = { 0 };
+		desc.Width = width;
+		desc.Height = height;
+		desc.MipLevels = 1;
+		desc.ArraySize = 1;
+		desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		desc.SampleDesc.Count = 1;
+		desc.SampleDesc.Quality = 0;
+		desc.Usage = D3D11_USAGE_DEFAULT;
+		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+		desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+		D3D11_SUBRESOURCE_DATA subresourceData = { 0 };
+		subresourceData.pSysMem = bytes;
+		subresourceData.SysMemPitch = width * sizeof(unsigned char) * desiredChannels;
+
+		HR(device->lpVtbl->CreateTexture2D(device, &desc, &subresourceData, &texture))
+	}
+
+	{
+		// TODO: Fix mip map generation
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = { 0 };
+		memset(&srvDesc, 0, sizeof(srvDesc));
+		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = -1;
+		HR(device->lpVtbl->CreateShaderResourceView(device, (ID3D11Resource*)texture, &srvDesc, &actor->m_Textures[type]))
+
+		context->lpVtbl->GenerateMips(context, actor->m_Textures[type]);
+	}
+	COM_FREE(texture);
+
+	stbi_image_free(bytes);
 }

@@ -7,6 +7,14 @@
 
 #define ACTOR_NUM_TEXTURES 4
 
+enum TextureType
+{
+	TextureType_Diffuse = 0,
+	TextureType_Specular = 1,
+	TextureType_Gloss = 2,
+	TextureType_Normal = 3,
+};
+
 typedef struct _Vertex
 {
 	Vec3D Position;
@@ -42,3 +50,9 @@ void ActorTranslate(Actor* actor, const Vec3D offset);
 void ActorRotate(Actor* actor, const float pitch, const float yaw, 
 	const float roll);
 void ActorScale(Actor* actor, const float s);
+
+void ActorLoadTexture(Actor* actor, 
+	const char* filename,
+	enum TextureType type,
+	ID3D11Device* device, 
+	ID3D11DeviceContext* context);
