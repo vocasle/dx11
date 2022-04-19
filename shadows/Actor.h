@@ -4,6 +4,7 @@
 
 #include "Math.h"
 #include "objloader.h"
+#include "LightHelper.h"
 
 #define ACTOR_NUM_TEXTURES 4
 
@@ -32,6 +33,7 @@ typedef struct _Actor
 	size_t m_NumIndices;
 	Mat4X4 m_World;
 	ID3D11ShaderResourceView* m_Textures[ACTOR_NUM_TEXTURES];
+	Material m_Material;
 } Actor;
 
 Actor* ActorNew(void);
@@ -56,3 +58,5 @@ void ActorLoadTexture(Actor* actor,
 	enum TextureType type,
 	ID3D11Device* device, 
 	ID3D11DeviceContext* context);
+
+void ActorSetMaterial(Actor* actor, const Material* material);

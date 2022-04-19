@@ -255,3 +255,8 @@ void ActorLoadTexture(Actor* actor,
 
 	stbi_image_free(bytes);
 }
+
+void ActorSetMaterial(Actor* actor, const Material* material)
+{
+	actor->m_Material = *material;
+}
