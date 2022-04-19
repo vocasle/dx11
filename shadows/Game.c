@@ -325,13 +325,12 @@ static void GameRenderNew(Game* game)
 	RBindVertexShader(r, game->VS);
 	
 	RBindConstantBuffers(r, BindTargets_VS, game->RenderData.VSConstBuffers, 1);
-	RBindShaderResources(r, BindTargets_PS, game->RenderData.SRVs, TEXTURE_PULL);
 	RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
 
 	for (size_t i = 0; i < game->m_NumActors; ++i)
 	{
 		const Actor* actor = game->m_Actors[i];
-
+		RBindShaderResources(r, BindTargets_PS, actor->m_Textures, ACTOR_NUM_TEXTURES);
 		game->PerFrameConstants.World = actor->m_World;
 		GameUpdatePerFrameConstants(game);
 		RBindConstantBuffers(r, BindTargets_VS, game->RenderData.VSConstBuffers, 1);
@@ -616,6 +615,10 @@ static void GameCreateActors(Game* game)
 		"assets/meshes/bunny.obj",
 	};
 
+	const char* textures[] = {
+		"assets/textures/chess.jpg"
+	};
+
 	const float scales[] = {
 		1.0f,
 		1.0f,
@@ -650,6 +653,7 @@ static void GameCreateActors(Game* game)
 		ActorScale(actor, scales[i]);
 		ActorRotate(actor, rotations[i].X, rotations[i].Y, rotations[i].Z);
 		ActorTranslate(actor, offsets[i]);
+		ActorLoadTexture(actor, textures[0], TextureType_Diffuse, game->DR->Device, game->DR->Context);
 
 		game->m_Actors[game->m_NumActors++] = actor;
 	}
