@@ -1,6 +1,5 @@
 #include "Actor.h"
 #include "Utils.h"
-#include "objloader.h"
 
 Actor* ActorNew(void)
 {
@@ -8,6 +7,15 @@ Actor* ActorNew(void)
 	ActorInit(actor);
 	return actor;
 }
+
+static void _ActorLoadMesh(Actor* actor, struct Mesh* mesh);
+Actor* ActorFromMesh(struct Mesh* mesh)
+{
+	Actor* actor = ActorNew();
+	_ActorLoadMesh(actor, mesh);
+	return actor;
+}
+
 void ActorFree(Actor* actor)
 {
 	ActorDeinit(actor);
@@ -31,6 +39,38 @@ void ActorDeinit(Actor* actor)
 	actor->m_Indices = NULL;
 	actor->m_IndexBuffer = NULL;
 	actor->m_VertexBuffer = NULL;
+}
+
+static void _ActorLoadMesh(Actor* actor, struct Mesh* mesh)
+{
+	actor->m_Vertices = realloc(actor->m_Vertices, sizeof(Vertex) * (mesh->NumFaces + actor->m_NumVertices));
+	actor->m_Indices = realloc(actor->m_Indices, sizeof(Vertex) * (mesh->NumFaces + actor->m_NumIndices));
+
+	for (uint32_t j = 0; j < mesh->NumFaces; ++j)
+	{
+		const struct Face* face = mesh->Faces + j;
+		const struct Position* pos = mesh->Positions + face->posIdx;
+		const struct Normal* norm = mesh->Normals + face->normIdx;
+		const struct TexCoord* tc = mesh->TexCoords + face->texIdx;
+		Vertex* vert = actor->m_Vertices + actor->m_NumVertices;
+		assert(face && pos && norm && tc && vert);
+
+		vert->Position.X = pos->x;
+		vert->Position.Y = pos->y;
+		vert->Position.Z = pos->z;
+
+		vert->Normal.X = norm->x;
+		vert->Normal.Y = norm->y;
+		vert->Normal.Z = norm->z;
+
+		vert->TexCoords.X = tc->u;
+		vert->TexCoords.Y = tc->v;
+
+		assert(actor->m_NumIndices + 1 <= mesh->Faces);
+		actor->m_Indices[actor->m_NumIndices] = actor->m_NumIndices++;
+
+		actor->m_NumVertices++;
+	}
 }
 
 static void _ActorLoadModel(Actor* actor, struct Model* model)

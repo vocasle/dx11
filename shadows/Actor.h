@@ -3,6 +3,7 @@
 #include <d3d11.h>
 
 #include "Math.h"
+#include "objloader.h"
 
 typedef struct _Vertex
 {
@@ -23,6 +24,7 @@ typedef struct _Actor
 } Actor;
 
 Actor* ActorNew(void);
+Actor* ActorFromMesh(struct Mesh* mesh);
 void ActorFree(Actor* actor);
 
 void ActorInit(Actor* actor);
@@ -32,6 +34,7 @@ void ActorLoadModel(Actor* actor, const char* filename);
 
 void ActorCreateVertexBuffer(Actor* actor, ID3D11Device* device);
 void ActorCreateIndexBuffer(Actor* actor, ID3D11Device* device);
+
 void ActorTranslate(Actor* actor, const Vec3D offset);
 void ActorRotate(Actor* actor, const float pitch, const float yaw, 
 	const float roll);
