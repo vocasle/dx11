@@ -3,8 +3,12 @@
 #include "Math.h"
 #include "Camera.h"
 #include "stb_image.h"
+#include "MeshGenerator.h"
 
 #include <windowsx.h>
+#if _DEBUG
+#include <vld.h>
+#endif
 
 struct Vertex
 {
@@ -626,6 +630,19 @@ static void GameCreateActors(Game* game)
 		ActorTranslate(actor, offsets[i]);
 
 		game->m_Actors[game->m_NumActors++] = actor;
+	}
+
+	game->m_Actors = realloc(game->m_Actors, sizeof(Actor*) * 6);
+	{
+		const Vec3D origin = { 0.0f, 0.0f, 0.0f };
+		struct Mesh* mesh = MGGeneratePlane(&origin, 10.0f, 10.0f);
+		Actor* plane = ActorFromMesh(mesh);
+		MeshFree(mesh);
+		ActorCreateIndexBuffer(plane, game->DR->Device);
+		ActorCreateVertexBuffer(plane, game->DR->Device);
+		const Vec3D offset = { 0.0f, -1.0f, 0.0f };
+		ActorTranslate(plane, offset);
+		game->m_Actors[game->m_NumActors++] = plane;
 	}
 }
 
