@@ -72,10 +72,6 @@ Game* GameNew(void)
 	Game* g = malloc(sizeof(Game));
 	memset(g, 0, sizeof(Game));
 	g->DR = DRNew();
-	const size_t bytes = sizeof(struct Model) * MODEL_PULL;
-	g->Models = malloc(bytes);
-	memset(g->Models, 0, bytes);
-
 	return g;
 }
 
@@ -92,11 +88,7 @@ void GameFree(Game* game)
 	COM_FREE(game->m_PerSceneCB);
 	KeyboardDeinit(&game->Keyboard);
 	DRFree(game->DR);
-	for (uint32_t i = 0; i < game->NumModels; ++i)
-	{
-		ModelFree(game->Models[i]);
-	}
-	free(game->Models);
+
 	for (size_t i = 0; i < game->m_NumActors; ++i)
 	{
 		ActorFree(game->m_Actors[i]);
@@ -250,24 +242,6 @@ static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
 	}
 	memcpy(mapped.pData, data, bufferSize);
 	context->lpVtbl->Unmap(context, (ID3D11Resource*)dest, 0);
-}
-
-static struct Mesh* GameFindMeshByName(Game* game, const char* name, size_t* indexOffset)
-{
-	for (uint32_t i = 0; i < game->NumModels; ++i)
-	{
-		const struct Model* model = game->Models[i];
-		for (uint32_t j = 0; j < model->NumMeshes; ++j)
-		{
-			struct Mesh* mesh = model->Meshes + j;
-			if (strcmp(mesh->Name, name) == 0)
-			{
-				return mesh;
-			}
-			*indexOffset += mesh->NumFaces;
-		}
-	}
-	return NULL;
 }
 
 static void GameRenderNew(Game* game)

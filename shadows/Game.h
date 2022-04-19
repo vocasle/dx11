@@ -7,7 +7,6 @@
 #include "Camera.h"
 #include "Keyboard.h"
 #include "Mouse.h"
-#include "objloader.h"
 #include "Renderer.h"
 #include "Actor.h"
 #include "LightHelper.h"
@@ -52,9 +51,6 @@ typedef struct Game
 	ID3D11PixelShader* LightPS;
 	ID3D11InputLayout* InputLayout;
 	ID3D11SamplerState* DefaultSampler;
-	struct Model** Models;
-	uint32_t NumModels;
-	uint32_t NumMeshes;
 	Timer TickTimer;
 	PerFrameConstants PerFrameConstants;
 	struct Camera Cam;
