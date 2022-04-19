@@ -252,6 +252,7 @@
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="LightHelper.h" />
     <ClInclude Include="Math.h" />
+    <ClInclude Include="MeshGenerator.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="objloader.h" />
     <ClInclude Include="Renderer.h" />

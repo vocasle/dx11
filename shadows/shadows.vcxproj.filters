@@ -131,6 +131,9 @@
     <ClInclude Include="LightHelper.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="MeshGenerator.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="LightingHelper.hlsli">
