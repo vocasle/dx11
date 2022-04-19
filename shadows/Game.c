@@ -37,9 +37,8 @@ void GameCreateDefaultSampler(Game* game)
 	}
 }
 
-void RenderDataInit(struct RenderData* rd, Vec3D* cameraPos)
+static void GameInitPerSceneConstants(Game* game)
 {
-	memset(rd, 0, sizeof(struct RenderData));
 	struct PointLight pl = { 0 };
 	const Vec3D positions[] = {
 		{-4.0f, 2.0f, -4.0f},
@@ -63,32 +62,9 @@ void RenderDataInit(struct RenderData* rd, Vec3D* cameraPos)
 		pl.Specular = colors[i][2];
 		pl.Att = MathVec3DFromXYZ(1.0f, 0.7f, 1.8f);
 		pl.Range = MathRandom(3.0f, 5.0f);
-		rd->LightingData.PL[i] = pl;
+		game->m_PerSceneData.pointLights[i] = pl;
 	}
 
-	rd->LightingData.CameraPos = *cameraPos;
-}
-
-void RenderDataDeinit(struct RenderData* rd)
-{
-	free(rd->Vertices);
-	free(rd->Indices);
-	free(rd->MeshPositions);
-	rd->NumMeshPositions = 0;
-	rd->NumVertices = 0;
-	rd->NumIndices = 0;
-	for (uint32_t i = 0; i < R_MAX_CB_NUM; ++i)
-	{
-		if (rd->PSConstBuffers[i])
-		{
-			COM_FREE(rd->PSConstBuffers[i]);
-		}
-
-		if (rd->VSConstBuffers[i])
-		{
-			COM_FREE(rd->VSConstBuffers[i]);
-		}
-	}
 }
 
 Game* GameNew(void)
@@ -111,7 +87,9 @@ void GameFree(Game* game)
 	COM_FREE(game->DefaultSampler);
 	COM_FREE(game->PhongPS);
 	COM_FREE(game->LightPS);
-	RenderDataDeinit(&game->RenderData);
+	COM_FREE(game->m_PerFrameCB);
+	COM_FREE(game->m_PerObjectCB);
+	COM_FREE(game->m_PerSceneCB);
 	KeyboardDeinit(&game->Keyboard);
 	DRFree(game->DR);
 	for (uint32_t i = 0; i < game->NumModels; ++i)
@@ -236,7 +214,6 @@ static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
 	size_t bufferSize,
 	void* data,
 	ID3D11Buffer* dest);
-static void GameUpdatePerFrameConstants(Game* game);
 void GameUpdate(Game* game)
 {
 	CameraUpdatePos(&game->Cam, game->TickTimer.DeltaMillis);
@@ -248,14 +225,11 @@ void GameUpdate(Game* game)
 	game->gViewMat = CameraGetViewMat(&game->Cam);
 	game->gProjMat = MathMat4X4PerspectiveFov(MathToRadians(45.0f), width / height, 0.1f, 100.0f);
 	
-	game->PerFrameConstants.World = game->gWorldMat;
-	game->PerFrameConstants.View = game->gViewMat;
-	game->PerFrameConstants.Proj = game->gProjMat;
+	game->m_PerFrameData.view = game->gViewMat;
+	game->m_PerFrameData.proj = game->gProjMat;
+	game->m_PerFrameData.cameraPosW = game->Cam.CameraPos;
 
-	GameUpdatePerFrameConstants(game);
-
-	game->RenderData.LightingData.CameraPos = game->Cam.CameraPos;
-	GameUpdateConstantBuffer(game->DR->Context, sizeof(struct LightingData), &game->RenderData.LightingData, game->RenderData.PSConstBuffers[0]);
+	GameUpdateConstantBuffer(game->DR->Context, sizeof(PerFrameConstants), &game->m_PerFrameData, game->m_PerFrameCB);
 }
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -276,14 +250,6 @@ static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
 	}
 	memcpy(mapped.pData, data, bufferSize);
 	context->lpVtbl->Unmap(context, (ID3D11Resource*)dest, 0);
-}
-
-static void GameUpdatePerFrameConstants(Game* game)
-{
-	GameUpdateConstantBuffer(game->DR->Context, 
-		sizeof(PerFrameConstants), 
-		&game->PerFrameConstants,
-		game->RenderData.VSConstBuffers[0]);
 }
 
 static struct Mesh* GameFindMeshByName(Game* game, const char* name, size_t* indexOffset)
@@ -313,16 +279,23 @@ static void GameRenderNew(Game* game)
 	RBindPixelShader(r, game->PhongPS);
 	RBindVertexShader(r, game->VS);
 	
-	RBindConstantBuffers(r, BindTargets_VS, game->RenderData.VSConstBuffers, 1);
-	RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
+	RBindConstantBuffer(r, BindTargets_VS, game->m_PerFrameCB, 1);
+	RBindConstantBuffer(r, BindTargets_PS, game->m_PerFrameCB, 1);
+
+	RBindConstantBuffer(r, BindTargets_VS, game->m_PerSceneCB, 2);
+	RBindConstantBuffer(r, BindTargets_PS, game->m_PerSceneCB, 2);
 
 	for (size_t i = 0; i < game->m_NumActors; ++i)
 	{
 		const Actor* actor = game->m_Actors[i];
 		RBindShaderResources(r, BindTargets_PS, actor->m_Textures, ACTOR_NUM_TEXTURES);
-		game->PerFrameConstants.World = actor->m_World;
-		GameUpdatePerFrameConstants(game);
-		RBindConstantBuffers(r, BindTargets_VS, game->RenderData.VSConstBuffers, 1);
+		game->m_PerObjectData.world = actor->m_World;
+		GameUpdateConstantBuffer(game->DR->Context,
+			sizeof(PerObjectConstants),
+			&game->m_PerObjectData,
+			game->m_PerObjectCB);
+		RBindConstantBuffer(r, BindTargets_VS, game->m_PerObjectCB, 0);
+		RBindConstantBuffer(r, BindTargets_PS, game->m_PerObjectCB, 0);
 
 		RDrawIndexed(r, actor->m_IndexBuffer, actor->m_VertexBuffer, 
 			sizeof(struct Vertex), 
@@ -331,19 +304,21 @@ static void GameRenderNew(Game* game)
 			0);
 	}
 	
-	
-
 	//// Light properties
-	for (uint32_t i = 0; i < _countof(game->RenderData.LightingData.PL); ++i)
+	for (uint32_t i = 0; i < _countof(game->m_PerSceneData.pointLights); ++i)
 	{
 		const Vec3D scale = { 0.2f, 0.2f, 0.2f };
 		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
-		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->RenderData.LightingData.PL[i].Position);
-		game->PerFrameConstants.World = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
-		GameUpdatePerFrameConstants(game);
+		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->m_PerSceneData.pointLights[i].Position);
+		game->m_PerObjectData.world = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
+		GameUpdateConstantBuffer(game->DR->Context,
+			sizeof(PerObjectConstants),
+			&game->m_PerObjectData,
+			game->m_PerObjectCB);
 
 		RBindPixelShader(r, game->LightPS);
-		RBindConstantBuffers(r, BindTargets_PS, game->RenderData.PSConstBuffers, 1);
+		RBindConstantBuffer(r, BindTargets_VS, game->m_PerObjectCB, 0);
+		RBindConstantBuffer(r, BindTargets_PS, game->m_PerObjectCB, 0);
 		const Actor* sphere = game->m_Actors[2];
 		RDrawIndexed(r, sphere->m_IndexBuffer, sphere->m_VertexBuffer,
 			sizeof(struct Vertex),
@@ -351,8 +326,6 @@ static void GameRenderNew(Game* game)
 			0,
 			0);
 	}
-
-
 
 	RPresent(r);
 }
@@ -399,92 +372,6 @@ static void GameCreateConstantBuffer(ID3D11Device* device,
 	if (FAILED(device->lpVtbl->CreateBuffer(device, &bufferDesc, NULL, pDest)))
 	{
 		UtilsFatalError("ERROR: Failed to create per frame constants cbuffer\n");
-	}
-}
-
-static void GameCreatePerFrameCB(Game* game)
-{
-	GameCreateConstantBuffer(game->DR->Device, sizeof(PerFrameConstants), &game->RenderData.VSConstBuffers[0]);
-}
-
-static void GameCreateSharedBuffers(Game* game)
-{
-	size_t numFaces = 0;
-	for (uint32_t j = 0; j < game->NumModels; ++j)
-	{
-		for (uint32_t i = 0; i < game->Models[j]->NumMeshes; ++i)
-		{
-			struct Mesh* mesh = game->Models[j]->Meshes + i;
-			numFaces += mesh->NumFaces;
-		}
-	}
-
-	size_t bytes = sizeof(struct Vertex) * numFaces;
-	struct Vertex* vertices = malloc(bytes);
-	memset(vertices, 0, bytes);
-
-	bytes = sizeof(uint32_t) * numFaces;
-	uint32_t* indices = malloc(bytes);
-	memset(indices, 0, bytes);
-
-	size_t posOffs = 0;
-	size_t normOffs = 0;
-	size_t tcOffs = 0;
-
-	for (uint32_t k = 0; k < game->NumModels; ++k)
-	{
-		struct Model* model = game->Models[k];
-		for (uint32_t i = 0; i < model->NumMeshes; ++i)
-		{
-			const struct Mesh* mesh = model->Meshes + i;
-			for (uint32_t j = 0; j < mesh->NumFaces; ++j)
-			{
-				const struct Face* face = model->Meshes[i].Faces + j;
-				const struct Position* pos = mesh->Positions + face->posIdx - posOffs;
-				const struct Normal* norm = mesh->Normals + face->normIdx - normOffs;
-				const struct TexCoord* tc = mesh->TexCoords + face->texIdx - tcOffs;
-				struct Vertex* vert = vertices + game->RenderData.NumIndices;
-
-				vert->Position.X = pos->x;
-				vert->Position.Y = pos->y;
-				vert->Position.Z = pos->z;
-
-				vert->Normal.X = norm->x;
-				vert->Normal.Y = norm->y;
-				vert->Normal.Z = norm->z;
-
-				vert->TexCoords.X = tc->u;
-				vert->TexCoords.Y = tc->v;
-
-				indices[game->RenderData.NumIndices++] = j;
-
-				game->RenderData.NumVertices++;
-			}
-			posOffs += mesh->NumPositions;
-			normOffs += mesh->NumNormals;
-			tcOffs += mesh->NumTexCoords;
-		}
-		posOffs = 0;
-		normOffs = 0;
-		tcOffs = 0;
-	}
-	assert(game->RenderData.NumVertices == numFaces);
-	game->RenderData.Vertices = vertices;
-	game->RenderData.Indices = indices;
-
-	
-}
-
-void GameGenerateRandomOffsets(Game* game)
-{
-	const float a = MathRandom(0.0f, 2.0f);
-	game->RenderData.MeshPositions = malloc(sizeof(Vec3D) * game->NumMeshes);
-	memset(game->RenderData.MeshPositions, 0, sizeof(Vec3D) * game->NumMeshes);
-	for (uint32_t i = 0; i < game->NumMeshes; ++i)
-	{
-		game->RenderData.MeshPositions[i].X = MathRandom(-10.0f + a * 10.0f, 10.0f + a * 10.0f);
-		game->RenderData.MeshPositions[i].Y = MathRandom(-10.0f + a * 10.0f, 10.0f + a * 10.0f);
-		game->RenderData.MeshPositions[i].Z = MathRandom(-10.0f + a * 10.0f, 10.0f + a * 10.0f);
 	}
 }
 
@@ -644,6 +531,13 @@ static void GameCreateActors(Game* game)
 		{0.0, 1.0f, 2.5f},
 	};
 
+	const Material material = {
+		// 0.24725 	0.1995 	0.0745 	0.75164 	0.60648 	0.22648 	0.628281 	0.555802 	0.366065 	0.4
+		{0.24725f, 0.1995f, 0.0745f, 1.0f},
+		{0.75164f, 0.60648f, 0.22648f, 1.0f},
+		{0.628281f, 0.555802f, 0.366065f, 0.4f}
+	};
+
 	game->m_Actors = realloc(game->m_Actors, 
 		sizeof(Actor*) * _countof(models));
 	assert(game->m_Actors);
@@ -662,6 +556,7 @@ static void GameCreateActors(Game* game)
 		ActorLoadTexture(actor, specularTextures[i], TextureType_Specular, game->DR->Device, game->DR->Context);
 		ActorLoadTexture(actor, glossTextures[i], TextureType_Gloss, game->DR->Device, game->DR->Context);
 		ActorLoadTexture(actor, normalTextures[i], TextureType_Normal, game->DR->Device, game->DR->Context);
+		ActorSetMaterial(actor, &material);
 
 		game->m_Actors[game->m_NumActors++] = actor;
 	}
@@ -694,12 +589,11 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	MouseInit(&game->Mouse, game->DR->BackbufferWidth, game->DR->BackbufferHeight);
 	const Vec3D cameraPos = { 0.0f, 0.0f, -5.0f };
 	CameraInit(&game->Cam, &cameraPos, &game->Keyboard, &game->Mouse);
-	RenderDataInit(&game->RenderData, &cameraPos);
+	GameInitPerSceneConstants(game);
 
 	// init actors
 	GameCreateActors(game);
 
-	GameGenerateRandomOffsets(game);
 	ID3D11Device1* device = game->DR->Device;
 	game->gWorldMat = MathMat4X4Identity();
 	game->gProjMat = MathMat4X4Identity();
@@ -710,8 +604,11 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	GameCreatePixelShader("LightPS.cso", (ID3D11Device*)device, &game->LightPS);
 	GameCreateVertexShader("VertexShader.cso", (ID3D11Device*)device, &game->VS, &game->InputLayout);
 
-	GameCreatePerFrameCB(game);
-	GameCreateConstantBuffer(game->DR->Device, sizeof(struct LightingData), &game->RenderData.PSConstBuffers[0]);
+	GameCreateConstantBuffer(game->DR->Device, sizeof(PerSceneConstants), &game->m_PerSceneCB);
+	GameCreateConstantBuffer(game->DR->Device, sizeof(PerObjectConstants), &game->m_PerObjectCB);
+	GameCreateConstantBuffer(game->DR->Device, sizeof(PerFrameConstants), &game->m_PerFrameCB);
+	GameUpdateConstantBuffer(game->DR->Context, sizeof(PerSceneConstants), &game->m_PerSceneData, game->m_PerSceneCB);
+
 	GameCreateDefaultSampler(game);
 
 	RInit(&game->Renderer);

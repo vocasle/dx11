@@ -17,10 +17,24 @@
 
 typedef struct PerFrameConstants
 {
-	Mat4X4 World;
-	Mat4X4 View;
-	Mat4X4 Proj;
+	Mat4X4 view;
+	Mat4X4 proj;
+	Vec3D cameraPosW;
+	float pad;
 } PerFrameConstants;
+
+typedef struct PerObjectConstants
+{
+	Mat4X4 world;
+	Material material;
+} PerObjectConstants;
+
+typedef struct PerSceneConstants
+{
+	PointLight pointLights[4];
+	DirectionalLight dirLight;
+	SpotLight spotLights[2];
+} PerSceneConstants;
 
 struct LightingData
 {
@@ -28,24 +42,6 @@ struct LightingData
 	Vec3D CameraPos;
 	float _Pad;
 };
-
-struct Vertex;
-struct RenderData
-{
-	struct Vertex* Vertices;
-	uint32_t NumVertices;
-	uint32_t* Indices;
-	size_t NumIndices;
-	Vec3D* MeshPositions;
-	uint32_t NumMeshPositions;
-	ID3D11Buffer* VSConstBuffers[R_MAX_CB_NUM];
-	ID3D11Buffer* PSConstBuffers[R_MAX_CB_NUM];
-	struct LightingData LightingData;
-	ID3D11ShaderResourceView* SRVs[TEXTURE_PULL];
-};
-
-void RenderDataInit(struct RenderData* rd, Vec3D* cameraPos);
-void RenderDataDeinit(struct RenderData* rd);
 
 typedef struct Game
 {
@@ -67,12 +63,17 @@ typedef struct Game
 	Mat4X4 gWorldMat;
 	Mat4X4 gViewMat;
 	Mat4X4 gProjMat;
-	struct RenderData RenderData;
 	struct Renderer Renderer;
 
 	// new stuff
 	Actor** m_Actors;
 	size_t m_NumActors;
+	PerFrameConstants m_PerFrameData;
+	PerObjectConstants m_PerObjectData;
+	PerSceneConstants m_PerSceneData;
+	ID3D11Buffer* m_PerFrameCB;
+	ID3D11Buffer* m_PerObjectCB;
+	ID3D11Buffer* m_PerSceneCB;
 } Game;
 
 Game* GameNew(void);
