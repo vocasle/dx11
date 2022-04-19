@@ -2,7 +2,6 @@
 #include "Utils.h"
 #include "Math.h"
 #include "Camera.h"
-#include "stb_image.h"
 #include "MeshGenerator.h"
 
 #include <windowsx.h>
@@ -36,12 +35,6 @@ void GameCreateDefaultSampler(Game* game)
 		UtilsDebugPrint("ERROR: Failed to create default sampler state\n");
 		ExitProcess(EXIT_FAILURE);
 	}
-}
-
-void TextureDeinit(struct Texture* texture)
-{
-	COM_FREE(texture->Resource);
-	COM_FREE(texture->SRV);
 }
 
 void RenderDataInit(struct RenderData* rd, Vec3D* cameraPos)
@@ -78,10 +71,6 @@ void RenderDataInit(struct RenderData* rd, Vec3D* cameraPos)
 
 void RenderDataDeinit(struct RenderData* rd)
 {
-	TextureDeinit(&rd->DefaultTexture);
-	TextureDeinit(&rd->SpecularTexture);
-	TextureDeinit(&rd->GlossTexture);
-	TextureDeinit(&rd->NormalTexture);
 	free(rd->Vertices);
 	free(rd->Indices);
 	free(rd->MeshPositions);
@@ -598,14 +587,6 @@ static void GameCreateIndexBuffer(const void* indexData, const uint32_t numIndic
 	}
 }
 
-static void RenderDataSetSRV(struct RenderData* rd)
-{
-	rd->SRVs[0] = rd->DefaultTexture.SRV;
-	rd->SRVs[1] = rd->SpecularTexture.SRV;
-	rd->SRVs[2] = rd->GlossTexture.SRV;
-	rd->SRVs[3] = rd->NormalTexture.SRV;
-}
-
 static void GameCreateActors(Game* game)
 {
 	const char* models[] = {
@@ -718,11 +699,6 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	// init actors
 	GameCreateActors(game);
 
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_COL_VAR1_1K.jpg", &game->RenderData.DefaultTexture);
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_REFL_1K.jpg", &game->RenderData.SpecularTexture);
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_GLOSS_1K.jpg", &game->RenderData.GlossTexture);
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_NRM_1K.png", &game->RenderData.NormalTexture);
-	//GameCreateSharedBuffers(game);
 	GameGenerateRandomOffsets(game);
 	ID3D11Device1* device = game->DR->Device;
 	game->gWorldMat = MathMat4X4Identity();
@@ -744,7 +720,6 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	RSetRasterizerState(&game->Renderer, game->DR->RasterizerState);
 	RSetInputLayout(&game->Renderer, game->InputLayout);
 	RSetSamplerState(&game->Renderer, game->DefaultSampler);
-	RenderDataSetSRV(&game->RenderData);
 }
 
 void GameGetDefaultSize(Game* game, int* width, int* height)
@@ -771,60 +746,4 @@ void GameOnKeyUp(Game* game, WPARAM key)
 void GameOnMouseMove(Game* game, uint32_t message, WPARAM wParam, LPARAM lParam)
 {
 	MouseOnMouseMove(&game->Mouse, message, wParam, lParam);
-}
-
-void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct Texture* texture)
-{
-	int width = 0;
-	int height = 0;
-	int channelsInFile = 0;
-	const int desiredChannels = 4;
-
-	unsigned char* bytes = stbi_load(filename, &width, &height, &channelsInFile, desiredChannels);
-	if (!bytes)
-	{
-		UtilsDebugPrint("ERROR: Failed to load texture from %s\n", filename);
-		ExitProcess(EXIT_FAILURE);
-	}
-
-	{
-		D3D11_TEXTURE2D_DESC desc = { 0 };
-		desc.Width = width;
-		desc.Height = height;
-		desc.MipLevels = 1;
-		desc.ArraySize = 1;
-		desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		desc.SampleDesc.Count = 1;
-		desc.SampleDesc.Quality = 0;
-		desc.Usage = D3D11_USAGE_DEFAULT;
-		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-		desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-
-		D3D11_SUBRESOURCE_DATA subresourceData = { 0 };
-		subresourceData.pSysMem = bytes;
-		subresourceData.SysMemPitch = width * sizeof(unsigned char) * desiredChannels;
-
-		if (FAILED(dr->Device->lpVtbl->CreateTexture2D(dr->Device, &desc, &subresourceData, &texture->Resource)))
-		{
-			UtilsDebugPrint("ERROR: Failed to create texture from file %s\n", filename);
-			ExitProcess(EXIT_FAILURE);
-		}
-	}
-
-	{
-		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = { 0 };
-		memset(&srvDesc, 0, sizeof(srvDesc));
-		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MipLevels = -1;
-		if (FAILED(dr->Device->lpVtbl->CreateShaderResourceView(dr->Device, (ID3D11Resource*)texture->Resource, &srvDesc, &texture->SRV)))
-		{
-			UtilsDebugPrint("ERROR: Failed to create SRV from file %s\n", filename);
-			ExitProcess(EXIT_FAILURE);
-		}
-
-		dr->Context->lpVtbl->GenerateMips(dr->Context, texture->SRV);
-	}
-
-	stbi_image_free(bytes);
 }

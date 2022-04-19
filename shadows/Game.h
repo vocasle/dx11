@@ -29,14 +29,6 @@ struct LightingData
 	float _Pad;
 };
 
-struct Texture
-{
-	ID3D11Texture2D* Resource;
-	ID3D11ShaderResourceView* SRV;
-};
-
-void TextureDeinit(struct Texture* texture);
-
 struct Vertex;
 struct RenderData
 {
@@ -44,10 +36,6 @@ struct RenderData
 	uint32_t NumVertices;
 	uint32_t* Indices;
 	size_t NumIndices;
-	struct Texture DefaultTexture;
-	struct Texture SpecularTexture;
-	struct Texture GlossTexture;
-	struct Texture NormalTexture;
 	Vec3D* MeshPositions;
 	uint32_t NumMeshPositions;
 	ID3D11Buffer* VSConstBuffers[R_MAX_CB_NUM];
@@ -102,5 +90,3 @@ void GameOnKeyDown(Game* game, WPARAM key);
 void GameOnKeyUp(Game* game, WPARAM key);
 
 void GameOnMouseMove(Game* game, uint32_t message, WPARAM wParam, LPARAM lParam);
-
-void GameLoadTextureFromFile(DeviceResources* dr, const char* filename, struct Texture* texture);
