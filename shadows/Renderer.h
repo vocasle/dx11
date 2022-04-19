@@ -7,7 +7,7 @@
 #include "DeviceResources.h"
 
 #define R_MAX_SRV_NUM 4
-#define R_MAX_CB_NUM 2
+#define R_MAX_CB_NUM 3
 
 #define R_DEFAULT_PRIMTIVE_TOPOLOGY D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
 
@@ -20,11 +20,8 @@ struct Renderer
 	ID3D11PixelShader* PS;
 	ID3D11VertexShader* VS;
 	ID3D11ShaderResourceView* PS_SRV[R_MAX_SRV_NUM];
-	uint32_t NumPS_SRV;
 	ID3D11Buffer* PS_CB[R_MAX_CB_NUM];
-	uint32_t NumPS_CB;
 	ID3D11Buffer* VS_CB[R_MAX_CB_NUM];
-	uint32_t NumVS_CB;
 	DeviceResources* DR;
 };
 
@@ -55,6 +52,10 @@ void RBindVertexShader(struct Renderer* renderer, ID3D11VertexShader* shader);
 void RBindShaderResources(struct Renderer* renderer, enum BindTargets bindTarget, ID3D11ShaderResourceView** SRVs, uint32_t numSRVs);
 
 void RBindConstantBuffers(struct Renderer* renderer, enum BindTargets bindTarget, ID3D11Buffer** CBs, uint32_t numCBs);
+
+void RBindShaderResource(struct Renderer* renderer, enum BindTargets bindTarget, ID3D11ShaderResourceView* srv, uint32_t slot);
+
+void RBindConstantBuffer(struct Renderer* renderer, enum BindTargets bindTarget, ID3D11Buffer* cb, uint32_t slot);
 
 void RDrawIndexed(struct Renderer* renderer,
 	ID3D11Buffer* indexBuffer, 

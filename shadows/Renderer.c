@@ -69,7 +69,6 @@ void RBindShaderResources(struct Renderer* renderer, enum BindTargets bindTarget
 	{
 		renderer->PS_SRV[i] = SRVs[i];
 	}
-	renderer->NumPS_SRV = numSRVs;
 }
 
 void RBindConstantBuffers(struct Renderer* renderer, enum BindTargets bindTarget, ID3D11Buffer** CBs, uint32_t numCBs)
@@ -77,13 +76,24 @@ void RBindConstantBuffers(struct Renderer* renderer, enum BindTargets bindTarget
 	assert(numCBs <= R_MAX_CB_NUM && "numCBs is above limit!");
 
 	ID3D11Buffer** buffers = bindTarget == BindTargets_PS ? renderer->PS_CB : renderer->VS_CB;
-	uint32_t* numBuffers = bindTarget == BindTargets_PS ? &renderer->NumPS_CB : &renderer->NumVS_CB;
 
 	for (uint32_t i = 0; i < numCBs; ++i)
 	{
 		buffers[i] = CBs[i];
 	}
-	*numBuffers = numCBs;
+}
+
+void RBindShaderResource(struct Renderer* renderer, enum BindTargets bindTarget, ID3D11ShaderResourceView* srv, uint32_t slot)
+{
+	assert(slot < R_MAX_SRV_NUM);
+	renderer->PS_SRV[slot] = srv;
+}
+
+void RBindConstantBuffer(struct Renderer* renderer, enum BindTargets bindTarget, ID3D11Buffer* cb, uint32_t slot)
+{
+	assert(slot < R_MAX_CB_NUM);
+	ID3D11Buffer** buffers = bindTarget == BindTargets_PS ? renderer->PS_CB : renderer->VS_CB;
+	buffers[slot] = cb;
 }
 
 void RDrawIndexed(struct Renderer* renderer,
@@ -107,26 +117,11 @@ void RDrawIndexed(struct Renderer* renderer,
 	context->lpVtbl->VSSetShader(context, renderer->VS, NULL, 0);
 	context->lpVtbl->PSSetShader(context, renderer->PS, NULL, 0);
 
-	if (renderer->NumPS_SRV > 0)
-	{
-		context->lpVtbl->PSSetShaderResources(context, 0, renderer->NumPS_SRV, renderer->PS_SRV);
-	}
-	else
-	{
-		context->lpVtbl->PSSetShaderResources(context, 0, 1, nullSRV);
-	}
-
-	if (renderer->NumPS_CB > 0)
-	{
-		context->lpVtbl->PSSetConstantBuffers(context, 0, renderer->NumPS_CB, renderer->PS_CB);
-	}
-
-	if (renderer->NumVS_CB > 0)
-	{
-		context->lpVtbl->VSSetConstantBuffers(context, 0, renderer->NumVS_CB, renderer->VS_CB);
-	}
-
+	context->lpVtbl->PSSetShaderResources(context, 0, R_MAX_SRV_NUM, renderer->PS_SRV);
+	context->lpVtbl->PSSetConstantBuffers(context, 0, R_MAX_CB_NUM, renderer->PS_CB);
+	context->lpVtbl->VSSetConstantBuffers(context, 0, R_MAX_CB_NUM, renderer->VS_CB);
 	context->lpVtbl->DrawIndexed(context, indexCount, startIndexLocation, baseVertexLocation);
+
 }
 
 void RClear(struct Renderer* renderer)
