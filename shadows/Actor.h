@@ -5,6 +5,8 @@
 #include "Math.h"
 #include "objloader.h"
 
+#define ACTOR_NUM_TEXTURES 4
+
 typedef struct _Vertex
 {
 	Vec3D Position;
@@ -21,6 +23,7 @@ typedef struct _Actor
 	uint32_t* m_Indices;
 	size_t m_NumIndices;
 	Mat4X4 m_World;
+	ID3D11ShaderResourceView* m_Textures[ACTOR_NUM_TEXTURES];
 } Actor;
 
 Actor* ActorNew(void);

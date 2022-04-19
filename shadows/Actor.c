@@ -39,6 +39,13 @@ void ActorDeinit(Actor* actor)
 	actor->m_Indices = NULL;
 	actor->m_IndexBuffer = NULL;
 	actor->m_VertexBuffer = NULL;
+	for (size_t i = 0; i < ACTOR_NUM_TEXTURES; ++i)
+	{
+		if (actor->m_Textures[i])
+		{
+			COM_FREE(actor->m_Textures[i]);
+		}
+	}
 }
 
 static void _ActorLoadMesh(Actor* actor, struct Mesh* mesh)
