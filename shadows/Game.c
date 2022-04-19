@@ -615,8 +615,32 @@ static void GameCreateActors(Game* game)
 		"assets/meshes/bunny.obj",
 	};
 
-	const char* textures[] = {
-		"assets/textures/chess.jpg"
+	const char* diffuseTextures[] = {
+		"assets/textures/drywall_diffuse.jpg",
+		"assets/textures/bricks_diffuse.jpg",
+		"assets/textures/cliff_diffuse.jpg",
+		"assets/textures/marble_diffuse.jpg",
+	};
+
+	const char* specularTextures[] = {
+		"assets/textures/drywall_reflection.jpg",
+		"assets/textures/bricks_reflection.jpg",
+		"assets/textures/cliff_reflection.jpg",
+		"assets/textures/marble_reflection.jpg",
+	};
+
+	const char* normalTextures[] = {
+		"assets/textures/drywall_normal.png",
+		"assets/textures/bricks_normal.png",
+		"assets/textures/cliff_normal.jpg",
+		"assets/textures/marble_normal.png",
+	};
+
+	const char* glossTextures[] = {
+		"assets/textures/drywall_gloss.jpg",
+		"assets/textures/bricks_gloss.jpg",
+		"assets/textures/cliff_gloss.jpg",
+		"assets/textures/marble_gloss.jpg",
 	};
 
 	const float scales[] = {
@@ -653,7 +677,10 @@ static void GameCreateActors(Game* game)
 		ActorScale(actor, scales[i]);
 		ActorRotate(actor, rotations[i].X, rotations[i].Y, rotations[i].Z);
 		ActorTranslate(actor, offsets[i]);
-		ActorLoadTexture(actor, textures[0], TextureType_Diffuse, game->DR->Device, game->DR->Context);
+		ActorLoadTexture(actor, diffuseTextures[i], TextureType_Diffuse, game->DR->Device, game->DR->Context);
+		ActorLoadTexture(actor, specularTextures[i], TextureType_Specular, game->DR->Device, game->DR->Context);
+		ActorLoadTexture(actor, glossTextures[i], TextureType_Gloss, game->DR->Device, game->DR->Context);
+		ActorLoadTexture(actor, normalTextures[i], TextureType_Normal, game->DR->Device, game->DR->Context);
 
 		game->m_Actors[game->m_NumActors++] = actor;
 	}
@@ -668,6 +695,7 @@ static void GameCreateActors(Game* game)
 		ActorCreateVertexBuffer(plane, game->DR->Device);
 		const Vec3D offset = { 0.0f, -1.0f, 0.0f };
 		ActorTranslate(plane, offset);
+		ActorLoadTexture(plane, "assets/textures/chess.jpg", TextureType_Diffuse, game->DR->Device, game->DR->Context);
 		game->m_Actors[game->m_NumActors++] = plane;
 	}
 }
