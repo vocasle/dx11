@@ -30,6 +30,10 @@ typedef struct Vec4D
 
 typedef struct Mat3X3
 {
+	Mat3X3()
+	{
+		memset(this, 0, sizeof(Mat3X3));
+	}
 	union
 	{
 		struct
@@ -45,6 +49,10 @@ typedef struct Mat3X3
 
 typedef struct Mat4X4
 {
+	Mat4X4()
+	{
+		memset(this, 0, sizeof(Mat4X4));
+	}
 	union
 	{
 		struct
