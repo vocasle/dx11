@@ -46,14 +46,14 @@ public:
 	void Present();
 
 private:
-	D3D11_PRIMITIVE_TOPOLOGY Topology;
-	ID3D11InputLayout* InputLayout;
-	ID3D11RasterizerState* RasterizerState;
-	ID3D11SamplerState* SamplerState;
-	ID3D11PixelShader* PS;
-	ID3D11VertexShader* VS;
-	ID3D11ShaderResourceView* PS_SRV[R_MAX_SRV_NUM];
-	ID3D11Buffer* PS_CB[R_MAX_CB_NUM];
-	ID3D11Buffer* VS_CB[R_MAX_CB_NUM];
-	DeviceResources* DR;
+	D3D11_PRIMITIVE_TOPOLOGY m_Topology;
+	ID3D11InputLayout* m_InputLayout;
+	ID3D11RasterizerState* m_RasterizerState;
+	ID3D11SamplerState* m_SamplerState;
+	ID3D11PixelShader* m_PS;
+	ID3D11VertexShader* m_VS;
+	ID3D11ShaderResourceView* m_PS_SRV[R_MAX_SRV_NUM];
+	ID3D11Buffer* m_PS_CB[R_MAX_CB_NUM];
+	ID3D11Buffer* m_VS_CB[R_MAX_CB_NUM];
+	DeviceResources* m_DR;
 };

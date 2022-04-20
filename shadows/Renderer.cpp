@@ -13,37 +13,37 @@ Renderer::~Renderer()
 
 void Renderer::SetDeviceResources(DeviceResources* dr)
 {
-	DR = dr;
+	m_DR = dr;
 }
 
 void Renderer::SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY topology)
 {
-	Topology = topology;
+	m_Topology = topology;
 }
 
 void Renderer::SetInputLayout(ID3D11InputLayout* inputLayout)
 {
-	InputLayout = inputLayout;
+	m_InputLayout = inputLayout;
 }
 
 void Renderer::SetRasterizerState(ID3D11RasterizerState* rasterizerState)
 {
-	RasterizerState = rasterizerState;
+	m_RasterizerState = rasterizerState;
 }
 
 void Renderer::BindPixelShader(ID3D11PixelShader* shader)
 {
-	PS = shader;
+	m_PS = shader;
 }
 
 void Renderer::BindVertexShader(ID3D11VertexShader* shader)
 {
-	VS = shader;
+	m_VS = shader;
 }
 
 void Renderer::SetSamplerState(ID3D11SamplerState* state)
 {
-	SamplerState = state;
+	m_SamplerState = state;
 }
 
 void Renderer::BindShaderResources(enum BindTargets bindTarget, ID3D11ShaderResourceView** SRVs, uint32_t numSRVs)
@@ -52,7 +52,7 @@ void Renderer::BindShaderResources(enum BindTargets bindTarget, ID3D11ShaderReso
 
 	for (uint32_t i = 0; i < numSRVs; ++i)
 	{
-		PS_SRV[i] = SRVs[i];
+		m_PS_SRV[i] = SRVs[i];
 	}
 }
 
@@ -60,7 +60,7 @@ void Renderer::BindConstantBuffers(enum BindTargets bindTarget, ID3D11Buffer** C
 {
 	assert(numCBs <= R_MAX_CB_NUM && "numCBs is above limit!");
 
-	ID3D11Buffer** buffers = bindTarget == BindTargets::PixelShader ? PS_CB : VS_CB;
+	ID3D11Buffer** buffers = bindTarget == BindTargets::PixelShader ? m_PS_CB : m_VS_CB;
 
 	for (uint32_t i = 0; i < numCBs; ++i)
 	{
@@ -71,13 +71,13 @@ void Renderer::BindConstantBuffers(enum BindTargets bindTarget, ID3D11Buffer** C
 void Renderer::BindShaderResource(enum BindTargets bindTarget, ID3D11ShaderResourceView* srv, uint32_t slot)
 {
 	assert(slot < R_MAX_SRV_NUM);
-	PS_SRV[slot] = srv;
+	m_PS_SRV[slot] = srv;
 }
 
 void Renderer::BindConstantBuffer(enum BindTargets bindTarget, ID3D11Buffer* cb, uint32_t slot)
 {
 	assert(slot < R_MAX_CB_NUM);
-	ID3D11Buffer** buffers = bindTarget == BindTargets::PixelShader ? PS_CB : VS_CB;
+	ID3D11Buffer** buffers = bindTarget == BindTargets::PixelShader ? m_PS_CB : m_VS_CB;
 	buffers[slot] = cb;
 }
 
@@ -90,29 +90,29 @@ void Renderer::DrawIndexed(ID3D11Buffer* indexBuffer,
 {
 	const uint32_t offsets = 0;
 	static ID3D11ShaderResourceView* nullSRV[] = { NULL };
-	ID3D11DeviceContext* context = DR->GetDeviceContext();
+	ID3D11DeviceContext* context = m_DR->GetDeviceContext();
 
-	context->IASetPrimitiveTopology(Topology);
-	context->IASetInputLayout(InputLayout);
+	context->IASetPrimitiveTopology(m_Topology);
+	context->IASetInputLayout(m_InputLayout);
 	context->IASetVertexBuffers(0, 1, &vertexBuffer, &strides, &offsets);
 	context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-	context->RSSetState(RasterizerState);
-	context->PSSetSamplers(0, 1, &SamplerState);
-	context->VSSetShader(VS, NULL, 0);
-	context->PSSetShader(PS, NULL, 0);
+	context->RSSetState(m_RasterizerState);
+	context->PSSetSamplers(0, 1, &m_SamplerState);
+	context->VSSetShader(m_VS, NULL, 0);
+	context->PSSetShader(m_PS, NULL, 0);
 
-	context->PSSetShaderResources(0, R_MAX_SRV_NUM, PS_SRV);
-	context->PSSetConstantBuffers(0, R_MAX_CB_NUM, PS_CB);
-	context->VSSetConstantBuffers(0, R_MAX_CB_NUM, VS_CB);
+	context->PSSetShaderResources(0, R_MAX_SRV_NUM, m_PS_SRV);
+	context->PSSetConstantBuffers(0, R_MAX_CB_NUM, m_PS_CB);
+	context->VSSetConstantBuffers(0, R_MAX_CB_NUM, m_VS_CB);
 	context->DrawIndexed(indexCount, startIndexLocation, baseVertexLocation);
 
 }
 
 void Renderer::Clear()
 {
-	ID3D11DeviceContext* ctx = DR->GetDeviceContext();
-	ID3D11RenderTargetView* rtv = DR->GetRenderTargetView();
-	ID3D11DepthStencilView* dsv = DR->GetDepthStencilView();
+	ID3D11DeviceContext* ctx = m_DR->GetDeviceContext();
+	ID3D11RenderTargetView* rtv = m_DR->GetRenderTargetView();
+	ID3D11DepthStencilView* dsv = m_DR->GetDepthStencilView();
 
 	static const float CLEAR_COLOR[4] = { 0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f };
 	static const float BLACK_COLOR[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -120,18 +120,18 @@ void Renderer::Clear()
 	ctx->ClearRenderTargetView(rtv, BLACK_COLOR);
 	ctx->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	ctx->OMSetRenderTargets(1, &rtv, dsv);
-	ctx->RSSetViewports(1, &DR->GetViewport());
+	ctx->RSSetViewports(1, &m_DR->GetViewport());
 }
 
 void Renderer::Present()
 {
-	const HRESULT hr = DR->GetSwapChain()->Present(1, 0);
+	const HRESULT hr = m_DR->GetSwapChain()->Present(1, 0);
 
-	ID3D11DeviceContext1* ctx = reinterpret_cast<ID3D11DeviceContext1*>(DR->GetDeviceContext());
-	ctx->DiscardView((ID3D11View*)DR->GetRenderTargetView());
-	if (DR->GetDepthStencilView())
+	ID3D11DeviceContext1* ctx = reinterpret_cast<ID3D11DeviceContext1*>(m_DR->GetDeviceContext());
+	ctx->DiscardView((ID3D11View*)m_DR->GetRenderTargetView());
+	if (m_DR->GetDepthStencilView())
 	{
-		ctx->DiscardView((ID3D11View*)DR->GetDepthStencilView());
+		ctx->DiscardView((ID3D11View*)m_DR->GetDepthStencilView());
 	}
 
 	if (FAILED(hr))
