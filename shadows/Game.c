@@ -269,6 +269,34 @@ static void GameRenderNew(Game* game)
 {
 	struct Renderer* r = &game->Renderer;
 
+	SMBind(&game->m_ShadowMap, game->DR->Context);
+	{
+		RBindVertexShader(r, game->VS);
+		RBindPixelShader(r, NULL);
+		RBindConstantBuffer(r, BindTargets_VS, game->m_PerFrameCB, 1);
+
+		RBindConstantBuffer(r, BindTargets_VS, game->m_PerSceneCB, 2);
+
+		for (size_t i = 0; i < game->m_NumActors; ++i)
+		{
+			const Actor* actor = game->m_Actors[i];
+			game->m_PerObjectData.world = actor->m_World;
+			game->m_PerObjectData.material = actor->m_Material;
+			GameUpdateConstantBuffer(game->DR->Context,
+				sizeof(PerObjectConstants),
+				&game->m_PerObjectData,
+				game->m_PerObjectCB);
+			RBindConstantBuffer(r, BindTargets_VS, game->m_PerObjectCB, 0);
+			RBindConstantBuffer(r, BindTargets_PS, game->m_PerObjectCB, 0);
+
+			RDrawIndexed(r, actor->m_IndexBuffer, actor->m_VertexBuffer,
+				sizeof(struct Vertex),
+				actor->m_NumIndices,
+				0,
+				0);
+		}
+	}
+
 	RClear(r);
 
 	RBindPixelShader(r, game->PhongPS);
