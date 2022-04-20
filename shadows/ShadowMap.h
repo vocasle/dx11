@@ -10,9 +10,6 @@ public:
 	ShadowMap();
 	~ShadowMap();
 
-	void Init();
-	void Deinit();
-
 	void InitResources(ID3D11Device* device, uint32_t texWidth, uint32_t texHeight);
 
 	void Bind(ID3D11DeviceContext* ctx);
