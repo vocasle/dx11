@@ -131,10 +131,11 @@ void RClear(struct Renderer* renderer)
 	ID3D11DepthStencilView* dsv = renderer->DR->DepthStencilView;
 
 	static const float CLEAR_COLOR[4] = { 0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f };
+	static const float BLACK_COLOR[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 	ctx->lpVtbl->Flush(ctx);
 
-	ctx->lpVtbl->ClearRenderTargetView(ctx, rtv, CLEAR_COLOR);
+	ctx->lpVtbl->ClearRenderTargetView(ctx, rtv, BLACK_COLOR);
 	ctx->lpVtbl->ClearDepthStencilView(ctx, dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	ctx->lpVtbl->OMSetRenderTargets(ctx, 1, &rtv, dsv);
 	ctx->lpVtbl->RSSetViewports(ctx, 1, &renderer->DR->ScreenViewport);
