@@ -411,10 +411,6 @@ void Game::CreateActors()
 		{0.628281f, 0.555802f, 0.366065f, 0.4f}
 	};
 
-	//m_Actors = {};
-
-	//m_Actors.reserve(_countof(models));
-
 	for (size_t i = 0; i < _countof(models); ++i)
 	{
 		Actor actor = Actor();
@@ -430,7 +426,7 @@ void Game::CreateActors()
 		actor.LoadTexture(normalTextures[i], TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		actor.SetMaterial(&material);
 
-		m_Actors.push_back(actor);
+		m_Actors.emplace_back(actor);
 	}
 
 	{
@@ -480,12 +476,11 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 
 	CreateDefaultSampler();
 
-	RInit(&m_Renderer);
-	RSetDeviceResources(&m_Renderer, m_DR.get());
-	RSetPrimitiveTopology(&m_Renderer, R_DEFAULT_PRIMTIVE_TOPOLOGY);
-	RSetRasterizerState(&m_Renderer, m_DR->GetRasterizerState());
-	RSetInputLayout(&m_Renderer, m_InputLayout.Get());
-	RSetSamplerState(&m_Renderer, m_DefaultSampler.Get());
+	m_Renderer.SetDeviceResources(m_DR.get());
+	m_Renderer.SetPrimitiveTopology(R_DEFAULT_PRIMTIVE_TOPOLOGY);
+	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
+	m_Renderer.SetInputLayout(m_InputLayout.Get());
+	m_Renderer.SetSamplerState(m_DefaultSampler.Get());
 }
 
 void Game::GetDefaultSize(uint32_t* width, uint32_t* height)

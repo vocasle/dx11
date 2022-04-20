@@ -11,8 +11,41 @@
 
 #define R_DEFAULT_PRIMTIVE_TOPOLOGY D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
 
-struct Renderer
+enum class BindTargets
 {
+	PixelShader,
+	VertexShader
+};
+
+class Renderer
+{
+public:
+	Renderer();
+	~Renderer();
+
+	void SetDeviceResources(DeviceResources* dr);
+	void SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY topology);
+	void SetInputLayout(ID3D11InputLayout* inputLayout);
+	void SetRasterizerState(ID3D11RasterizerState* rasterizerState);
+	void SetSamplerState(ID3D11SamplerState* state);
+	
+	void BindPixelShader(ID3D11PixelShader* shader);
+	void BindVertexShader(ID3D11VertexShader* shader);
+	void BindShaderResources(enum BindTargets bindTarget, ID3D11ShaderResourceView** SRVs, uint32_t numSRVs);
+	void BindConstantBuffers(enum BindTargets bindTarget, ID3D11Buffer** CBs, uint32_t numCBs);
+	void BindShaderResource(enum BindTargets bindTarget, ID3D11ShaderResourceView* srv, uint32_t slot);
+	void BindConstantBuffer(enum BindTargets bindTarget, ID3D11Buffer* cb, uint32_t slot);
+	
+	void DrawIndexed(ID3D11Buffer* indexBuffer,
+		ID3D11Buffer* vertexBuffer,
+		uint32_t strides,
+		uint32_t indexCount,
+		uint32_t startIndexLocation,
+		uint32_t baseVertexLocation);
+	void Clear();
+	void Present();
+
+private:
 	D3D11_PRIMITIVE_TOPOLOGY Topology;
 	ID3D11InputLayout* InputLayout;
 	ID3D11RasterizerState* RasterizerState;
@@ -24,47 +57,3 @@ struct Renderer
 	ID3D11Buffer* VS_CB[R_MAX_CB_NUM];
 	DeviceResources* DR;
 };
-
-enum BindTargets
-{
-	BindTargets_PS,
-	BindTargets_VS
-};
-
-void RInit(struct Renderer* renderer);
-
-void RDeinit(struct Renderer* renderer);
-
-void RSetDeviceResources(struct Renderer* renderer, DeviceResources* dr);
-
-void RSetPrimitiveTopology(struct Renderer* renderer, D3D11_PRIMITIVE_TOPOLOGY topology);
-
-void RSetInputLayout(struct Renderer* renderer, ID3D11InputLayout* inputLayout);
-
-void RSetRasterizerState(struct Renderer* renderer, ID3D11RasterizerState* rasterizerState);
-
-void RSetSamplerState(struct Renderer* renderer, ID3D11SamplerState* state);
-
-void RBindPixelShader(struct Renderer* renderer, ID3D11PixelShader* shader);
-
-void RBindVertexShader(struct Renderer* renderer, ID3D11VertexShader* shader);
-
-void RBindShaderResources(struct Renderer* renderer, enum BindTargets bindTarget, ID3D11ShaderResourceView** SRVs, uint32_t numSRVs);
-
-void RBindConstantBuffers(struct Renderer* renderer, enum BindTargets bindTarget, ID3D11Buffer** CBs, uint32_t numCBs);
-
-void RBindShaderResource(struct Renderer* renderer, enum BindTargets bindTarget, ID3D11ShaderResourceView* srv, uint32_t slot);
-
-void RBindConstantBuffer(struct Renderer* renderer, enum BindTargets bindTarget, ID3D11Buffer* cb, uint32_t slot);
-
-void RDrawIndexed(struct Renderer* renderer,
-	ID3D11Buffer* indexBuffer, 
-	ID3D11Buffer* vertexBuffer,
-	uint32_t strides,
-	uint32_t indexCount,
-	uint32_t startIndexLocation, 
-	uint32_t baseVertexLocation);
-
-void RClear(struct Renderer* renderer);
-
-void RPresent(struct Renderer* renderer);
