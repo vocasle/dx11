@@ -50,6 +50,7 @@ uint32_t OLReadLine(FILE* f, char* out, uint32_t sz)
 
 struct MeshInfo
 {
+	MeshInfo(): NumPositions{0}, NumNormals{0}, NumTexCoords{0}, NumFaces{0} {}
 	uint32_t NumPositions;
 	uint32_t NumNormals;
 	uint32_t NumTexCoords;
@@ -126,7 +127,7 @@ static void OLParseMeshes(struct Mesh* meshes, uint32_t numMeshes, struct MeshIn
 	int32_t meshIdx = -1;
 	struct Mesh* mesh = NULL;
 	struct MeshInfo* info = NULL;
-	struct Face face = { 0 };
+	struct Face face = {};
 	
 	while(OLReadLine(objfile, line, 128))
 	{
@@ -214,7 +215,7 @@ static uint32_t OLValidateMeshes(const struct Mesh* meshes, const struct MeshInf
 
 static char* OLGetCwd(const char* filename)
 {
-	char* lastSlash = NULL;
+	const char* lastSlash = NULL;
 	uint32_t len = 0;
 	lastSlash = strrchr(filename, '/');
 	lastSlash = lastSlash ? lastSlash : strrchr(filename, '\\');
@@ -225,7 +226,7 @@ static char* OLGetCwd(const char* filename)
 	char* dir = NULL;
 	if (len > 0)
 	{
-		dir = malloc(len + 1);
+		dir = new char[len + 1];
 		strncpy_s(dir, len + 1, filename, len);
 		return dir;
 	}
@@ -299,22 +300,17 @@ struct Model* OLLoad(const char* filename)
 		return NULL;
 	}
 
-	size_t bytes = sizeof(struct Mesh) * numMeshes;
-	struct Mesh* meshes = malloc(bytes);
-	memset(meshes, 0, bytes);
-
-	bytes = sizeof(struct MeshInfo) * numMeshes;
-	struct MeshInfo* infos = malloc(bytes);
-	memset(infos, 0, bytes);
+	struct Mesh* meshes = new Mesh[numMeshes];
+	struct MeshInfo* infos = new MeshInfo[numMeshes];
 
 	OLGetMeshInfos(infos, numMeshes, f);
 	//assert(numMeshes == 1);
 	for (uint32_t i = 0; i < numMeshes; ++i)
 	{
-		meshes[i].Faces = malloc(sizeof(struct Face) * infos[i].NumFaces);
-		meshes[i].Normals = malloc(sizeof(struct Normal) * infos[i].NumNormals);
-		meshes[i].Positions = malloc(sizeof(struct Position) * infos[i].NumPositions);
-		meshes[i].TexCoords = malloc(sizeof(struct TexCoord) * infos[i].NumTexCoords);
+		meshes[i].Faces = new Face[infos[i].NumFaces];
+		meshes[i].Normals = new Normal[infos[i].NumNormals];
+		meshes[i].Positions = new Position[infos[i].NumPositions];
+		meshes[i].TexCoords = new TexCoord[infos[i].NumTexCoords];
 	}
 	OLParseMeshes(meshes, numMeshes, infos, f);
 	fclose(f);
@@ -322,7 +318,7 @@ struct Model* OLLoad(const char* filename)
 	assert(OLValidateMeshes(meshes, infos, numMeshes));
 	free(infos);
 
-	struct Model* model = malloc(sizeof(struct Model));
+	struct Model* model = new Model;
 	model->Meshes = meshes;
 	model->NumMeshes = numMeshes;
 	model->Directory = OLGetCwd(filename);
@@ -333,9 +329,7 @@ struct Model* OLLoad(const char* filename)
 
 struct Mesh* MeshNew(void)
 {
-	const size_t bytes = sizeof(struct Mesh);
-	struct Mesh* mesh = malloc(bytes);
-	memset(mesh, 0, bytes);
+	struct Mesh* mesh = new Mesh;
 	return mesh;
 }
 
@@ -356,9 +350,7 @@ void MeshDeinit(struct Mesh* mesh)
 
 struct Model* ModelNew(void)
 {
-	const size_t bytes = sizeof(struct Model);
-	struct Model* model = malloc(bytes);
-	memset(model, 0, bytes);
+	struct Model* model = new Model;
 	return model;
 }
 

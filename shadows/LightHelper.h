@@ -57,6 +57,7 @@ struct SpotLight
 struct Material
 {
 	Material() : Ambient{}, Diffuse{}, Specular{} {}
+	Material(Color ambient, Color diffuse, Color specular): Ambient(ambient), Diffuse(diffuse), Specular(specular) {}
 	Color Ambient;
 	Color Diffuse;
 	Color Specular;

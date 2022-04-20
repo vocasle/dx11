@@ -76,7 +76,7 @@ unsigned char* UtilsReadData(const char* filepath, unsigned int* bufferSize);
 	\
 	void Array##ClassSuffix##FreeCustom(struct Array##ClassSuffix* arr, void (*CustomFree)(struct Array##ClassSuffix* arr))
 
-#define COM_FREE(This) (This->lpVtbl->Release(This))
+#define COM_FREE(This) (This->Release())
 
 #define HR(x) \
 	if (FAILED(x)) { \

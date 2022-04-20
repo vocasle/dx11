@@ -11,7 +11,7 @@ inline struct Mesh* MGGeneratePlane(const Vec3D* origin, const float width, cons
 {
 	struct Mesh* mesh = MeshNew();
 	
-	mesh->Positions = malloc(sizeof(struct Position) * 4);
+	mesh->Positions = new Position[4];
 	mesh->Positions[0].x = origin->X + width / 2.0f;
 	mesh->Positions[0].y = origin->Y;
 	mesh->Positions[0].z = origin->Z - height / 2.0f;
@@ -29,13 +29,13 @@ inline struct Mesh* MGGeneratePlane(const Vec3D* origin, const float width, cons
 	mesh->Positions[3].z = origin->Z + height / 2.0f;
 	mesh->NumPositions = 4;
 
-	mesh->Normals = malloc(sizeof(struct Normal));
+	mesh->Normals = new Normal;
 	mesh->Normals[0].x = 0.0f;
 	mesh->Normals[0].y = 1.0f;
 	mesh->Normals[0].z = 0.0f;
 	mesh->NumNormals = 1;
 
-	mesh->TexCoords = malloc(sizeof(struct TexCoord) * 4);
+	mesh->TexCoords = new TexCoord[4];
 	mesh->TexCoords[0].u = 1.0f;
 	mesh->TexCoords[0].v = 1.0f;
 
@@ -49,7 +49,7 @@ inline struct Mesh* MGGeneratePlane(const Vec3D* origin, const float width, cons
 	mesh->TexCoords[3].v = 0.0f;
 	mesh->NumTexCoords = 4;
 
-	mesh->Faces = malloc(sizeof(struct Face) * 6);
+	mesh->Faces = new Face[6];
 	mesh->Faces[0].normIdx = 0;
 	mesh->Faces[0].posIdx = 0;
 	mesh->Faces[0].texIdx = 0;

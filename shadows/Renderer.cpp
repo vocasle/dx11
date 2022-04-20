@@ -106,50 +106,48 @@ void RDrawIndexed(struct Renderer* renderer,
 {
 	const uint32_t offsets = 0;
 	static ID3D11ShaderResourceView* nullSRV[] = { NULL };
-	ID3D11DeviceContext* context = renderer->DR->Context;
+	ID3D11DeviceContext* context = renderer->DR->GetDeviceContext();
 
-	context->lpVtbl->IASetPrimitiveTopology(context, renderer->Topology);
-	context->lpVtbl->IASetInputLayout(context, renderer->InputLayout);
-	context->lpVtbl->IASetVertexBuffers(context, 0, 1, &vertexBuffer, &strides, &offsets);
-	context->lpVtbl->IASetIndexBuffer(context, indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-	context->lpVtbl->RSSetState(context, renderer->RasterizerState);
-	context->lpVtbl->PSSetSamplers(context, 0, 1, &renderer->SamplerState);
-	context->lpVtbl->VSSetShader(context, renderer->VS, NULL, 0);
-	context->lpVtbl->PSSetShader(context, renderer->PS, NULL, 0);
+	context->IASetPrimitiveTopology(renderer->Topology);
+	context->IASetInputLayout(renderer->InputLayout);
+	context->IASetVertexBuffers(0, 1, &vertexBuffer, &strides, &offsets);
+	context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	context->RSSetState(renderer->RasterizerState);
+	context->PSSetSamplers(0, 1, &renderer->SamplerState);
+	context->VSSetShader(renderer->VS, NULL, 0);
+	context->PSSetShader(renderer->PS, NULL, 0);
 
-	context->lpVtbl->PSSetShaderResources(context, 0, R_MAX_SRV_NUM, renderer->PS_SRV);
-	context->lpVtbl->PSSetConstantBuffers(context, 0, R_MAX_CB_NUM, renderer->PS_CB);
-	context->lpVtbl->VSSetConstantBuffers(context, 0, R_MAX_CB_NUM, renderer->VS_CB);
-	context->lpVtbl->DrawIndexed(context, indexCount, startIndexLocation, baseVertexLocation);
+	context->PSSetShaderResources(0, R_MAX_SRV_NUM, renderer->PS_SRV);
+	context->PSSetConstantBuffers(0, R_MAX_CB_NUM, renderer->PS_CB);
+	context->VSSetConstantBuffers(0, R_MAX_CB_NUM, renderer->VS_CB);
+	context->DrawIndexed(indexCount, startIndexLocation, baseVertexLocation);
 
 }
 
 void RClear(struct Renderer* renderer)
 {
-	ID3D11DeviceContext1* ctx = renderer->DR->Context;
-	ID3D11RenderTargetView* rtv = renderer->DR->RenderTargetView;
-	ID3D11DepthStencilView* dsv = renderer->DR->DepthStencilView;
+	ID3D11DeviceContext* ctx = renderer->DR->GetDeviceContext();
+	ID3D11RenderTargetView* rtv = renderer->DR->GetRenderTargetView();
+	ID3D11DepthStencilView* dsv = renderer->DR->GetDepthStencilView();
 
 	static const float CLEAR_COLOR[4] = { 0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f };
 	static const float BLACK_COLOR[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-	ctx->lpVtbl->Flush(ctx);
-
-	ctx->lpVtbl->ClearRenderTargetView(ctx, rtv, BLACK_COLOR);
-	ctx->lpVtbl->ClearDepthStencilView(ctx, dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	ctx->lpVtbl->OMSetRenderTargets(ctx, 1, &rtv, dsv);
-	ctx->lpVtbl->RSSetViewports(ctx, 1, &renderer->DR->ScreenViewport);
+	ctx->ClearRenderTargetView(rtv, BLACK_COLOR);
+	ctx->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	ctx->OMSetRenderTargets(1, &rtv, dsv);
+	ctx->RSSetViewports(1, &renderer->DR->GetViewport());
 }
 
 void RPresent(struct Renderer* renderer)
 {
-	const HRESULT hr = renderer->DR->SwapChain->lpVtbl->Present(renderer->DR->SwapChain, 1, 0);
+	const HRESULT hr = renderer->DR->GetSwapChain()->Present(1, 0);
 
-	ID3D11DeviceContext1* ctx = renderer->DR->Context;
-	ctx->lpVtbl->DiscardView(ctx, (ID3D11View*)renderer->DR->RenderTargetView);
-	if (renderer->DR->DepthStencilView)
+	ID3D11DeviceContext1* ctx = reinterpret_cast<ID3D11DeviceContext1*>(renderer->DR->GetDeviceContext());
+	ctx->DiscardView((ID3D11View*)renderer->DR->GetRenderTargetView());
+	if (renderer->DR->GetDepthStencilView())
 	{
-		ctx->lpVtbl->DiscardView(ctx, (ID3D11View*)renderer->DR->DepthStencilView);
+		ctx->DiscardView((ID3D11View*)renderer->DR->GetDepthStencilView());
 	}
 
 	if (FAILED(hr))

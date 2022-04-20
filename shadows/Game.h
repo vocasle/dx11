@@ -12,80 +12,84 @@
 #include "LightHelper.h"
 #include "ShadowMap.h"
 
+#include <vector>
+#include <memory>
+#include <wrl/client.h>
+
 #define MODEL_PULL 10
 #define TEXTURE_PULL 4
 
-typedef struct PerFrameConstants
+struct PerFrameConstants
 {
+	PerFrameConstants() : view{}, proj{}, cameraPosW{}, pad{0} {}
 	Mat4X4 view;
 	Mat4X4 proj;
 	Vec3D cameraPosW;
 	float pad;
-} PerFrameConstants;
+};
 
-typedef struct PerObjectConstants
+struct PerObjectConstants
 {
+	PerObjectConstants() : world{}, material{} {}
 	Mat4X4 world;
 	Material material;
-} PerObjectConstants;
+};
 
-typedef struct PerSceneConstants
+struct PerSceneConstants
 {
+	PerSceneConstants() : pointLights{}, dirLight{}, spotLights{} {}
 	PointLight pointLights[4];
 	DirectionalLight dirLight;
 	SpotLight spotLights[2];
-} PerSceneConstants;
-
-struct LightingData
-{
-	PointLight PL[4];
-	Vec3D CameraPos;
-	float _Pad;
 };
 
-typedef struct Game
+class Game
 {
-	DeviceResources* DR;
-	ID3D11VertexShader* VS;
-	ID3D11PixelShader* PS;
-	ID3D11PixelShader* PhongPS;
-	ID3D11PixelShader* LightPS;
-	ID3D11InputLayout* InputLayout;
-	ID3D11SamplerState* DefaultSampler;
-	Timer TickTimer;
-	PerFrameConstants PerFrameConstants;
-	struct Camera Cam;
-	struct Keyboard Keyboard;
-	struct Mouse Mouse;
-	Mat4X4 gWorldMat;
-	Mat4X4 gViewMat;
-	Mat4X4 gProjMat;
-	struct Renderer Renderer;
+public:
+	Game();
+
+	~Game();
+
+	void Tick();
+
+	void Initialize(HWND hWnd, uint32_t width, uint32_t height);
+
+	void GetDefaultSize(uint32_t* width, uint32_t* height);
+
+	void OnKeyDown(WPARAM key);
+
+	void OnKeyUp(WPARAM key);
+
+	void OnMouseMove(uint32_t message, WPARAM wParam, LPARAM lParam);
+
+private:
+	void InitPerSceneConstants();
+	void CreateDefaultSampler();
+	void Clear();
+	void Update();
+	void Render();
+	void CreateActors();
+
+	std::unique_ptr<DeviceResources> m_DR;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VS;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PS;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PhongPS;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_LightPS;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_InputLayout;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_DefaultSampler;
+	Timer m_Timer;
+	Camera m_Camera;
+	Keyboard m_Keyboard;
+	Mouse m_Mouse;
+	Renderer m_Renderer;
 
 	// new stuff
-	Actor** m_Actors;
-	size_t m_NumActors;
+	std::vector<Actor> m_Actors;
 	PerFrameConstants m_PerFrameData;
 	PerObjectConstants m_PerObjectData;
 	PerSceneConstants m_PerSceneData;
-	ID3D11Buffer* m_PerFrameCB;
-	ID3D11Buffer* m_PerObjectCB;
-	ID3D11Buffer* m_PerSceneCB;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_PerFrameCB;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_PerObjectCB;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_PerSceneCB;
 	ShadowMap m_ShadowMap;
-} Game;
-
-Game* GameNew(void);
-
-void GameFree(Game* game);
-
-void GameTick(Game* game);
-
-void GameInitialize(Game* game, HWND hWnd, int width, int height);
-
-void GameGetDefaultSize(Game* game, int* width, int* height);
-
-void GameOnKeyDown(Game* game, WPARAM key);
-
-void GameOnKeyUp(Game* game, WPARAM key);
-
-void GameOnMouseMove(Game* game, uint32_t message, WPARAM wParam, LPARAM lParam);
+};

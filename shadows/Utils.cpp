@@ -80,7 +80,7 @@ unsigned char* UtilsReadData(const char* filepath, unsigned int* bufferSize)
     {
         UTILS_FATAL_ERROR("Failed to get file stats from %s", filepath);
     }
-    unsigned char* bytes = malloc(sb.st_size);
+    unsigned char* bytes = new unsigned char[sb.st_size];
     fread(bytes, sb.st_size, 1, f);
     fclose(f);
     *bufferSize = sb.st_size;

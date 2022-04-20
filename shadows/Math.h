@@ -1,5 +1,6 @@
 #pragma once
-#include <stdint.h>
+#include <cstdint>
+#include <cstring>
 
 typedef struct Vec2D
 {

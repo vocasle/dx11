@@ -22,7 +22,7 @@ void MouseOnMouseMove(struct Mouse* mouse, uint32_t message, WPARAM wParam, LPAR
 	static uint32_t firstLaunch = 1;
 	mouse->MousePos.X = GET_X_LPARAM(lParam);
 	mouse->MousePos.Y = GET_Y_LPARAM(lParam);
-	POINT pos = { 0 };
+	POINT pos = {};
 	GetCursorPos(&pos);
 	mouse->MousePos.X = pos.x;
 	mouse->MousePos.Y = pos.y;
@@ -38,7 +38,7 @@ void MouseOnMouseMove(struct Mouse* mouse, uint32_t message, WPARAM wParam, LPAR
 Vec2D MouseGetMouseDelta(const struct Mouse* mouse)
 {
 
-	Vec2D delta = {0};
+	Vec2D delta = {};
 	delta.X = mouse->WinSize.X / 2.0f - mouse->MousePos.X;
 	delta.Y = mouse->WinSize.Y / 2.0f - mouse->MousePos.Y;
 

@@ -150,9 +150,9 @@
     <ClCompile>
       <WarningLevel>EnableAllWarnings</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;MATH_TEST;REDIRECT_IO_TO_CONSOLE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;MATH_TEST;REDIRECT_IO_TO_CONSOLE;NOMINMAX</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <CompileAs>CompileAsC</CompileAs>
+      <CompileAs>CompileAsCpp</CompileAs>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ExceptionHandling>false</ExceptionHandling>
       <TreatWarningAsError>false</TreatWarningAsError>
@@ -231,19 +231,19 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Actor.c" />
-    <ClCompile Include="Camera.c" />
-    <ClCompile Include="DeviceResources.c" />
-    <ClCompile Include="dx11.c" />
-    <ClCompile Include="Game.c" />
-    <ClCompile Include="Keyboard.c" />
-    <ClCompile Include="Math.c" />
-    <ClCompile Include="Mouse.c" />
-    <ClCompile Include="objloader.c" />
-    <ClCompile Include="Renderer.c" />
-    <ClCompile Include="ShadowMap.c" />
-    <ClCompile Include="stb_image.c" />
-    <ClCompile Include="Utils.c" />
+    <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="DeviceResources.cpp" />
+    <ClCompile Include="dx11.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Keyboard.cpp" />
+    <ClCompile Include="Math.cpp" />
+    <ClCompile Include="Mouse.cpp" />
+    <ClCompile Include="objloader.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="ShadowMap.cpp" />
+    <ClCompile Include="stb_image.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.h" />
