@@ -4,11 +4,13 @@
 
 struct Color
 {
+	Color(): R{0}, G{0}, B{0}, A{0} {}
+	Color(float r, float g, float b, float a): R{r}, G{g}, B{b}, A{a} {}
 	float R;
 	float G;
 	float B;
 	float A;
-} typedef Color;
+};
 
 inline Color ColorFromRGBA(const float r, const float g, const float b, const float a)
 {
@@ -16,17 +18,19 @@ inline Color ColorFromRGBA(const float r, const float g, const float b, const fl
 	return color;
 }
 
-typedef struct DirectionalLight
+struct DirectionalLight
 {
+	DirectionalLight() : Ambient{}, Diffuse{}, Specular{}, Direction{}, pad{0} {}
 	Color Ambient;
 	Color Diffuse;
 	Color Specular;
 	Vec3D Direction;
 	float pad;
-} DirectionalLight;
+};
 
-typedef struct PointLight
+struct PointLight
 {
+	PointLight() : Ambient{}, Diffuse{}, Specular{}, Position{}, Range{0}, Att{}, pad{0} {}
 	Color Ambient;
 	Color Diffuse;
 	Color Specular;
@@ -34,10 +38,11 @@ typedef struct PointLight
 	float Range;
 	Vec3D Att;
 	float pad;
-} PointLight;
+};
 
-typedef struct SpotLight
+struct SpotLight
 {
+	SpotLight() : Ambient{}, Diffuse{}, Specular{}, Position{}, Range{0}, Direction{}, Spot{0}, Att{}, pad{0} {}
 	Color Ambient;
 	Color Diffuse;
 	Color Specular;
@@ -47,11 +52,12 @@ typedef struct SpotLight
 	float Spot;
 	Vec3D Att;
 	float pad;
-} SpotLight;
+};
 
-typedef struct Material
+struct Material
 {
-	Vec4D Ambient;
-	Vec4D Diffuse;
-	Vec4D Specular;
-} Material;
+	Material() : Ambient{}, Diffuse{}, Specular{} {}
+	Color Ambient;
+	Color Diffuse;
+	Color Specular;
+};
