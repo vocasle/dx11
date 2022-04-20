@@ -399,6 +399,44 @@ Mat4X4 MathMat4X4PerspectiveFov(float fovAngleY, float aspectRatio, float nearZ,
 	return res;
 }
 
+Mat4X4 MathMat4X4OrthographicOffCenter(float viewLeft, 
+	float viewRight, 
+	float viewBottom, 
+	float viewTop, 
+	float nearZ, 
+	float farZ)
+{
+	assert(!MathNearlyEqual(viewRight, viewLeft));
+	assert(!MathNearlyEqual(viewTop, viewBottom));
+	assert(!MathNearlyEqual(farZ, nearZ));
+
+	float reciprocalWidth = 1.0f / (viewRight - viewLeft);
+	float reciprocalHeight = 1.0f / (viewTop - viewBottom);
+	float fRange = 1.0f / (farZ - nearZ);
+
+	Mat4X4 m = {};
+	m.A[0][0] = reciprocalWidth + reciprocalWidth;
+	m.A[0][1] = 0.0f;
+	m.A[0][2] = 0.0f;
+	m.A[0][3] = 0.0f;
+
+	m.A[1][0] = 0.0f;
+	m.A[1][1] = reciprocalHeight + reciprocalHeight;
+	m.A[1][2] = 0.0f;
+	m.A[1][3] = 0.0f;
+
+	m.A[2][0] = 0.0f;
+	m.A[2][1] = 0.0f;
+	m.A[2][2] = fRange;
+	m.A[2][3] = 0.0f;
+
+	m.A[3][0] = -(viewLeft + viewRight) * reciprocalWidth;
+	m.A[3][1] = -(viewTop + viewBottom) * reciprocalHeight;
+	m.A[3][2] = -fRange * nearZ;
+	m.A[3][3] = 1.0f;
+	return m;
+}
+
 float MathClamp(float min, float max, float v)
 {
 	if (v > max)
