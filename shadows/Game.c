@@ -41,30 +41,39 @@ static void GameInitPerSceneConstants(Game* game)
 {
 	struct PointLight pl = { 0 };
 	const Vec3D positions[] = {
-		{-4.0f, 2.0f, -4.0f},
-		{-4.0f, 2.0f, 4.0f},
-		{0.0f, 5.5f, 0.0f},
-		{4.0f, 2.0f, -4.0f},
-	};
-
-	const Color colors[4][3] = {
-		{ {0.1f, 0.1f, 0.1f, 1.0f}, {0.8f, 0.1f, 0.1f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f} },
-		{ {0.1f, 0.1f, 0.1f, 1.0f}, {0.1f, 0.8f, 0.1f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f} },
-		{ {0.1f, 0.1f, 0.1f, 1.0f}, {0.1f, 0.1f, 0.8f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f} },
-		{ {0.1f, 0.1f, 0.1f, 1.0f}, {0.8f, 0.1f, 0.8f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f} },
+		{-4.0f, 1.5f, -4.0f},
+		{-4.0f, 1.5f, 4.0f},
+		{4.0f, 1.5f, 4.0f},
+		{4.0f, 1.5f, -4.0f},
 	};
 
 	for (uint32_t i = 0; i < 4; ++i)
 	{
 		pl.Position = positions[i];
-		pl.Ambient = colors[i][0];
-		pl.Diffuse = colors[i][1];
-		pl.Specular = colors[i][2];
-		pl.Att = MathVec3DFromXYZ(1.0f, 0.7f, 1.8f);
-		pl.Range = MathRandom(3.0f, 5.0f);
+		pl.Ambient = ColorFromRGBA(0.3f, 0.3f, 0.3f, 1.0f);
+		pl.Diffuse = ColorFromRGBA(0.6f, 0.6f, 0.6f, 1.0f);
+		pl.Specular = ColorFromRGBA(0.2f, 0.2f, 0.2f, 1.0f);
+		pl.Att = MathVec3DFromXYZ(1.0f, 0.09f, 0.032f);
+		pl.Range = 5.0f;
 		game->m_PerSceneData.pointLights[i] = pl;
 	}
 
+	DirectionalLight dirLight = { 0 };
+	dirLight.Ambient = ColorFromRGBA(0.2f, 0.2f, 0.2f, 1.0f);
+	dirLight.Diffuse = ColorFromRGBA(0.7f, 0.7f, 0.6f, 1.0f);
+	dirLight.Specular = ColorFromRGBA(0.8f, 0.8f, 0.7f, 1.0f);
+	dirLight.Direction = MathVec3DFromXYZ(5.0f / sqrtf(50.0f), -5.0f / sqrtf(50.0f), 0.0f);
+	game->m_PerSceneData.dirLight = dirLight;
+
+	SpotLight spotLight = { 0 };
+	spotLight.Position = game->Cam.CameraPos;
+	spotLight.Direction = game->Cam.FocusPoint;
+	spotLight.Ambient = ColorFromRGBA(0.0f, 0.0f, 0.0f, 1.0f);
+	spotLight.Diffuse = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	spotLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	spotLight.Att = MathVec3DFromXYZ(1.0f, 0.09f, 0.032f);
+	spotLight.Range = 5.0f;
+	game->m_PerSceneData.spotLights[0] = spotLight;
 }
 
 Game* GameNew(void)
@@ -222,6 +231,17 @@ void GameUpdate(Game* game)
 	game->m_PerFrameData.cameraPosW = game->Cam.CameraPos;
 
 	GameUpdateConstantBuffer(game->DR->Context, sizeof(PerFrameConstants), &game->m_PerFrameData, game->m_PerFrameCB);
+
+	// update directional light
+	//static float elapsedTime = 0.0f;
+	//elapsedTime += (float)game->TickTimer.DeltaMillis / 1000.0f;
+	//game->m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);
+	//game->m_PerSceneData.dirLight.Direction.Y = 1.0f;
+	//game->m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
+
+	//game->m_PerSceneData.spotLights[0].Position = game->Cam.CameraPos;
+	//game->m_PerSceneData.spotLights[0].Direction = game->Cam.FocusPoint;
+	//GameUpdateConstantBuffer(game->DR->Context, sizeof(PerSceneConstants), &game->m_PerSceneData, game->m_PerSceneCB);
 }
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -264,6 +284,7 @@ static void GameRenderNew(Game* game)
 		const Actor* actor = game->m_Actors[i];
 		RBindShaderResources(r, BindTargets_PS, actor->m_Textures, ACTOR_NUM_TEXTURES);
 		game->m_PerObjectData.world = actor->m_World;
+		game->m_PerObjectData.material = actor->m_Material;
 		GameUpdateConstantBuffer(game->DR->Context,
 			sizeof(PerObjectConstants),
 			&game->m_PerObjectData,
@@ -279,27 +300,27 @@ static void GameRenderNew(Game* game)
 	}
 	
 	//// Light properties
-	for (uint32_t i = 0; i < _countof(game->m_PerSceneData.pointLights); ++i)
-	{
-		const Vec3D scale = { 0.2f, 0.2f, 0.2f };
-		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
-		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->m_PerSceneData.pointLights[i].Position);
-		game->m_PerObjectData.world = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
-		GameUpdateConstantBuffer(game->DR->Context,
-			sizeof(PerObjectConstants),
-			&game->m_PerObjectData,
-			game->m_PerObjectCB);
+	//for (uint32_t i = 0; i < _countof(game->m_PerSceneData.pointLights); ++i)
+	//{
+	//	const Vec3D scale = { 0.2f, 0.2f, 0.2f };
+	//	Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
+	//	Mat4X4 translate = MathMat4X4TranslateFromVec3D(&game->m_PerSceneData.pointLights[i].Position);
+	//	game->m_PerObjectData.world = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
+	//	GameUpdateConstantBuffer(game->DR->Context,
+	//		sizeof(PerObjectConstants),
+	//		&game->m_PerObjectData,
+	//		game->m_PerObjectCB);
 
-		RBindPixelShader(r, game->LightPS);
-		RBindConstantBuffer(r, BindTargets_VS, game->m_PerObjectCB, 0);
-		RBindConstantBuffer(r, BindTargets_PS, game->m_PerObjectCB, 0);
-		const Actor* sphere = game->m_Actors[2];
-		RDrawIndexed(r, sphere->m_IndexBuffer, sphere->m_VertexBuffer,
-			sizeof(struct Vertex),
-			sphere->m_NumIndices,
-			0,
-			0);
-	}
+	//	RBindPixelShader(r, game->LightPS);
+	//	RBindConstantBuffer(r, BindTargets_VS, game->m_PerObjectCB, 0);
+	//	RBindConstantBuffer(r, BindTargets_PS, game->m_PerObjectCB, 0);
+	//	const Actor* sphere = game->m_Actors[2];
+	//	RDrawIndexed(r, sphere->m_IndexBuffer, sphere->m_VertexBuffer,
+	//		sizeof(struct Vertex),
+	//		sphere->m_NumIndices,
+	//		0,
+	//		0);
+	//}
 
 	RPresent(r);
 }
@@ -506,7 +527,6 @@ static void GameCreateActors(Game* game)
 	};
 
 	const Material material = {
-		// 0.24725 	0.1995 	0.0745 	0.75164 	0.60648 	0.22648 	0.628281 	0.555802 	0.366065 	0.4
 		{0.24725f, 0.1995f, 0.0745f, 1.0f},
 		{0.75164f, 0.60648f, 0.22648f, 1.0f},
 		{0.628281f, 0.555802f, 0.366065f, 0.4f}
@@ -546,6 +566,7 @@ static void GameCreateActors(Game* game)
 		const Vec3D offset = { 0.0f, -1.0f, 0.0f };
 		ActorTranslate(plane, offset);
 		ActorLoadTexture(plane, "assets/textures/chess.jpg", TextureType_Diffuse, game->DR->Device, game->DR->Context);
+		ActorSetMaterial(plane, &material);
 		game->m_Actors[game->m_NumActors++] = plane;
 	}
 }
