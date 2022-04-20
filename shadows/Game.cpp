@@ -202,7 +202,7 @@ void Game::InitPerSceneConstants()
 }
 
 Game::Game():
-	m_Camera{ {0.0f, 0.0f, -5.0f}, &m_Keyboard, &m_Mouse }
+	m_Camera{ {0.0f, 0.0f, -5.0f} }
 {
 	memset(this, 0, sizeof(Game));
 	m_DR = std::make_unique<DeviceResources>();
@@ -454,8 +454,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_DR->CreateDeviceResources();
 	m_DR->CreateWindowSizeDependentResources();
 	TimerInitialize(&m_Timer);
-	KeyboardInit(&m_Keyboard);
-	MouseInit(&m_Mouse, m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
+	//MouseInit(&m_Mouse, m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
 	SMInitResources(&m_ShadowMap, m_DR->GetDevice(), 2048, 2048);
 
 	// init actors
@@ -490,7 +489,7 @@ void Game::GetDefaultSize(uint32_t* width, uint32_t* height)
 
 void Game::OnKeyDown(WPARAM key)
 {
-	KeyboardOnKeyDown(&m_Keyboard, key);
+	Keyboard::Get().OnKeyDown(key);
 
 	if (key == VK_ESCAPE)
 	{
@@ -500,10 +499,10 @@ void Game::OnKeyDown(WPARAM key)
 
 void Game::OnKeyUp(WPARAM key)
 {
-	KeyboardOnKeyUp(&m_Keyboard, key);
+	Keyboard::Get().OnKeyUp(key);
 }
 
 void Game::OnMouseMove(uint32_t message, WPARAM wParam, LPARAM lParam)
 {
-	MouseOnMouseMove(&m_Mouse, message, wParam, lParam);
+	Mouse::Get().OnMouseMove(message, wParam, lParam);
 }

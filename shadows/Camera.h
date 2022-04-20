@@ -1,8 +1,6 @@
 #pragma once
 
 #include "Math.h"
-#include "Keyboard.h"
-#include "Mouse.h"
 
 #include <stdint.h>
 
@@ -12,9 +10,7 @@
 class Camera
 {
 public:
-	Camera(const Vec3D& cameraPos,
-		const Keyboard* keyboard,
-		const Mouse* mouse);
+	Camera(const Vec3D& cameraPos);
 	Mat4X4 GetViewMat() const;
 	void UpdatePos(double deltaMillis);
 	void ProcessMouse(double deltaMillis);
@@ -31,7 +27,5 @@ private:
 	Vec3D m_At;
 	Vec3D m_Right;
 	Vec3D m_Up;
-	const Keyboard* m_Keyboard;
-	const Mouse* m_Mouse;
 	float m_Speed;
 };

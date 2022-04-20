@@ -1,59 +1,63 @@
 ﻿#include "Keyboard.h"
 
-void KeyboardInit(struct Keyboard* keyboard)
+std::unique_ptr<Keyboard> Keyboard::m_Instance = nullptr;
+
+Keyboard::Keyboard(): Keys(10), States(10)
 {
-	keyboard->Keys = new WPARAM[Keys_Num];
-	keyboard->States = new uint32_t[Keys_Num];
-	WPARAM* keys = keyboard->Keys;
-	keys[0] = Keys_W;
-	keys[1] = Keys_A;
-	keys[2] = Keys_S;
-	keys[3] = Keys_D;
-	keys[4] = Keys_Up;
-	keys[5] = Keys_Left;
-	keys[6] = Keys_Down;
-	keys[7] = Keys_Right;
-	keys[8] = Keys_Plus;
-	keys[9] = Keys_Minus;
+	Keys[0] = static_cast<WPARAM>(Keys::W);
+	Keys[1] = static_cast<WPARAM>(Keys::A);
+	Keys[2] = static_cast<WPARAM>(Keys::S);
+	Keys[3] = static_cast<WPARAM>(Keys::D);
+	Keys[4] = static_cast<WPARAM>(Keys::Up);
+	Keys[5] = static_cast<WPARAM>(Keys::Left);
+	Keys[6] = static_cast<WPARAM>(Keys::Down);
+	Keys[7] = static_cast<WPARAM>(Keys::Right);
+	Keys[8] = static_cast<WPARAM>(Keys::Plus);
+	Keys[9] = static_cast<WPARAM>(Keys::Minus);
 }
 
-void KeyboardDeinit(struct Keyboard* keyboard)
+Keyboard& Keyboard::Get()
 {
-	free(keyboard->Keys);
-	free(keyboard->States);
-	keyboard->Keys = NULL;
-	keyboard->States = NULL;
-}
-
-void KeyboardOnKeyDown(struct Keyboard* keyboard, WPARAM wParam)
-{
-	for (uint32_t i = 0; i < Keys_Num; ++i)
+	if (!m_Instance)
 	{
-		if (keyboard->Keys[i] == wParam)
+		m_Instance = std::unique_ptr<Keyboard>(new Keyboard());
+	}
+	return *m_Instance;
+}
+
+Keyboard::~Keyboard()
+{
+}
+
+void Keyboard::OnKeyDown(WPARAM wParam)
+{
+	for (uint32_t i = 0; i < static_cast<uint32_t>(Keys::Num); ++i)
+	{
+		if (Keys[i] == wParam)
 		{
-			keyboard->States[i] = 1;
+			States[i] = 1;
 		}
 	}
 }
 
-void KeyboardOnKeyUp(struct Keyboard* keyboard, WPARAM wParam)
+void Keyboard::OnKeyUp(WPARAM wParam)
 {
-	for (uint32_t i = 0; i < Keys_Num; ++i)
+	for (uint32_t i = 0; i < static_cast<uint32_t>(Keys::Num); ++i)
 	{
-		if (keyboard->Keys[i] == wParam)
+		if (Keys[i] == wParam)
 		{
-			keyboard->States[i] = 0;
+			States[i] = 0;
 		}
 	}
 }
 
-uint32_t KeyboardIsKeyDown(const struct Keyboard* keyboard, WPARAM key)
+uint32_t Keyboard::IsKeyDown(WPARAM key)
 {
-	for (uint32_t i = 0; i < Keys_Num; ++i)
+	for (uint32_t i = 0; i < static_cast<uint32_t>(Keys::Num); ++i)
 	{
-		if (keyboard->Keys[i] == key)
+		if (Keys[i] == key)
 		{
-			return keyboard->States[i];
+			return States[i];
 		}
 	}
 	return 0;

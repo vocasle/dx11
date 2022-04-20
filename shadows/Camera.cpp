@@ -1,18 +1,16 @@
 #include "Camera.h"
 #include "Utils.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 
 #include <corecrt_math_defines.h>
 #include <cmath>
 
-Camera::Camera(const Vec3D& cameraPos,
-	const struct Keyboard* keyboard,
-	const struct Mouse* mouse)
+Camera::Camera(const Vec3D& cameraPos)
 {
 	m_Pos = cameraPos;
 	m_Pitch = 0.0f;
 	m_Yaw = (float)M_PI_2;
-	m_Keyboard = keyboard;
-	m_Mouse = mouse;
 	m_Speed = 1.0f;
 	UpdateVectors();
 }
@@ -25,11 +23,11 @@ Mat4X4 Camera::GetViewMat() const
 
 void Camera::UpdateSpeed()
 {
-	if (KeyboardIsKeyDown(m_Keyboard, VK_OEM_PLUS))
+	if (Keyboard::Get().IsKeyDown(VK_OEM_PLUS))
 	{
 		m_Speed += 0.5f;
 	}
-	else if (KeyboardIsKeyDown(m_Keyboard, VK_OEM_MINUS))
+	else if (Keyboard::Get().IsKeyDown(VK_OEM_MINUS))
 	{
 		m_Speed -= 0.5f;
 	}
@@ -44,36 +42,36 @@ void Camera::UpdatePos(double deltaMillis)
 	const float delta = (float)deltaMillis * CAMERA_SENSITIVITY * m_Speed;
 
 
-	if (KeyboardIsKeyDown(m_Keyboard, VK_LEFT) || KeyboardIsKeyDown(m_Keyboard, 'A'))
+	if (Keyboard::Get().IsKeyDown(VK_LEFT) || Keyboard::Get().IsKeyDown('A'))
 	{
 		Vec3D right = MathVec3DCross(&cameraFocus, &m_Up);
 		MathVec3DNormalize(&right);
 		right = MathVec3DModulateByScalar(&right, delta);
 		m_Pos = MathVec3DAddition(&m_Pos, &right);
 	}
-	else if (KeyboardIsKeyDown(m_Keyboard, VK_RIGHT) || KeyboardIsKeyDown(m_Keyboard, 'D'))
+	else if (Keyboard::Get().IsKeyDown(VK_RIGHT) || Keyboard::Get().IsKeyDown('D'))
 	{
 		Vec3D right = MathVec3DCross(&cameraFocus, &m_Up);
 		MathVec3DNormalize(&right);
 		right = MathVec3DModulateByScalar(&right, delta);
 		m_Pos = MathVec3DSubtraction(&m_Pos, &right);
 	}
-	else if (KeyboardIsKeyDown(m_Keyboard, VK_UP))
+	else if (Keyboard::Get().IsKeyDown(VK_UP))
 	{
 		const Vec3D up = MathVec3DModulateByScalar(&m_Up, delta);
 		m_Pos = MathVec3DAddition(&m_Pos, &up);
 	}
-	else if (KeyboardIsKeyDown(m_Keyboard, VK_DOWN))
+	else if (Keyboard::Get().IsKeyDown(VK_DOWN))
 	{
 		const Vec3D up = MathVec3DModulateByScalar(&m_Up, delta);
 		m_Pos = MathVec3DSubtraction(&m_Pos, &up);
 	}
-	else if (KeyboardIsKeyDown(m_Keyboard, 'W'))
+	else if (Keyboard::Get().IsKeyDown('W'))
 	{
 		cameraFocus = MathVec3DModulateByScalar(&cameraFocus, delta);
 		m_Pos = MathVec3DAddition(&m_Pos, &cameraFocus);
 	}
-	else if (KeyboardIsKeyDown(m_Keyboard, 'S'))
+	else if (Keyboard::Get().IsKeyDown('S'))
 	{
 		cameraFocus = MathVec3DModulateByScalar(&cameraFocus, delta);
 		m_Pos = MathVec3DSubtraction(&m_Pos, &cameraFocus);
@@ -101,7 +99,7 @@ void Camera::UpdateVectors()
 
 void Camera::ProcessMouse(double deltaMillis)
 {
-	const Vec2D mouseDelta = MouseGetMouseDelta(m_Mouse);
+	const Vec2D mouseDelta = Mouse::Get().GetMouseDelta();
 
 	static const float MAX_PITCH = (float)(M_PI_2 - 0.1);
 	m_Yaw += mouseDelta.X * MOUSE_SENSITIVITY * (float)deltaMillis;

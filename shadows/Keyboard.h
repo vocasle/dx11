@@ -1,34 +1,42 @@
 ﻿#pragma once
 
-#include <stdint.h>
+#include <cstdint>
+#include <vector>
+#include <memory>
 
 #include <Windows.h>
 
-enum Keys
+enum class Keys
 {
-	Keys_W = 'W',
-	Keys_A = 'A',
-	Keys_S = 'S',
-	Keys_D = 'D',
-	Keys_Up = VK_UP,
-	Keys_Left = VK_LEFT,
-	Keys_Down = VK_DOWN,
-	Keys_Right = VK_RIGHT,
-	Keys_Plus = VK_OEM_PLUS,
-	Keys_Minus = VK_OEM_MINUS,
-	Keys_Num = 10
+	W = 'W',
+	A = 'A',
+	S = 'S',
+	D = 'D',
+	Up = VK_UP,
+	Left = VK_LEFT,
+	Down = VK_DOWN,
+	Right = VK_RIGHT,
+	Plus = VK_OEM_PLUS,
+	Minus = VK_OEM_MINUS,
+	Num = 10
 };
 
-struct Keyboard
+class Keyboard
 {
-	WPARAM* Keys;
-	uint32_t* States;
+public:
+	static Keyboard& Get();
+	~Keyboard();
+
+	void OnKeyDown(WPARAM wParam);
+	void OnKeyUp(WPARAM wParam);
+
+	uint32_t IsKeyDown(WPARAM key);
+
+private:
+	Keyboard();
+
+	static std::unique_ptr<Keyboard> m_Instance;
+
+	std::vector<WPARAM> Keys;
+	std::vector<uint32_t> States;
 };
-
-void KeyboardInit(struct Keyboard* keyboard);
-void KeyboardDeinit(struct Keyboard* keyboard);
-
-void KeyboardOnKeyDown(struct Keyboard* keyboard, WPARAM wParam);
-void KeyboardOnKeyUp(struct Keyboard* keyboard, WPARAM wParam);
-
-uint32_t KeyboardIsKeyDown(const struct Keyboard* keyboard, WPARAM key);

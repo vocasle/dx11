@@ -79,8 +79,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_DefaultSampler;
 	Timer m_Timer;
 	Camera m_Camera;
-	Keyboard m_Keyboard;
-	Mouse m_Mouse;
 	Renderer m_Renderer;
 
 	// new stuff
