@@ -241,6 +241,7 @@
     <ClCompile Include="Mouse.c" />
     <ClCompile Include="objloader.c" />
     <ClCompile Include="Renderer.c" />
+    <ClCompile Include="ShadowMap.c" />
     <ClCompile Include="stb_image.c" />
     <ClCompile Include="Utils.c" />
   </ItemGroup>
@@ -259,6 +260,7 @@
     <ClInclude Include="objloader.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Timer.h" />

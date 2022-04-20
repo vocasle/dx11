@@ -78,6 +78,9 @@
     <ClCompile Include="Actor.c">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="ShadowMap.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -132,6 +135,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="MeshGenerator.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowMap.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
