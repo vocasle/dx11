@@ -1,6 +1,8 @@
 #pragma once
 
 #include <d3d11.h>
+#include <wrl/client.h>
+#include <vector>
 
 #include "Math.h"
 #include "objloader.h"
@@ -8,55 +10,53 @@
 
 #define ACTOR_NUM_TEXTURES 4
 
-enum TextureType
+enum class TextureType
 {
-	TextureType_Diffuse = 0,
-	TextureType_Specular = 1,
-	TextureType_Gloss = 2,
-	TextureType_Normal = 3,
+	Diffuse = 0,
+	Specular = 1,
+	Gloss = 2,
+	Normal = 3,
 };
 
-typedef struct _Vertex
+struct Vertex
 {
 	Vec3D Position;
 	Vec3D Normal;
 	Vec2D TexCoords;
-} Vertex;
+};
 
-typedef struct _Actor
+class Actor
 {
-	ID3D11Buffer* m_IndexBuffer;
-	ID3D11Buffer* m_VertexBuffer;
-	Vertex* m_Vertices;
-	size_t m_NumVertices;
-	uint32_t* m_Indices;
-	size_t m_NumIndices;
+public:
+	Actor();
+	Actor(Mesh* mesh);
+	~Actor();
+
+	void LoadModel(const char* filename);
+
+	void CreateVertexBuffer(ID3D11Device* device);
+	void CreateIndexBuffer(ID3D11Device* device);
+
+	void Translate(const Vec3D offset);
+	void Rotate(const float pitch, const float yaw, const float roll);
+	void Scale(const float s);
+
+	void LoadTexture(const char* filename,
+		enum TextureType type,
+		ID3D11Device* device,
+		ID3D11DeviceContext* context);
+
+	void SetMaterial(const Material* material);
+
+private:
+
+	void LoadMesh(Mesh* mesh);
+
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_IndexBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_VertexBuffer;
+	std::vector<Vertex> m_Vertices;
+	std::vector<uint32_t> m_Indices;
 	Mat4X4 m_World;
 	ID3D11ShaderResourceView* m_Textures[ACTOR_NUM_TEXTURES];
 	Material m_Material;
-} Actor;
-
-Actor* ActorNew(void);
-Actor* ActorFromMesh(struct Mesh* mesh);
-void ActorFree(Actor* actor);
-
-void ActorInit(Actor* actor);
-void ActorDeinit(Actor* actor);
-
-void ActorLoadModel(Actor* actor, const char* filename);
-
-void ActorCreateVertexBuffer(Actor* actor, ID3D11Device* device);
-void ActorCreateIndexBuffer(Actor* actor, ID3D11Device* device);
-
-void ActorTranslate(Actor* actor, const Vec3D offset);
-void ActorRotate(Actor* actor, const float pitch, const float yaw, 
-	const float roll);
-void ActorScale(Actor* actor, const float s);
-
-void ActorLoadTexture(Actor* actor, 
-	const char* filename,
-	enum TextureType type,
-	ID3D11Device* device, 
-	ID3D11DeviceContext* context);
-
-void ActorSetMaterial(Actor* actor, const Material* material);
+};
