@@ -9,6 +9,11 @@
 #include <winuser.h>
 #include <shellapi.h>
 
+
+#if _DEBUG
+#include <vld.h>
+#endif
+
 #define MAX_LOADSTRING 100
 
 // Global Variables:
@@ -35,7 +40,7 @@ HMODULE GetCurrentModule()
 
 namespace
 {
-    std::unique_ptr<Game> gGame = std::make_unique<Game>();
+    std::unique_ptr<Game> gGame = nullptr;
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -43,7 +48,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
-	printf("wWinMain called\n");
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -51,6 +55,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     LoadStringW(NULL, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(NULL, IDC_DX11, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
+
+    gGame = std::make_unique<Game>();
 
     // Perform application initialization:
     if (!InitInstance (hInstance, nCmdShow, gGame.get()))
