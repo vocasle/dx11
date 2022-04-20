@@ -411,7 +411,9 @@ void Game::CreateActors()
 		{0.628281f, 0.555802f, 0.366065f, 0.4f}
 	};
 
-	m_Actors.reserve(_countof(models));
+	//m_Actors = {};
+
+	//m_Actors.reserve(_countof(models));
 
 	for (size_t i = 0; i < _countof(models); ++i)
 	{
@@ -428,7 +430,7 @@ void Game::CreateActors()
 		actor.LoadTexture(normalTextures[i], TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		actor.SetMaterial(&material);
 
-		m_Actors.emplace_back(actor);
+		m_Actors.push_back(actor);
 	}
 
 	{

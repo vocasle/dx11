@@ -107,7 +107,6 @@ void DeviceResources::CreateDeviceResources()
 		ExitProcess(EXIT_FAILURE);
 	}
 
-	COM_FREE(adapter);
 }
 
 void DeviceResources::CreateWindowSizeDependentResources()

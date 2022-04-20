@@ -8,9 +8,48 @@ Actor::Actor():
 	m_Vertices{},
 	m_Indices{},
 	m_World{MathMat4X4Identity()},
-	m_Textures{},
+	m_DiffuseTexture{nullptr},
+	m_SpecularTexture{nullptr},
+	m_GlossTexture{nullptr},
+	m_NormalTexture{nullptr},
 	m_Material{}
 {
+}
+
+Actor::Actor(const Actor& actor)
+{
+	m_IndexBuffer = actor.m_IndexBuffer;
+	m_VertexBuffer = actor.m_VertexBuffer;
+	m_Vertices = actor.m_Vertices;
+	m_Indices = actor.m_Indices;
+	m_World = actor.m_World;
+	m_DiffuseTexture = actor.m_DiffuseTexture;
+	m_SpecularTexture = actor.m_SpecularTexture;
+	m_GlossTexture = actor.m_GlossTexture;
+	m_NormalTexture = actor.m_NormalTexture;
+	m_Material = actor.m_Material;
+}
+
+Actor& Actor::operator=(const Actor& actor)
+{
+	if (this != &actor)
+	{
+		Actor temp(actor);
+		temp.Swap(*this);
+	}
+	return *this;
+}
+
+Actor::Actor(Actor&& actor) noexcept
+{
+	actor.Swap(*this);
+}
+
+Actor& Actor::operator=(Actor&& actor) noexcept
+{
+	Actor temp(std::move(actor));
+	temp.Swap(*this);
+	return *this;
 }
 
 Actor::Actor(Mesh* mesh): Actor()
@@ -20,13 +59,20 @@ Actor::Actor(Mesh* mesh): Actor()
 
 Actor::~Actor()
 {
-	for (uint32_t i = 0; i < ACTOR_NUM_TEXTURES; ++i)
-	{
-		if (m_Textures[i])
-		{
-			COM_FREE(m_Textures[i]);
-		}
-	}
+}
+
+void Actor::Swap(Actor& actor)
+{
+	std::swap(m_World, actor.m_World);
+	std::swap(m_Vertices, actor.m_Vertices);
+	std::swap(m_Indices, actor.m_Indices);
+	std::swap(m_Material, actor.m_Material);
+	std::swap(m_DiffuseTexture, actor.m_DiffuseTexture);
+	std::swap(m_SpecularTexture, actor.m_SpecularTexture);
+	std::swap(m_GlossTexture, actor.m_GlossTexture);
+	std::swap(m_NormalTexture, actor.m_NormalTexture);
+	std::swap(m_IndexBuffer, actor.m_IndexBuffer);
+	std::swap(m_VertexBuffer, actor.m_VertexBuffer);
 }
 
 void Actor::LoadMesh(Mesh* mesh)
@@ -107,9 +153,7 @@ void Actor::LoadModel(const char* filename)
 			vert.TexCoords.X = tc->u;
 			vert.TexCoords.Y = tc->v;
 
-			assert(m_Indices.size() + 1 <= mesh->NumFaces);
 			m_Indices.emplace_back(m_Indices.size());
-			assert(m_Vertices.size() + 1 <= mesh->NumFaces);
 			m_Vertices.emplace_back(vert);
 		}
 		posOffs += mesh->NumPositions;
@@ -188,7 +232,7 @@ void Actor::LoadTexture(const char* filename,
 		UtilsDebugPrint("ERROR: Failed to load texture from %s\n", filename);
 		ExitProcess(EXIT_FAILURE);
 	}
-	ID3D11Texture2D* texture = NULL;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> texture;
 	{
 		D3D11_TEXTURE2D_DESC desc = {};
 		desc.Width = width;
@@ -206,7 +250,7 @@ void Actor::LoadTexture(const char* filename,
 		subresourceData.pSysMem = bytes;
 		subresourceData.SysMemPitch = width * sizeof(unsigned char) * desiredChannels;
 
-		HR(device->CreateTexture2D( &desc, &subresourceData, &texture))
+		HR(device->CreateTexture2D( &desc, &subresourceData, texture.ReleaseAndGetAddressOf()))
 	}
 
 	{
@@ -216,11 +260,29 @@ void Actor::LoadTexture(const char* filename,
 		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = -1;
-		HR(device->CreateShaderResourceView( (ID3D11Resource*)texture, &srvDesc, &m_Textures[static_cast<uint32_t>(type)]))
-
-		context->GenerateMips(m_Textures[static_cast<uint32_t>(type)]);
+		
+		switch (type)
+		{
+		case TextureType::Diffuse:
+			HR(device->CreateShaderResourceView(texture.Get(), &srvDesc, m_DiffuseTexture.ReleaseAndGetAddressOf()))
+				context->GenerateMips(m_DiffuseTexture.Get());
+			break;
+		case TextureType::Specular:
+			HR(device->CreateShaderResourceView(texture.Get(), &srvDesc, m_SpecularTexture.ReleaseAndGetAddressOf()));
+			context->GenerateMips(m_SpecularTexture.Get());
+			break;
+		case TextureType::Gloss:
+			HR(device->CreateShaderResourceView(texture.Get(), &srvDesc, m_GlossTexture.ReleaseAndGetAddressOf()));
+			context->GenerateMips(m_GlossTexture.Get());
+			break;
+		case TextureType::Normal:
+			HR(device->CreateShaderResourceView(texture.Get(), &srvDesc, m_NormalTexture.ReleaseAndGetAddressOf()));
+			context->GenerateMips(m_NormalTexture.Get());
+			break;
+		default:
+			break;
+		}
 	}
-	COM_FREE(texture);
 
 	stbi_image_free(bytes);
 }

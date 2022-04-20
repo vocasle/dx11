@@ -29,6 +29,10 @@ class Actor
 {
 public:
 	Actor();
+	Actor(const Actor& actor);
+	Actor& operator=(const Actor& actor);
+	Actor(Actor&& actor) noexcept;
+	Actor& operator=(Actor&& actor) noexcept;
 	Actor(Mesh* mesh);
 	~Actor();
 
@@ -49,7 +53,7 @@ public:
 	void SetMaterial(const Material* material);
 
 private:
-
+	void Swap(Actor& actor);
 	void LoadMesh(Mesh* mesh);
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_IndexBuffer;
@@ -57,6 +61,9 @@ private:
 	std::vector<Vertex> m_Vertices;
 	std::vector<uint32_t> m_Indices;
 	Mat4X4 m_World;
-	ID3D11ShaderResourceView* m_Textures[ACTOR_NUM_TEXTURES];
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_DiffuseTexture;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_SpecularTexture;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_GlossTexture;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_NormalTexture;
 	Material m_Material;
 };
