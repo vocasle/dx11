@@ -1,31 +1,15 @@
 #include "ShadowMap.h"
 #include "Utils.h"
 
-ShadowMap* SMNew(void)
+ShadowMap::ShadowMap(): m_OutputViewPort{}
 {
-	ShadowMap* sm = new ShadowMap;
-	SMInit(sm);
-	return sm;
 }
 
-void SMFree(ShadowMap* sm)
+ShadowMap::~ShadowMap()
 {
-	SMDeinit(sm);
-	free(sm);
 }
 
-void SMInit(ShadowMap* sm)
-{
-	memset(sm, 0, sizeof(ShadowMap));
-}
-
-void SMDeinit(ShadowMap* sm)
-{
-	COM_FREE(sm->m_pOutputTextureDSV);
-	COM_FREE(sm->m_pOutputTextureSRV);
-}
-
-void SMInitResources(ShadowMap* sm, ID3D11Device* device, uint32_t texWidth, uint32_t texHeight)
+void ShadowMap::InitResources(ID3D11Device* device, uint32_t texWidth, uint32_t texHeight)
 {
 	D3D11_TEXTURE2D_DESC texDesc = {};
 	texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
@@ -45,7 +29,7 @@ void SMInitResources(ShadowMap* sm, ID3D11Device* device, uint32_t texWidth, uin
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	HR(device->CreateDepthStencilView( depthTex, &dsvDesc,
-		&sm->m_pOutputTextureDSV))
+		m_pOutputTextureDSV.ReleaseAndGetAddressOf()))
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
@@ -54,21 +38,21 @@ void SMInitResources(ShadowMap* sm, ID3D11Device* device, uint32_t texWidth, uin
 	srvDesc.Texture2D.MostDetailedMip = 0;
 
 	HR(device->CreateShaderResourceView( depthTex, &srvDesc,
-		&sm->m_pOutputTextureSRV))
+		m_pOutputTextureSRV.ReleaseAndGetAddressOf()))
 
 	COM_FREE(depthTex);
 
-	sm->m_OutputViewPort.TopLeftX = 0.0f;
-	sm->m_OutputViewPort.TopLeftY = 0.0f;
-	sm->m_OutputViewPort.Width = (float)texWidth;
-	sm->m_OutputViewPort.Height = (float)texHeight;
-	sm->m_OutputViewPort.MinDepth = 0.0f;
-	sm->m_OutputViewPort.MaxDepth = 1.0f;
+	m_OutputViewPort.TopLeftX = 0.0f;
+	m_OutputViewPort.TopLeftY = 0.0f;
+	m_OutputViewPort.Width = (float)texWidth;
+	m_OutputViewPort.Height = (float)texHeight;
+	m_OutputViewPort.MinDepth = 0.0f;
+	m_OutputViewPort.MaxDepth = 1.0f;
 }
 
-void SMBind(ShadowMap* sm, ID3D11DeviceContext* ctx)
+void ShadowMap::Bind(ID3D11DeviceContext* ctx)
 {
-	ctx->ClearDepthStencilView(sm->m_pOutputTextureDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
-	ctx->OMSetRenderTargets(0, 0, sm->m_pOutputTextureDSV);
-	ctx->RSSetViewports(1, &sm->m_OutputViewPort);
+	ctx->ClearDepthStencilView(m_pOutputTextureDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+	ctx->OMSetRenderTargets(0, 0, m_pOutputTextureDSV.Get());
+	ctx->RSSetViewports(1, &m_OutputViewPort);
 }

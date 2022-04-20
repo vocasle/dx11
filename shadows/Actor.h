@@ -52,6 +52,14 @@ public:
 
 	void SetMaterial(const Material* material);
 
+	Mat4X4 GetWorld() const { return m_World; }
+	Material GetMaterial() const { return m_Material; }
+	ID3D11Buffer* GetIndexBuffer() const { return m_IndexBuffer.Get(); }
+	ID3D11Buffer* GetVertexBuffer() const { return m_VertexBuffer.Get(); }
+	uint32_t GetNumIndices() const { return m_Indices.size(); }
+	ID3D11ShaderResourceView** GetShaderResources() const;
+
+
 private:
 	void Swap(Actor& actor);
 	void LoadMesh(Mesh* mesh);

@@ -257,64 +257,63 @@ void Game::Update()
 void Game::Render()
 {
 
-	/*SMBind(&m_ShadowMap, m_DR->GetDeviceContext());
-	{
-		RBindVertexShader(r, VS);
-		RBindPixelShader(r, NULL);
-		RBindConstantBuffer(r, BindTargets_VS, m_PerFrameCB, 1);
+	//m_ShadowMap.Bind(m_DR->GetDeviceContext());
+	//{
+	//	m_Renderer.BindVertexShader(m_VS.Get());
+	//	m_Renderer.BindPixelShader(nullptr);
+	//	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
+	//	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerSceneCB.Get(), 2);
 
-		RBindConstantBuffer(r, BindTargets_VS, m_PerSceneCB, 2);
+	//	for (size_t i = 0; i < m_Actors.size(); ++i)
+	//	{
+	//		const Actor& actor = m_Actors[i];
+	//		m_PerObjectData.world = actor.GetWorld();
+	//		m_PerObjectData.material = actor.GetMaterial();
+	//		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+	//			sizeof(PerObjectConstants),
+	//			&m_PerObjectData,
+	//			m_PerObjectCB.Get());
+	//		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+	//		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
 
-		for (size_t i = 0; i < m_NumActors; ++i)
-		{
-			const Actor* actor = m_Actors[i];
-			m_PerObjectData.world = m_World;
-			m_PerObjectData.material = m_Material;
-			GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-				sizeof(PerObjectConstants),
-				&m_PerObjectData,
-				m_PerObjectCB);
-			RBindConstantBuffer(r, BindTargets_VS, m_PerObjectCB, 0);
-			RBindConstantBuffer(r, BindTargets_PS, m_PerObjectCB, 0);
+	//		m_Renderer.DrawIndexed(actor.GetIndexBuffer(), actor.GetVertexBuffer(),
+	//			sizeof(Vertex),
+	//			actor.GetNumIndices(),
+	//			0,
+	//			0);
+	//	}
+	//}
 
-			RDrawIndexed(r, m_IndexBuffer, m_VertexBuffer,
-				sizeof(Vertex),
-				m_NumIndices,
-				0,
-				0);
-		}
-	}
+	m_Renderer.Clear();
 
-	RClear(r);
-
-	RBindPixelShader(r, PhongPS);
-	RBindVertexShader(r, VS);
+	m_Renderer.BindPixelShader(m_PhongPS.Get());
+	m_Renderer.BindVertexShader(m_VS.Get());
 	
-	RBindConstantBuffer(r, BindTargets_VS, m_PerFrameCB, 1);
-	RBindConstantBuffer(r, BindTargets_PS, m_PerFrameCB, 1);
+	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
+	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
 
-	RBindConstantBuffer(r, BindTargets_VS, m_PerSceneCB, 2);
-	RBindConstantBuffer(r, BindTargets_PS, m_PerSceneCB, 2);
+	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerSceneCB.Get(), 2);
+	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerSceneCB.Get(), 2);
 
-	for (size_t i = 0; i < m_NumActors; ++i)
+	for (size_t i = 0; i < m_Actors.size(); ++i)
 	{
-		const Actor* actor = m_Actors[i];
-		RBindShaderResources(r, BindTargets_PS, (ID3D11ShaderResourceView**)m_Textures, ACTOR_NUM_TEXTURES);
-		m_PerObjectData.world = m_World;
-		m_PerObjectData.material = m_Material;
+		const Actor& actor = m_Actors[i];
+		m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
+		m_PerObjectData.world = actor.GetWorld();
+		m_PerObjectData.material = actor.GetMaterial();
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
 			sizeof(PerObjectConstants),
 			&m_PerObjectData,
-			m_PerObjectCB);
-		RBindConstantBuffer(r, BindTargets_VS, m_PerObjectCB, 0);
-		RBindConstantBuffer(r, BindTargets_PS, m_PerObjectCB, 0);
+			m_PerObjectCB.Get());
+		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
 
-		RDrawIndexed(r, m_IndexBuffer, m_VertexBuffer, 
-			sizeof(Vertex), 
-			m_NumIndices,
+		m_Renderer.DrawIndexed(actor.GetIndexBuffer(), actor.GetVertexBuffer(),
+			sizeof(Vertex),
+			actor.GetNumIndices(),
 			0,
 			0);
-	}*/
+	}
 	
 	//// Light properties
 	//for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
@@ -328,18 +327,18 @@ void Game::Render()
 	//		&m_PerObjectData,
 	//		m_PerObjectCB);
 
-	//	RBindPixelShader(r, LightPS);
-	//	RBindConstantBuffer(r, BindTargets_VS, m_PerObjectCB, 0);
-	//	RBindConstantBuffer(r, BindTargets_PS, m_PerObjectCB, 0);
+	//	RBindPixelShader(LightPS);
+	//	RBindConstantBuffer(BindTargets_VS, m_PerObjectCB, 0);
+	//	RBindConstantBuffer(BindTargets_PS, m_PerObjectCB, 0);
 	//	const Actor* sphere = m_Actors[2];
-	//	RDrawIndexed(r, sphere->m_IndexBuffer, sphere->m_VertexBuffer,
+	//	RDrawIndexed(sphere->m_IndexBuffesphere->m_VertexBuffer,
 	//		sizeof(struct Vertex),
 	//		sphere->m_NumIndices,
 	//		0,
 	//		0);
 	//}
 
-	//RPresent(r);
+	m_Renderer.Present();
 }
 
 void Game::Tick()
@@ -454,11 +453,12 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_DR->CreateDeviceResources();
 	m_DR->CreateWindowSizeDependentResources();
 	TimerInitialize(&m_Timer);
-	//MouseInit(&m_Mouse, m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
-	SMInitResources(&m_ShadowMap, m_DR->GetDevice(), 2048, 2048);
+	Mouse::Get().SetWindowDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
+	m_ShadowMap.InitResources(m_DR->GetDevice(), 2048, 2048);
 
 	// init actors
 	CreateActors();
+	InitPerSceneConstants();
 
 	ID3D11Device* device = m_DR->GetDevice();
 

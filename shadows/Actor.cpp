@@ -61,6 +61,12 @@ Actor::~Actor()
 {
 }
 
+ID3D11ShaderResourceView** Actor::GetShaderResources() const
+{
+	static ID3D11ShaderResourceView* shaderResources[4] = { m_DiffuseTexture.Get(),m_SpecularTexture.Get(), m_GlossTexture.Get(), m_NormalTexture.Get() };
+	return shaderResources;
+}
+
 void Actor::Swap(Actor& actor)
 {
 	std::swap(m_World, actor.m_World);

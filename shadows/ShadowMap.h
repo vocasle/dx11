@@ -1,21 +1,24 @@
 #pragma once
 
 #include <d3d11.h>
-#include <stdint.h>
+#include <cstdint>
+#include <wrl/client.h>
 
-typedef struct ShadowMap
+class ShadowMap
 {
-	ID3D11ShaderResourceView*	m_pOutputTextureSRV;
-	ID3D11DepthStencilView*		m_pOutputTextureDSV;
-	D3D11_VIEWPORT				m_OutputViewPort;
-} ShadowMap;
+public:
+	ShadowMap();
+	~ShadowMap();
 
-ShadowMap* SMNew(void);
-void SMFree(ShadowMap* sm);
+	void Init();
+	void Deinit();
 
-void SMInit(ShadowMap* sm);
-void SMDeinit(ShadowMap* sm);
+	void InitResources(ID3D11Device* device, uint32_t texWidth, uint32_t texHeight);
 
-void SMInitResources(ShadowMap* sm, ID3D11Device* device, uint32_t texWidth, uint32_t texHeight);
+	void Bind(ID3D11DeviceContext* ctx);
 
-void SMBind(ShadowMap* sm, ID3D11DeviceContext* ctx);
+private:
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	m_pOutputTextureSRV;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		m_pOutputTextureDSV;
+	D3D11_VIEWPORT										m_OutputViewPort;
+};
