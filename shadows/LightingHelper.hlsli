@@ -4,7 +4,7 @@ struct DirectionalLight
 	float4 Diffuse;
 	float4 Specular;
 	float3 Direction;
-	float pad;
+    float pad;
 };
 
 struct PointLight
@@ -13,9 +13,9 @@ struct PointLight
 	float4 Diffuse;
 	float4 Specular;
 	float3 Position;
-	float Range;
+    float Range;
 	float3 Att;
-	float pad;
+    float pad;
 };
 
 struct SpotLight
@@ -24,11 +24,11 @@ struct SpotLight
 	float4 Diffuse;
 	float4 Specular;
 	float3 Position;
-	float Range;
+    float Range;
 	float3 Direction;
-	float Spot;
-	float3 Att;
-	float pad;
+    float Spot;
+    float3 Att;
+    float pad;
 };
 
 struct Material
@@ -38,19 +38,106 @@ struct Material
 	float4 Specular;
 };
 
-float Attenuation(float Kc, float Kl, float Kq, float d)
+float4 ComputeDirectionalLight(Material mat, DirectionalLight L, float3 normal, float3 toEye)
 {
-	return 1.0f / (Kc + Kl * d + Kq * d * d);
+    float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    float3 lightVec = -L.Direction;
+
+    ambient = mat.Ambient * L.Ambient;
+
+    float diffuseFactor = dot(lightVec, normal);
+
+    [flatten]
+    if (diffuseFactor > 0.0f)
+    {
+        float3 v = reflect(-lightVec, normal);
+        float specFactor = pow(max(dot(v, toEye), 0.0f), mat.Specular.w);
+
+        diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
+        spec = specFactor * mat.Specular * L.Specular;
+    }
+
+    return ambient + diffuse + spec;
 }
 
-float4 DiffuseLighting(float4 D, float4 A, float Atten, float3 N, float3 L)
+
+float4 ComputePointLight(Material mat, PointLight L, float3 pos, float3 normal, float3 toEye)
 {
-	float4 Kdiff = D * A + D * Atten * max(dot(N, L), 0);
-	return Kdiff;
+    float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    float3 lightVec = L.Position - pos;
+
+    float d = length(lightVec);
+
+    if (d > L.Range)
+        return ambient + diffuse + spec;
+
+    lightVec /= d;
+
+    ambient = mat.Ambient * L.Ambient;
+
+    float diffuseFactor = dot(lightVec, normal);
+
+    [flatten]
+    if (diffuseFactor > 0.0f)
+    {
+        float3 v = reflect(-lightVec, normal);
+        float specFactor = pow(max(dot(v, toEye), 0.0f), mat.Specular.w);
+
+        diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
+        spec = specFactor * mat.Specular * L.Specular;
+    }
+
+    float att = 1.0f / dot(L.Att, float3(1.0f, d, d * d));
+
+    diffuse *= att;
+    spec *= att;
+
+    return ambient + diffuse + spec;
 }
 
-float4 SpecularReflection(float4 S, float Atten, float3 N, float3 H, float shininess)
+
+float4 ComputeSpotLight(Material mat, SpotLight L, float3 pos, float3 normal, float3 toEye)
 {
-	float4 Kspec = S * Atten * pow(max(dot(N, H), 0), shininess);
-	return Kspec;
+    float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    float3 lightVec = L.Position - pos;
+
+    float d = length(lightVec);
+
+    if (d > L.Range)
+        return ambient + diffuse + spec;;
+
+    lightVec /= d;
+
+    ambient = mat.Ambient * L.Ambient;
+
+
+    float diffuseFactor = dot(lightVec, normal);
+
+    [flatten]
+    if (diffuseFactor > 0.0f)
+    {
+        float3 v = reflect(-lightVec, normal);
+        float specFactor = pow(max(dot(v, toEye), 0.0f), mat.Specular.w);
+
+        diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
+        spec = specFactor * mat.Specular * L.Specular;
+    }
+
+    float spot = pow(max(dot(-lightVec, L.Direction), 0.0f), L.Spot);
+    float att = spot / dot(L.Att, float3(1.0f, d, d * d));
+
+    ambient *= spot;
+    diffuse *= att;
+    spec *= att;
+
+    return ambient + diffuse + spec;
 }
