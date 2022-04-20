@@ -2,137 +2,133 @@
 #include "Utils.h"
 
 #include <corecrt_math_defines.h>
-#include <math.h>
+#include <cmath>
 
-static void CameraUpdateVectors(struct Camera* camera);
-
-void CameraInit(struct Camera* camera,
-	const Vec3D* cameraPos,
+Camera::Camera(const Vec3D& cameraPos,
 	const struct Keyboard* keyboard,
 	const struct Mouse* mouse)
 {
-	memset(camera, 0, sizeof(struct Camera));
-	camera->CameraPos = *cameraPos;
-	camera->Pitch = 0.0f;
-	camera->Yaw = (float)M_PI_2;
-	camera->Keyboard = keyboard;
-	camera->Mouse = mouse;
-	camera->Speed = 1.0f;
-	CameraUpdateVectors(camera);
+	m_Pos = cameraPos;
+	m_Pitch = 0.0f;
+	m_Yaw = (float)M_PI_2;
+	m_Keyboard = keyboard;
+	m_Mouse = mouse;
+	m_Speed = 1.0f;
+	UpdateVectors();
 }
 
-Mat4X4 CameraGetViewMat(struct Camera* camera)
+Mat4X4 Camera::GetViewMat() const
 {
-	const Vec3D direction = MathVec3DAddition(&camera->CameraPos, &camera->FocusPoint);
-	return MathMat4X4ViewAt(&camera->CameraPos, &direction, &camera->Up);
+	const Vec3D direction = MathVec3DAddition(&m_Pos, &m_At);
+	return MathMat4X4ViewAt(&m_Pos, &direction, &m_Up);
 }
 
-static void CameraUpdateSpeed(struct Camera* camera)
+void Camera::UpdateSpeed()
 {
-	if (KeyboardIsKeyDown(camera->Keyboard, VK_OEM_PLUS))
+	if (KeyboardIsKeyDown(m_Keyboard, VK_OEM_PLUS))
 	{
-		camera->Speed += 0.5f;
+		m_Speed += 0.5f;
 	}
-	else if (KeyboardIsKeyDown(camera->Keyboard, VK_OEM_MINUS))
+	else if (KeyboardIsKeyDown(m_Keyboard, VK_OEM_MINUS))
 	{
-		camera->Speed -= 0.5f;
+		m_Speed -= 0.5f;
 	}
 
-	camera->Speed = MathClamp(0.1f, 100.0f, camera->Speed);
+	m_Speed = MathClamp(0.1f, 100.0f, m_Speed);
 }
 
-void CameraUpdatePos(struct Camera* camera, double deltaMillis)
+void Camera::UpdatePos(double deltaMillis)
 {
-	CameraUpdateSpeed(camera);
-	Vec3D cameraFocus = camera->FocusPoint;
-	const float delta = (float)deltaMillis * CAMERA_SENSITIVITY * camera->Speed;
+	UpdateSpeed();
+	Vec3D cameraFocus = m_At;
+	const float delta = (float)deltaMillis * CAMERA_SENSITIVITY * m_Speed;
 
 
-	if (KeyboardIsKeyDown(camera->Keyboard, VK_LEFT) || KeyboardIsKeyDown(camera->Keyboard, 'A'))
+	if (KeyboardIsKeyDown(m_Keyboard, VK_LEFT) || KeyboardIsKeyDown(m_Keyboard, 'A'))
 	{
-		Vec3D right = MathVec3DCross(&cameraFocus, &camera->Up);
+		Vec3D right = MathVec3DCross(&cameraFocus, &m_Up);
 		MathVec3DNormalize(&right);
 		right = MathVec3DModulateByScalar(&right, delta);
-		camera->CameraPos = MathVec3DAddition(&camera->CameraPos, &right);
+		m_Pos = MathVec3DAddition(&m_Pos, &right);
 	}
-	else if (KeyboardIsKeyDown(camera->Keyboard, VK_RIGHT) || KeyboardIsKeyDown(camera->Keyboard, 'D'))
+	else if (KeyboardIsKeyDown(m_Keyboard, VK_RIGHT) || KeyboardIsKeyDown(m_Keyboard, 'D'))
 	{
-		Vec3D right = MathVec3DCross(&cameraFocus, &camera->Up);
+		Vec3D right = MathVec3DCross(&cameraFocus, &m_Up);
 		MathVec3DNormalize(&right);
 		right = MathVec3DModulateByScalar(&right, delta);
-		camera->CameraPos = MathVec3DSubtraction(&camera->CameraPos, &right);
+		m_Pos = MathVec3DSubtraction(&m_Pos, &right);
 	}
-	else if (KeyboardIsKeyDown(camera->Keyboard, VK_UP))
+	else if (KeyboardIsKeyDown(m_Keyboard, VK_UP))
 	{
-		const Vec3D up = MathVec3DModulateByScalar(&camera->Up, delta);
-		camera->CameraPos = MathVec3DAddition(&camera->CameraPos, &up);
+		const Vec3D up = MathVec3DModulateByScalar(&m_Up, delta);
+		m_Pos = MathVec3DAddition(&m_Pos, &up);
 	}
-	else if (KeyboardIsKeyDown(camera->Keyboard, VK_DOWN))
+	else if (KeyboardIsKeyDown(m_Keyboard, VK_DOWN))
 	{
-		const Vec3D up = MathVec3DModulateByScalar(&camera->Up, delta);
-		camera->CameraPos = MathVec3DSubtraction(&camera->CameraPos, &up);
+		const Vec3D up = MathVec3DModulateByScalar(&m_Up, delta);
+		m_Pos = MathVec3DSubtraction(&m_Pos, &up);
 	}
-	else if (KeyboardIsKeyDown(camera->Keyboard, 'W'))
-	{
-		cameraFocus = MathVec3DModulateByScalar(&cameraFocus, delta);
-		camera->CameraPos = MathVec3DAddition(&camera->CameraPos, &cameraFocus);
-	}
-	else if (KeyboardIsKeyDown(camera->Keyboard, 'S'))
+	else if (KeyboardIsKeyDown(m_Keyboard, 'W'))
 	{
 		cameraFocus = MathVec3DModulateByScalar(&cameraFocus, delta);
-		camera->CameraPos = MathVec3DSubtraction(&camera->CameraPos, &cameraFocus);
+		m_Pos = MathVec3DAddition(&m_Pos, &cameraFocus);
+	}
+	else if (KeyboardIsKeyDown(m_Keyboard, 'S'))
+	{
+		cameraFocus = MathVec3DModulateByScalar(&cameraFocus, delta);
+		m_Pos = MathVec3DSubtraction(&m_Pos, &cameraFocus);
 	}
 }
 
-static void CameraUpdateVectors(struct Camera* camera)
+void Camera::UpdateVectors()
 {
-	const float d = cosf(camera->Pitch);
-	const float x = d * cosf(camera->Yaw);
-	const float z = d * sinf(camera->Yaw);
-	const float y = sinf(camera->Pitch);
+	const float d = cosf(m_Pitch);
+	const float x = d * cosf(m_Yaw);
+	const float z = d * sinf(m_Yaw);
+	const float y = sinf(m_Pitch);
 
 	Vec3D direction = { x, y, z };
 	MathVec3DNormalize(&direction);
 
-	camera->FocusPoint = direction;
-	MathVec3DNormalize(&camera->FocusPoint);
+	m_At = direction;
+	MathVec3DNormalize(&m_At);
 	const Vec3D worldUp = { 0.0f, 1.0f, 0.0f };
-	camera->Right = MathVec3DCross(&worldUp, &camera->FocusPoint);
-	MathVec3DNormalize(&camera->Right);
-	camera->Up = MathVec3DCross(&camera->FocusPoint, &camera->Right);
-	MathVec3DNormalize(&camera->Up);
+	m_Right = MathVec3DCross(&worldUp, &m_At);
+	MathVec3DNormalize(&m_Right);
+	m_Up = MathVec3DCross(&m_At, &m_Right);
+	MathVec3DNormalize(&m_Up);
 }
 
-void CameraProcessMouse(struct Camera* camera, double deltaMillis)
+void Camera::ProcessMouse(double deltaMillis)
 {
-	const Vec2D mouseDelta = MouseGetMouseDelta(camera->Mouse);
+	const Vec2D mouseDelta = MouseGetMouseDelta(m_Mouse);
 
 	static const float MAX_PITCH = (float)(M_PI_2 - 0.1);
-	camera->Yaw += mouseDelta.X * MOUSE_SENSITIVITY * (float)deltaMillis;
-	camera->Pitch += mouseDelta.Y * MOUSE_SENSITIVITY * (float)deltaMillis;
-	camera->Pitch = MathClamp(-MAX_PITCH, MAX_PITCH, camera->Pitch);
+	m_Yaw += mouseDelta.X * MOUSE_SENSITIVITY * (float)deltaMillis;
+	m_Pitch += mouseDelta.Y * MOUSE_SENSITIVITY * (float)deltaMillis;
+	m_Pitch = MathClamp(-MAX_PITCH, MAX_PITCH, m_Pitch);
 
 	//static float xLastPos = 0;
 	//static float yLastPos = 0;
 
 	//if (xLastPos == 0.0f || yLastPos == 0.0f)
 	//{
-	//	xLastPos = camera->Mouse->MousePos.X;
-	//	yLastPos = camera->Mouse->MousePos.Y;
+	//	xLastPos = Mouse->MousePos.X;
+	//	yLastPos = Mouse->MousePos.Y;
 	//	return;
 	//}
 
-	//const float xOffset = (camera->Mouse->MousePos.X - xLastPos) * MOUSE_SENSITIVITY * (float)deltaMillis;
-	//const float yOffset = (yLastPos - camera->Mouse->MousePos.Y) * MOUSE_SENSITIVITY * (float)deltaMillis;
+	//const float xOffset = (Mouse->MousePos.X - xLastPos) * MOUSE_SENSITIVITY * (float)deltaMillis;
+	//const float yOffset = (yLastPos - Mouse->MousePos.Y) * MOUSE_SENSITIVITY * (float)deltaMillis;
 
-	//xLastPos = camera->Mouse->MousePos.X;
-	//yLastPos = camera->Mouse->MousePos.Y;
+	//xLastPos = Mouse->MousePos.X;
+	//yLastPos = Mouse->MousePos.Y;
 
 	//static const float MAX_PITCH = (float)(M_PI_2 - 0.1);
 
-	//camera->Yaw -= xOffset;
-	//camera->Pitch += yOffset; // reverse y because in screen space y goes from top to bottom of the screen
-	//camera->Pitch = MathClamp(-MAX_PITCH, MAX_PITCH, camera->Pitch);
+	//Yaw -= xOffset;
+	//Pitch += yOffset; // reverse y because in screen space y goes from top to bottom of the screen
+	//Pitch = MathClamp(-MAX_PITCH, MAX_PITCH, Pitch);
 
-	CameraUpdateVectors(camera);
+	UpdateVectors();
 }

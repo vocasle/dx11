@@ -191,8 +191,8 @@ void Game::InitPerSceneConstants()
 	m_PerSceneData.dirLight = dirLight;
 
 	SpotLight spotLight = {};
-	spotLight.Position = m_Camera.CameraPos;
-	spotLight.Direction = m_Camera.FocusPoint;
+	spotLight.Position = m_Camera.GetPos();
+	spotLight.Direction = m_Camera.GetAt();
 	spotLight.Ambient = ColorFromRGBA(0.0f, 0.0f, 0.0f, 1.0f);
 	spotLight.Diffuse = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	spotLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
@@ -201,7 +201,8 @@ void Game::InitPerSceneConstants()
 	m_PerSceneData.spotLights[0] = spotLight;
 }
 
-Game::Game()
+Game::Game():
+	m_Camera{ {0.0f, 0.0f, -5.0f}, &m_Keyboard, &m_Mouse }
 {
 	memset(this, 0, sizeof(Game));
 	m_DR = std::make_unique<DeviceResources>();
@@ -229,15 +230,15 @@ void Game::Clear()
 
 void Game::Update()
 {
-	CameraUpdatePos(&m_Camera, m_Timer.DeltaMillis);
-	CameraProcessMouse(&m_Camera, m_Timer.DeltaMillis);
+	m_Camera.UpdatePos(m_Timer.DeltaMillis);
+	m_Camera.ProcessMouse(m_Timer.DeltaMillis);
 
 	const float width = (float)m_DR->GetBackBufferWidth();
 	const float height = (float)m_DR->GetBackBufferHeight();
 	
-	m_PerFrameData.view = CameraGetViewMat(&m_Camera);
+	m_PerFrameData.view = m_Camera.GetViewMat();
 	m_PerFrameData.proj = MathMat4X4PerspectiveFov(MathToRadians(45.0f), width / height, 0.1f, 100.0f);;
-	m_PerFrameData.cameraPosW = m_Camera.CameraPos;
+	m_PerFrameData.cameraPosW = m_Camera.GetPos();
 
 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 
@@ -455,8 +456,6 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	TimerInitialize(&m_Timer);
 	KeyboardInit(&m_Keyboard);
 	MouseInit(&m_Mouse, m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
-	const Vec3D cameraPos = { 0.0f, 0.0f, -5.0f };
-	CameraInit(&m_Camera, &cameraPos, &m_Keyboard, &m_Mouse);
 	SMInitResources(&m_ShadowMap, m_DR->GetDevice(), 2048, 2048);
 
 	// init actors

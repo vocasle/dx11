@@ -9,26 +9,29 @@
 #define CAMERA_SENSITIVITY 0.01f
 #define MOUSE_SENSITIVITY 0.0001f
 
-struct Camera
+class Camera
 {
-	float Pitch;
-	float Yaw;
-	Vec3D CameraPos;
-	Vec3D FocusPoint;
-	Vec3D Right;
-	Vec3D Up;
-	const struct Keyboard* Keyboard;
-	const struct Mouse* Mouse;
-	float Speed;
+public:
+	Camera(const Vec3D& cameraPos,
+		const Keyboard* keyboard,
+		const Mouse* mouse);
+	Mat4X4 GetViewMat() const;
+	void UpdatePos(double deltaMillis);
+	void ProcessMouse(double deltaMillis);
+	Vec3D GetPos() const { return m_Pos; }
+	Vec3D GetAt() const { return m_At; }
+
+private:
+	void UpdateVectors();
+	void UpdateSpeed();
+
+	float m_Pitch;
+	float m_Yaw;
+	Vec3D m_Pos;
+	Vec3D m_At;
+	Vec3D m_Right;
+	Vec3D m_Up;
+	const Keyboard* m_Keyboard;
+	const Mouse* m_Mouse;
+	float m_Speed;
 };
-
-void CameraInit(struct Camera* camera,
-	const Vec3D* cameraPos,
-	const struct Keyboard* keyboard,
-	const struct Mouse* mouse);
-
-Mat4X4 CameraGetViewMat(struct Camera* camera);
-
-void CameraUpdatePos(struct Camera* camera, double deltaMillis);
-
-void CameraProcessMouse(struct Camera* camera, double deltaMillis);
