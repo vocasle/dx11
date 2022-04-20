@@ -6,7 +6,6 @@
 typedef struct ShadowMap
 {
 	ID3D11ShaderResourceView*	m_pOutputTextureSRV;
-	ID3D11RenderTargetView*		m_pOutputTextureRTV;
 	ID3D11DepthStencilView*		m_pOutputTextureDSV;
 	D3D11_VIEWPORT				m_OutputViewPort;
 } ShadowMap;

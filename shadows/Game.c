@@ -103,6 +103,7 @@ void GameFree(Game* game)
 		ActorFree(game->m_Actors[i]);
 	}
 	free(game->m_Actors);
+	SMDeinit(&game->m_ShadowMap);
 	
 	memset(game, 0, sizeof(Game));
 	free(game);
@@ -585,6 +586,7 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	const Vec3D cameraPos = { 0.0f, 0.0f, -5.0f };
 	CameraInit(&game->Cam, &cameraPos, &game->Keyboard, &game->Mouse);
 	GameInitPerSceneConstants(game);
+	SMInitResources(&game->m_ShadowMap, game->DR->Device, 2048, 2048);
 
 	// init actors
 	GameCreateActors(game);

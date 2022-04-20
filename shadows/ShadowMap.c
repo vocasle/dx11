@@ -22,7 +22,6 @@ void SMInit(ShadowMap* sm)
 void SMDeinit(ShadowMap* sm)
 {
 	COM_FREE(sm->m_pOutputTextureDSV);
-	COM_FREE(sm->m_pOutputTextureRTV);
 	COM_FREE(sm->m_pOutputTextureSRV);
 }
 
@@ -34,6 +33,8 @@ void SMInitResources(ShadowMap* sm, ID3D11Device* device, uint32_t texWidth, uin
 	texDesc.Height = texHeight;
 	texDesc.ArraySize = 1;
 	texDesc.MipLevels = 1;
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
 	texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 
 	ID3D11Texture2D* depthTex;
@@ -49,9 +50,13 @@ void SMInitResources(ShadowMap* sm, ID3D11Device* device, uint32_t texWidth, uin
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = { 0 };
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
 
 	HR(device->lpVtbl->CreateShaderResourceView(device, depthTex, &srvDesc,
 		&sm->m_pOutputTextureSRV))
+
+	COM_FREE(depthTex);
 
 	sm->m_OutputViewPort.TopLeftX = 0.0f;
 	sm->m_OutputViewPort.TopLeftY = 0.0f;

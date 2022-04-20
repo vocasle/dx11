@@ -10,6 +10,7 @@
 #include "Renderer.h"
 #include "Actor.h"
 #include "LightHelper.h"
+#include "ShadowMap.h"
 
 #define MODEL_PULL 10
 #define TEXTURE_PULL 4
@@ -70,6 +71,7 @@ typedef struct Game
 	ID3D11Buffer* m_PerFrameCB;
 	ID3D11Buffer* m_PerObjectCB;
 	ID3D11Buffer* m_PerSceneCB;
+	ShadowMap m_ShadowMap;
 } Game;
 
 Game* GameNew(void);
