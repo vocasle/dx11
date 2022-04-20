@@ -63,7 +63,11 @@ Actor::~Actor()
 
 ID3D11ShaderResourceView** Actor::GetShaderResources() const
 {
-	static ID3D11ShaderResourceView* shaderResources[4] = { m_DiffuseTexture.Get(),m_SpecularTexture.Get(), m_GlossTexture.Get(), m_NormalTexture.Get() };
+	static ID3D11ShaderResourceView* shaderResources[4] = {};
+	shaderResources[0] = m_DiffuseTexture.Get();
+	shaderResources[1] = m_SpecularTexture.Get();
+	shaderResources[2] = m_GlossTexture.Get();
+	shaderResources[3] = m_NormalTexture.Get();
 	return shaderResources;
 }
 
