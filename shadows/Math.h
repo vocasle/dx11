@@ -3,12 +3,16 @@
 
 typedef struct Vec2D
 {
+	Vec2D(): X{0}, Y{0} {}
+	Vec2D(float x, float y): X{x}, Y{y} {}
 	float X;
 	float Y;
 } Vec2D;
 
 typedef struct Vec3D
 {
+	Vec3D() : X{0}, Y{0}, Z{0} {}
+	Vec3D(float x, float y, float z) : X{x}, Y{y}, Z{z} {}
 	float X;
 	float Y;
 	float Z;
@@ -16,6 +20,8 @@ typedef struct Vec3D
 
 typedef struct Vec4D
 {
+	Vec4D() : X{0}, Y{0}, Z{0}, W{0} {}
+	Vec4D(float x, float y, float z, float w) : X{x}, Y{y}, Z{z}, W{w} {}
 	float X;
 	float Y;
 	float Z;
