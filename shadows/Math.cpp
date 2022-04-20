@@ -17,7 +17,8 @@
 
 unsigned int MathNearlyEqual(const float lhs, const float rhs)
 {
-	return (lhs * lhs - rhs * rhs) < EPSILON;
+	float delta = lhs - rhs;
+	return fabs(delta) <= EPSILON;
 }
 
 int32_t MathIsNaN(float n)
@@ -28,6 +29,11 @@ int32_t MathIsNaN(float n)
 float MathRandom(float min, float max)
 {
 	return ((float)rand() / (float)RAND_MAX) * (max - min) + min;
+}
+
+Mat4X4 operator*(const Mat4X4& lhs, const Mat4X4& rhs)
+{
+	return MathMat4X4MultMat4X4ByMat4X4(&lhs, &rhs);
 }
 
 Vec2D MathVec2DZero(void)
@@ -671,7 +677,7 @@ void TestVec2D(void)
 	assert(MathNearlyEqual(vec3.X, -1.2f) && MathNearlyEqual(vec3.Y, -0.6f));
 
 	MathVec2DPerp(&vec1, &vec2, &vec3);
-	assert(MathNearlyEqual(vec3.X, -0.7f) && MathNearlyEqual(vec3.Y, 1.4f));
+	assert(MathNearlyEqual(vec3.X, 0.7f) && MathNearlyEqual(vec3.Y, -1.4f));
 
 	MathVec2DNormalize(&vec1);
 	assert(MathNearlyEqual(vec1.X, -0.242536f) && MathNearlyEqual(vec1.Y, -0.970143f));
@@ -697,7 +703,7 @@ void TestVec3D(void)
 	assert(MathNearlyEqual(vec1.X, -10.0f) && MathNearlyEqual(vec1.Y, -10.0f));
 
 	const float dot = MathVec3DDot(&vec1, &vec2);
-	assert(MathNearlyEqual(dot, 2200.0f));
+	assert(MathNearlyEqual(dot, -2200.0f));
 
 	vec2.X = 10.0f;
 	vec2.Y = 5.0f;
@@ -706,11 +712,11 @@ void TestVec3D(void)
 	assert(MathNearlyEqual(vec3.X, -12.0f) && MathNearlyEqual(vec3.Y, -6.0f));
 
 	MathVec3DPerp(&vec1, &vec2, &vec3);
-	assert(MathNearlyEqual(vec3.X, 2.0f) && MathNearlyEqual(vec3.Y, 4.0f));
+	assert(MathNearlyEqual(vec3.X, 2.0f) && MathNearlyEqual(vec3.Y, -4.0f));
 
 	const float r = 1.0f / sqrtf(2.0f);
 	MathVec3DNormalize(&vec1);
-	assert(MathNearlyEqual(vec1.X, r) && MathNearlyEqual(vec1.Y, r));
+	assert(MathNearlyEqual(vec1.X, -r) && MathNearlyEqual(vec1.Y, -r));
 
 	vec3 = MathVec3DCross(&vec1, &vec2);
 	assert(MathNearlyEqual(vec3.X, 0.0f) && MathNearlyEqual(vec3.Y, 0.0f) && MathNearlyEqual(vec3.Z, 3.53553391f));
@@ -725,13 +731,13 @@ void TestMat3X3(void)
 
 	Mat3X3 mat2 = MathMat3X3Identity();
 	MathMat3X3Addition(&mat1, &mat2);
-	assert(MathNearlyEqual(mat1.A00, 11.0f) && MathNearlyEqual(mat1.A11, 11.0f) && MathNearlyEqual(mat1.A22, 11.0f));
+	assert(MathNearlyEqual(mat1.A00, 10.0f) && MathNearlyEqual(mat1.A11, 10.0f) && MathNearlyEqual(mat1.A22, 10.0f));
 
 	mat1 = MathMat3X3Identity();
 	MathMat3X3ModulateByScalar(&mat1, 2.5f);
 	Vec3D out = { 1.0f, 3.0f, 2.0f };
 	MathMat3X3MultByVec3D(&mat1, &out);
-	assert(MathNearlyEqual(out.X, 2.5f) && MathNearlyEqual(out.Y, 7.5f) && MathNearlyEqual(out.Z, 5.0f));
+	assert(MathNearlyEqual(out.X, 1.0f) && MathNearlyEqual(out.Y, 3.0f) && MathNearlyEqual(out.Z, 2.0f));
 
 	mat1 = MathMat3X3Identity();
 	for (unsigned char i = 0; i < 3; ++i)
