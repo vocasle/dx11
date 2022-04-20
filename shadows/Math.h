@@ -50,10 +50,23 @@ typedef struct Mat3X3
 
 typedef struct Mat4X4
 {
-	Mat4X4()
+	Mat4X4(): Mat4X4(0.0f, 0.0f, 0.0f, 0.0f,
+					0.0f, 0.0f, 0.0f, 0.0f,
+					0.0f, 0.0f, 0.0f, 0.0f, 
+					0.0f, 0.0f, 0.0f, 0.0f)
 	{
-		memset(this, 0, sizeof(Mat4X4));
 	}
+
+	Mat4X4(float a00, float a01, float a02, float a03,
+		float a10, float a11, float a12, float a13,
+		float a20, float a21, float a22, float a23,
+		float a30, float a31, float a32, float a33):
+		A00{a00}, A01{a01}, A02{a02}, A03{a03},
+		A10{a10}, A11{a11}, A12{a12}, A13{a13},
+		A20{a20}, A21{a21}, A22{a22}, A23{a23},
+		A30{a30}, A31{a31}, A32{a32}, A33{a33}
+	{}
+
 	union
 	{
 		struct
