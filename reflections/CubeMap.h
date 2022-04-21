@@ -10,6 +10,7 @@ public:
 	~CubeMap();
 
 	void LoadCubeMap(ID3D11Device* device, const char* filepath);
+	ID3D11ShaderResourceView* GetCubeMap() const { return m_cubeMap.Get(); }
 
 private:
 	template <typename T>
