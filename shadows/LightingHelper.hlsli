@@ -38,7 +38,7 @@ struct Material
 	float4 Specular;
 };
 
-float4 ComputeDirectionalLight(Material mat, DirectionalLight L, float3 normal, float3 toEye)
+Material ComputeDirectionalLight(Material mat, DirectionalLight L, float3 normal, float3 toEye)
 {
     float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -60,22 +60,32 @@ float4 ComputeDirectionalLight(Material mat, DirectionalLight L, float3 normal, 
         spec = specFactor * mat.Specular * L.Specular;
     }
 
-    return ambient + diffuse + spec;
+    Material material;
+    material.Ambient = ambient;
+    material.Diffuse = diffuse;
+    material.Specular = spec;
+
+    return material;
 }
 
 
-float4 ComputePointLight(Material mat, PointLight L, float3 pos, float3 normal, float3 toEye)
+Material ComputePointLight(Material mat, PointLight L, float3 pos, float3 normal, float3 toEye)
 {
     float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    Material material;
+    material.Ambient = ambient;
+    material.Diffuse = diffuse;
+    material.Specular = spec;
 
     float3 lightVec = L.Position - pos;
 
     float d = length(lightVec);
 
     if (d > L.Range)
-        return ambient + diffuse + spec;
+        return material;
 
     lightVec /= d;
 
@@ -98,22 +108,30 @@ float4 ComputePointLight(Material mat, PointLight L, float3 pos, float3 normal, 
     diffuse *= att;
     spec *= att;
 
-    return ambient + diffuse + spec;
+    material.Ambient = ambient;
+    material.Diffuse = diffuse;
+    material.Specular = spec;
+
+    return material;
 }
 
 
-float4 ComputeSpotLight(Material mat, SpotLight L, float3 pos, float3 normal, float3 toEye)
+Material ComputeSpotLight(Material mat, SpotLight L, float3 pos, float3 normal, float3 toEye)
 {
     float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    Material material;
+    material.Ambient = ambient;
+    material.Diffuse = diffuse;
+    material.Specular = spec;
 
     float3 lightVec = L.Position - pos;
 
     float d = length(lightVec);
 
     if (d > L.Range)
-        return ambient + diffuse + spec;;
+        return material;
 
     lightVec /= d;
 
@@ -138,6 +156,43 @@ float4 ComputeSpotLight(Material mat, SpotLight L, float3 pos, float3 normal, fl
     ambient *= spot;
     diffuse *= att;
     spec *= att;
+    material.Ambient = ambient;
+    material.Diffuse = diffuse;
+    material.Specular = spec;
 
-    return ambient + diffuse + spec;
+    return material;
+}
+
+static const float SMAP_SIZE = 2048.0f;
+static const float SMAP_DX = 1.0f / SMAP_SIZE;
+
+float CalcShadowFactor(SamplerComparisonState samShadow,
+    Texture2D shadowMap,
+    float4 shadowPosH)
+{
+    // Complete projection by doing division by w.
+    shadowPosH.xyz /= shadowPosH.w;
+
+    // Depth in NDC space.
+    float depth = shadowPosH.z;
+
+    // Texel size.
+    const float dx = SMAP_DX;
+
+    float percentLit = 0.0f;
+    const float2 offsets[9] =
+    {
+        float2(-dx,  -dx), float2(0.0f,  -dx), float2(dx,  -dx),
+        float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(dx, 0.0f),
+        float2(-dx,  +dx), float2(0.0f,  +dx), float2(dx,  +dx)
+    };
+
+    [unroll]
+    for (int i = 0; i < 9; ++i)
+    {
+        percentLit += shadowMap.SampleCmpLevelZero(samShadow,
+            shadowPosH.xy + offsets[i], depth).r;
+    }
+
+    return percentLit /= 9.0f;
 }
