@@ -9,5 +9,6 @@ VSOut main(VSIn In)
 	Out.TexCoords = In.TexCoords;
 	Out.NormalW = mul(world, float4(In.Normal, 1.0f)).xyz;
 	Out.PosW = mul(world, float4(In.Pos, 1.0f)).xyz;
+	Out.ShadowPosH = mul(shadowTransform, float4(In.Pos, 1.0f));
 	return Out;
 }
