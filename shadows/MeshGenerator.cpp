@@ -1,95 +1,18 @@
 #include "MeshGenerator.h"
+#include "Actor.h"
 
-#include <DirectXMath.h>
-#include <memory>
-#include <algorithm>
-#include <iterator>
+#include <cassert>
 
-#define HRESULT_E_ARITHMETIC_OVERFLOW static_cast<HRESULT>(0x80070216L)
-
-
-using namespace DirectX;
-
-HRESULT ComputeTangentFrameImpl(
-    const std::vector<uint32_t>& indices,
-    size_t nFaces,
-    const std::vector<XMFLOAT3>& positions,
-    const std::vector<XMFLOAT3>& normals,
-    const std::vector<XMFLOAT2>& texcoords,
-    size_t nVerts,
-    std::vector<XMFLOAT3>& tangents3,
-    std::vector<XMFLOAT3>& bitangents);
-
-HRESULT ComputeTangentFrame(
-    const std::vector<uint32_t>& indices,
-    size_t nFaces,
-    const std::vector<Vec3D>& positions,
-    const std::vector<Vec3D>& normals,
-    const std::vector<Vec2D>& texcoords,
-    size_t nVerts,
-    std::vector<Vec3D>& tangents,
-    std::vector<Vec3D>& bitangents)
+HRESULT ComputeTangentFrame(const std::vector<uint32_t>& indices, std::vector<Vertex>& vertices)
 {
-    std::vector<XMFLOAT3> xmPositions;
-    std::transform(std::begin(positions),
-        std::end(positions),
-        std::back_inserter(xmPositions),
-        [](const Vec3D& v) { return XMFLOAT3{ v.X, v.Y, v.Z }; });
-
-    std::vector<XMFLOAT3> xmNormals(nVerts);
-    std::transform(std::begin(normals),
-        std::end(normals),
-        std::back_inserter(xmNormals),
-        [](const Vec3D& v) { return XMFLOAT3{ v.X, v.Y, v.Z }; });
-
-    std::vector<XMFLOAT2> xmTexCoords(nVerts);
-    std::transform(std::begin(texcoords),
-        std::end(texcoords),
-        std::back_inserter(xmTexCoords),
-        [](const Vec2D& v) { return XMFLOAT2{ v.X, v.Y }; });
-
-    std::vector<XMFLOAT3> xmTangents;
-    std::vector<XMFLOAT3> xmBitangents;
-
-    HRESULT hr = ComputeTangentFrameImpl(indices, nFaces, xmPositions, xmNormals, xmTexCoords, nVerts, xmTangents, xmBitangents);
-
-    std::transform(std::begin(xmTangents),
-        std::end(xmTangents),
-        std::back_inserter(tangents),
-        [](const XMFLOAT3& v) { return Vec3D{ v.x, v.y, v.z }; });
-
-    std::transform(std::begin(xmBitangents),
-        std::end(xmBitangents),
-        std::back_inserter(bitangents),
-        [](const XMFLOAT3& v) { return Vec3D{ v.x, v.y, v.z }; });
-
-    return hr;
-}
-
-
-HRESULT ComputeTangentFrameImpl(
-    const std::vector<uint32_t>& indices, 
-    size_t nFaces,
-    const std::vector<XMFLOAT3>& positions,
-    const std::vector<XMFLOAT3>& normals,
-    const std::vector<XMFLOAT2>& texcoords,
-    size_t nVerts,
-    std::vector<XMFLOAT3>& tangents3,
-    std::vector<XMFLOAT3>& bitangents)
-{
-    if (nVerts >= uint32_t(-1))
-        return E_INVALIDARG;
-
-    if ((uint64_t(nFaces) * 3) >= UINT32_MAX)
-        return HRESULT_E_ARITHMETIC_OVERFLOW;
-
     static constexpr float EPSILON = 0.0001f;
-    static const XMVECTORF32 s_flips = { { { 1.f, -1.f, -1.f, 1.f } } };
+    static const Vec4D s_flips = { 1.f, -1.f, -1.f, 1.f };
+    assert(indices.size() % 3 == 0);
 
-    std::vector<XMVECTOR> tangent1(nVerts);
-    std::vector<XMVECTOR> tangent2(nVerts);
+    std::vector<Vec3D> tangent1(vertices.size());
+    std::vector<Vec3D> tangent2(vertices.size());
 
-    for (size_t face = 0; face < nFaces; ++face)
+    for (size_t face = 0; face < indices.size() / 3; ++face)
     {
         uint32_t i0 = indices[face * 3];
         uint32_t i1 = indices[face * 3 + 1];
@@ -100,110 +23,120 @@ HRESULT ComputeTangentFrameImpl(
             || i2 == uint32_t(-1))
             continue;
 
-        if (i0 >= nVerts
-            || i1 >= nVerts
-            || i2 >= nVerts)
+        if (i0 >= vertices.size()
+            || i1 >= vertices.size()
+            || i2 >= vertices.size())
             return E_UNEXPECTED;
 
-        const XMVECTOR t0 = XMLoadFloat2(&texcoords[i0]);
-        const XMVECTOR t1 = XMLoadFloat2(&texcoords[i1]);
-        const XMVECTOR t2 = XMLoadFloat2(&texcoords[i2]);
+        const Vec2D t0 = vertices[i0].TexCoords;
+        const Vec2D t1 = vertices[i1].TexCoords;
+        const Vec2D t2 = vertices[i2].TexCoords;
+        Vec2D d1;
+        Vec2D d2;
+        MathVec2DSubtraction(&t1, &t0, &d1);
+        MathVec2DSubtraction(&t2, &t0, &d2);
 
-        XMVECTOR s = XMVectorMergeXY(XMVectorSubtract(t1, t0), XMVectorSubtract(t2, t0));
+        Vec4D s = { d1.X, d2.X, d1.Y, d2.Y };
 
-        XMFLOAT4A tmp;
-        XMStoreFloat4A(&tmp, s);
+        Vec4D tmp = s;
 
-        float d = tmp.x * tmp.w - tmp.z * tmp.y;
+        float d = tmp.X * tmp.W - tmp.Z * tmp.Y;
         d = (fabsf(d) <= EPSILON) ? 1.f : (1.f / d);
-        s = XMVectorScale(s, d);
-        s = XMVectorMultiply(s, s_flips);
+        MathVec4DModulateByScalar(&s, d, &s);
+        MathVec4DModulateByVec4D(&s, &s_flips, &s);
 
-        XMMATRIX m0;
-        m0.r[0] = XMVectorPermute<3, 2, 6, 7>(s, g_XMZero);
-        m0.r[1] = XMVectorPermute<1, 0, 4, 5>(s, g_XMZero);
-        m0.r[2] = m0.r[3] = g_XMZero;
+        Mat4X4 m0;
+        const Vec4D zero = { 0.0f, 0.0f, 0.0f, 0.0f };
+        m0.V[0] = MathVec4DVectorPermute(s, zero, 3, 2, 6, 7);
+        m0.V[1] = MathVec4DVectorPermute(s, zero, 1, 0, 4, 5);
+        m0.V[2] = m0.V[3] = zero;
 
-        const XMVECTOR p0 = XMLoadFloat3(&positions[i0]);
-        const XMVECTOR p1 = XMLoadFloat3(&positions[i1]);
-        XMVECTOR p2 = XMLoadFloat3(&positions[i2]);
+        const Vec3D p0 = vertices[i0].Position;
+        const Vec3D p1 = vertices[i1].Position;
+        Vec3D p2 = vertices[i2].Position;
 
-        XMMATRIX m1;
-        m1.r[0] = XMVectorSubtract(p1, p0);
-        m1.r[1] = XMVectorSubtract(p2, p0);
-        m1.r[2] = m1.r[3] = g_XMZero;
+        Mat4X4 m1;
+        m1.V[0] = Vec4D(MathVec3DSubtraction(&p1, &p0), 0.0f);
+        m1.V[1] = Vec4D(MathVec3DSubtraction(&p2, &p0), 0.0f);
+        m1.V[2] = m1.V[3] = zero;
+        
+        const Mat4X4 uv = MathMat4X4MultMat4X4ByMat4X4(&m0, &m1);
+        Vec4D sum = MathVec4DAddition(Vec4D(tangent1[i0], 1.0f), uv.V[0]);
+        tangent1[i0] = {sum.X, sum.Y, sum.Z};
+        sum = MathVec4DAddition(Vec4D(tangent1[i1], 1.0f), uv.V[0]);
+        tangent1[i1] = { sum.X, sum.Y, sum.Z };
+        sum = MathVec4DAddition(Vec4D(tangent1[i2], 1.0f), uv.V[0]);
+        tangent1[i2] = { sum.X, sum.Y, sum.Z };
 
-        const XMMATRIX uv = XMMatrixMultiply(m0, m1);
-
-        tangent1[i0] = XMVectorAdd(tangent1[i0], uv.r[0]);
-        tangent1[i1] = XMVectorAdd(tangent1[i1], uv.r[0]);
-        tangent1[i2] = XMVectorAdd(tangent1[i2], uv.r[0]);
-
-        tangent2[i0] = XMVectorAdd(tangent2[i0], uv.r[1]);
-        tangent2[i1] = XMVectorAdd(tangent2[i1], uv.r[1]);
-        tangent2[i2] = XMVectorAdd(tangent2[i2], uv.r[1]);
+        sum = MathVec4DAddition(Vec4D(tangent2[i0], 1.0f), uv.V[1]);
+        tangent2[i0] = { sum.X, sum.Y, sum.Z };
+        sum = MathVec4DAddition(Vec4D(tangent2[i1], 1.0f), uv.V[1]);
+        tangent2[i1] = { sum.X, sum.Y, sum.Z };
+        sum = MathVec4DAddition(Vec4D(tangent2[i2], 1.0f), uv.V[1]);
+        tangent2[i2] = { sum.X, sum.Y, sum.Z };
     }
 
-    for (size_t j = 0; j < nVerts; ++j)
+    for (size_t j = 0; j < vertices.size(); ++j)
     {
         // Gram-Schmidt orthonormalization
-        XMVECTOR b0 = XMLoadFloat3(&normals[j]);
-        b0 = XMVector3Normalize(b0);
+        Vec3D b0 = vertices[j].Normal;
+        MathVec3DNormalize(&b0);
 
-        const XMVECTOR tan1 = tangent1[j];
-        XMVECTOR b1 = XMVectorSubtract(tan1, XMVectorMultiply(XMVector3Dot(b0, tan1), b0));
-        b1 = XMVector3Normalize(b1);
+        const Vec3D tan1 = tangent1[j];
 
-        const XMVECTOR tan2 = tangent2[j];
-        XMVECTOR b2 = XMVectorSubtract(XMVectorSubtract(tan2, XMVectorMultiply(XMVector3Dot(b0, tan2), b0)), XMVectorMultiply(XMVector3Dot(b1, tan2), b1));
-        b2 = XMVector3Normalize(b2);
+        Vec3D b1 = MathVec3DSubtraction(tan1, MathVec3DModulateByScalar(&b0, MathVec3DDot(&b0, &tan1)));
+        MathVec3DNormalize(&b1);
+
+        const Vec3D tan2 = tangent2[j];
+        Vec3D b2 = MathVec3DSubtraction(MathVec3DSubtraction(tan2, MathVec3DModulateByScalar(&b0, MathVec3DDot(&b0, &tan2))), MathVec3DModulateByScalar(&b1, MathVec3DDot(&b1, &tan2)));
+        MathVec3DNormalize(&b2);
 
         // handle degenerate vectors
-        const float len1 = XMVectorGetX(XMVector3Length(b1));
-        const float len2 = XMVectorGetY(XMVector3Length(b2));
+        
+        const float len1 = MathVec3DLength(b1);
+        const float len2 = MathVec3DLength(b2);
 
         if ((len1 <= EPSILON) || (len2 <= EPSILON))
         {
             if (len1 > 0.5f)
             {
                 // Reset bi-tangent from tangent and normal
-                b2 = XMVector3Cross(b0, b1);
+                b2 = MathVec3DCross(&b0, &b1);
             }
             else if (len2 > 0.5f)
             {
                 // Reset tangent from bi-tangent and normal
-                b1 = XMVector3Cross(b2, b0);
+                b1 = MathVec3DCross(&b2, &b0);
             }
             else
             {
                 // Reset both tangent and bi-tangent from normal
-                XMVECTOR axis;
-
-                const float d0 = fabsf(XMVectorGetX(XMVector3Dot(g_XMIdentityR0, b0)));
-                const float d1 = fabsf(XMVectorGetX(XMVector3Dot(g_XMIdentityR1, b0)));
-                const float d2 = fabsf(XMVectorGetX(XMVector3Dot(g_XMIdentityR2, b0)));
+                Vec3D axis;
+                const Vec3D identityR0 = { 1.0f, 0.0f, 0.0f };
+                const Vec3D identityR1 = { 0.0f, 1.0f, 0.0f };
+                const Vec3D identityR2 = { 0.0f, 0.0f, 1.0f };
+                const float d0 = fabsf(MathVec3DDot(&identityR0, &b0));
+                const float d1 = fabsf(MathVec3DDot(&identityR1, &b0));
+                const float d2 = fabsf(MathVec3DDot(&identityR2, &b0));
                 if (d0 < d1)
                 {
-                    axis = (d0 < d2) ? g_XMIdentityR0 : g_XMIdentityR2;
+                    axis = (d0 < d2) ? identityR0 : identityR1;
                 }
                 else if (d1 < d2)
                 {
-                    axis = g_XMIdentityR1;
+                    axis = identityR1;
                 }
                 else
                 {
-                    axis = g_XMIdentityR2;
+                    axis = identityR2;
                 }
 
-                b1 = XMVector3Cross(b0, axis);
-                b2 = XMVector3Cross(b0, b1);
+                b1 = MathVec3DCross(&b0, &axis);
+                b2 = MathVec3DCross(&b0, &b1);
             }
         }
-
-        XMStoreFloat3(&tangents3[j], b1);
-
-        XMStoreFloat3(&bitangents[j], b2);
-
+        vertices[j].Tangent = b1;
+        vertices[j].Bitangent = b2;
     }
 
     return S_OK;

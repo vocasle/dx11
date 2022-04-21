@@ -189,8 +189,8 @@ void Game::InitPerSceneConstants()
 	for (uint32_t i = 0; i < 4; ++i)
 	{
 		pl.Position = positions[i];
-		pl.Ambient = ColorFromRGBA(0.3f, 0.3f, 0.3f, 1.0f);
-		pl.Diffuse = ColorFromRGBA(0.6f, 0.6f, 0.6f, 1.0f);
+		pl.Ambient = ColorFromRGBA(0.03f, 0.03f, 0.03f, 1.0f);
+		pl.Diffuse = ColorFromRGBA(0.2f, 0.2f, 0.2f, 1.0f);
 		pl.Specular = ColorFromRGBA(0.2f, 0.2f, 0.2f, 1.0f);
 		pl.Att = MathVec3DFromXYZ(1.0f, 0.09f, 0.032f);
 		pl.Range = 5.0f;
@@ -345,27 +345,28 @@ void Game::Render()
 	}
 	
 	//// Light properties
-	//for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
-	//{
-	//	const Vec3D scale = { 0.2f, 0.2f, 0.2f };
-	//	Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
-	//	Mat4X4 translate = MathMat4X4TranslateFromVec3D(&m_PerSceneData.pointLights[i].Position);
-	//	m_PerObjectData.world = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
-	//	GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-	//		sizeof(PerObjectConstants),
-	//		&m_PerObjectData,
-	//		m_PerObjectCB);
+	for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
+	{
+		const Vec3D scale = { 0.2f, 0.2f, 0.2f };
+		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
+		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&m_PerSceneData.pointLights[i].Position);
+		m_PerObjectData.world = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
+		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+			sizeof(PerObjectConstants),
+			&m_PerObjectData,
+			m_PerObjectCB.Get());
 
-	//	RBindPixelShader(LightPS);
-	//	RBindConstantBuffer(BindTargets_VS, m_PerObjectCB, 0);
-	//	RBindConstantBuffer(BindTargets_PS, m_PerObjectCB, 0);
-	//	const Actor* sphere = m_Actors[2];
-	//	RDrawIndexed(sphere->m_IndexBuffesphere->m_VertexBuffer,
-	//		sizeof(struct Vertex),
-	//		sphere->m_NumIndices,
-	//		0,
-	//		0);
-	//}
+		m_Renderer.BindPixelShader(m_LightPS.Get());
+		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+		const Actor& sphere = m_Actors[2];
+		m_Renderer.DrawIndexed(sphere.GetIndexBuffer(),
+			sphere.GetVertexBuffer(),
+			sizeof(struct Vertex),
+			sphere.GetNumIndices(),
+			0,
+			0);
+	}
 
 	m_Renderer.Present();
 }
@@ -381,37 +382,37 @@ void Game::CreateActors()
 {
 	const char* models[] = {
 		"assets/meshes/rocket.obj",
-		//"assets/meshes/cube.obj",
-		//"assets/meshes/sphere.obj",
-		//"assets/meshes/bunny.obj",
+		"assets/meshes/cube.obj",
+		"assets/meshes/sphere.obj",
+		"assets/meshes/bunny.obj",
 	};
 
 	const char* diffuseTextures[] = {
-		//"assets/textures/drywall_diffuse.jpg",
+		"assets/textures/drywall_diffuse.jpg",
 		"assets/textures/bricks_diffuse.jpg",
-		//"assets/textures/cliff_diffuse.jpg",
-		//"assets/textures/marble_diffuse.jpg",
+		"assets/textures/cliff_diffuse.jpg",
+		"assets/textures/marble_diffuse.jpg",
 	};
 
 	const char* specularTextures[] = {
-		//"assets/textures/drywall_reflection.jpg",
+		"assets/textures/drywall_reflection.jpg",
 		"assets/textures/bricks_reflection.jpg",
-		//"assets/textures/cliff_reflection.jpg",
-		//"assets/textures/marble_reflection.jpg",
+		"assets/textures/cliff_reflection.jpg",
+		"assets/textures/marble_reflection.jpg",
 	};
 
 	const char* normalTextures[] = {
-		//"assets/textures/drywall_normal.png",
+		"assets/textures/drywall_normal.png",
 		"assets/textures/bricks_normal.png",
-		//"assets/textures/cliff_normal.jpg",
-		//"assets/textures/marble_normal.png",
+		"assets/textures/cliff_normal.jpg",
+		"assets/textures/marble_normal.png",
 	};
 
 	const char* glossTextures[] = {
-		//"assets/textures/drywall_gloss.jpg",
+		"assets/textures/drywall_gloss.jpg",
 		"assets/textures/bricks_gloss.jpg",
-		//"assets/textures/cliff_gloss.jpg",
-		//"assets/textures/marble_gloss.jpg",
+		"assets/textures/cliff_gloss.jpg",
+		"assets/textures/marble_gloss.jpg",
 	};
 
 	const float scales[] = {
@@ -466,7 +467,10 @@ void Game::CreateActors()
 		plane.CreateVertexBuffer(m_DR->GetDevice());
 		const Vec3D offset = { 0.0f, -1.0f, 0.0f };
 		plane.Translate(offset);
-		plane.LoadTexture("assets/textures/chess.jpg", TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture("assets/textures/drywall_diffuse.jpg", TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture("assets/textures/drywall_normal.png", TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture("assets/textures/drywall_gloss.jpg", TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture("assets/textures/drywall_reflection.jpg", TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		plane.SetMaterial(&material);
 		m_Actors.emplace_back(plane);
 	}

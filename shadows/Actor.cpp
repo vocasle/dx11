@@ -120,9 +120,7 @@ void Actor::LoadMesh(Mesh* mesh)
 
 void Actor::GenerateTangents()
 {
-	std::vector<Vec3D> tangents;
-	std::vector<Vec3D> bitangents;
-	//ComputeTangentFrame(m_Indices, m_Vertices, tangents, bitangents);
+	ComputeTangentFrame(m_Indices, m_Vertices);
 }
 
 void Actor::LoadModel(const char* filename)

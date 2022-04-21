@@ -10,5 +10,7 @@ VSOut main(VSIn In)
 	Out.NormalW = mul(world, float4(In.Normal, 1.0f)).xyz;
 	Out.PosW = mul(world, float4(In.Pos, 1.0f)).xyz;
 	Out.ShadowPosH = mul(shadowTransform, float4(In.Pos, 1.0f));
+	Out.TangentW = mul(world, float4(In.Tangent, 1.0f));
+	Out.BitangentW = mul(world, float4(In.Bitangent, 1.0f));
 	return Out;
 }

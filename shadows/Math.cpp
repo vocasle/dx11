@@ -562,6 +562,11 @@ Vec3D MathVec3DSubtraction(const Vec3D* vec1, const Vec3D* vec2)
 	return out;
 }
 
+Vec3D MathVec3DSubtraction(const Vec3D& vec1, const Vec3D& vec2)
+{
+	return MathVec3DSubtraction(&vec1, &vec2);
+}
+
 float MathVec3DDot(const Vec3D* vec1, const Vec3D* vec2)
 {
 	return vec1->X * vec2->X + vec1->Y * vec2->Y + vec1->Z * vec2->Z;
@@ -610,6 +615,11 @@ void MathVec3DPrint(const Vec3D* vec)
 	printf("{ %f %f %f }\n", vec->X, vec->Y, vec->Z);
 }
 
+float MathVec3DLength(const Vec3D& v)
+{
+	return sqrtf(MathVec3DDot(&v, &v));
+}
+
 Vec4D MathVec4DAddition(const Vec4D* vec1, const Vec4D* vec2)
 {
 	Vec4D res = {};
@@ -618,6 +628,11 @@ Vec4D MathVec4DAddition(const Vec4D* vec1, const Vec4D* vec2)
 	res.Z = vec1->Z + vec2->Z;
 	res.W = vec1->W + vec2->W;
 	return res;
+}
+
+Vec4D MathVec4DAddition(const Vec4D& vec1, const Vec4D& vec2)
+{
+	return MathVec4DAddition(&vec1, &vec2);
 }
 
 void MathVec4DSubtraction(const Vec4D* vec1, const Vec4D* vec2, Vec4D* out)
@@ -645,6 +660,44 @@ void MathVec4DNormalize(Vec4D* vec1)
 void MathVec4DPrint(const Vec4D* vec)
 {
 	printf("{ %f %f %f %f }\n", vec->X, vec->Y, vec->Z, vec->W);
+}
+
+Vec4D  MathVec4DVectorPermute
+(
+	Vec4D V1,
+	Vec4D V2,
+	uint32_t PermuteX,
+	uint32_t PermuteY,
+	uint32_t PermuteZ,
+	uint32_t PermuteW
+)
+{
+	assert(PermuteX <= 7 && PermuteY <= 7 && PermuteZ <= 7 && PermuteW <= 7);
+
+	const uint32_t* aPtr[2];
+	aPtr[0] = reinterpret_cast<const uint32_t*>(&V1);
+	aPtr[1] = reinterpret_cast<const uint32_t*>(&V2);
+
+	Vec4D Result;
+	auto pWork = reinterpret_cast<uint32_t*>(&Result);
+
+	const uint32_t i0 = PermuteX & 3;
+	const uint32_t vi0 = PermuteX >> 2;
+	pWork[0] = aPtr[vi0][i0];
+
+	const uint32_t i1 = PermuteY & 3;
+	const uint32_t vi1 = PermuteY >> 2;
+	pWork[1] = aPtr[vi1][i1];
+
+	const uint32_t i2 = PermuteZ & 3;
+	const uint32_t vi2 = PermuteZ >> 2;
+	pWork[2] = aPtr[vi2][i2];
+
+	const uint32_t i3 = PermuteW & 3;
+	const uint32_t vi3 = PermuteW >> 2;
+	pWork[3] = aPtr[vi3][i3];
+
+	return Result;
 }
 
 #ifdef MATH_TEST

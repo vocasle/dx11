@@ -116,6 +116,8 @@ Vec3D MathVec3DAddition(const Vec3D* vec1, const Vec3D* vec2);
 
 Vec3D MathVec3DSubtraction(const Vec3D* vec1, const Vec3D* vec2);
 
+Vec3D MathVec3DSubtraction(const Vec3D& vec1, const Vec3D& vec2);
+
 float MathVec3DDot(const Vec3D* vec1, const Vec3D* vec2);
 
 void MathVec3DProj(const Vec3D* vec1, const Vec3D* vec2, Vec3D* out);
@@ -130,6 +132,8 @@ void MathVec3DNegate(Vec3D* vec);
 
 void MathVec3DPrint(const Vec3D* vec);
 
+float MathVec3DLength(const Vec3D& v);
+
 // *** 4D vector math ***
 Vec4D MathVec4DZero(void);
 
@@ -141,6 +145,8 @@ void MathVec4DModulateByScalar(const Vec4D* vec1, float s, Vec4D* out);
 
 Vec4D MathVec4DAddition(const Vec4D* vec1, const Vec4D* vec2);
 
+Vec4D MathVec4DAddition(const Vec4D& vec1, const Vec4D& vec2);
+
 void MathVec4DSubtraction(const Vec4D* vec1, const Vec4D* vec2, Vec4D* out);
 
 float MathVec4DDot(const Vec4D* vec1, const Vec4D* vec2);
@@ -148,6 +154,13 @@ float MathVec4DDot(const Vec4D* vec1, const Vec4D* vec2);
 void MathVec4DNormalize(Vec4D* vec1);
 
 void MathVec4DPrint(const Vec4D* vec);
+
+Vec4D  MathVec4DVectorPermute(Vec4D V1,
+	Vec4D V2,
+	uint32_t PermuteX,
+	uint32_t PermuteY,
+	uint32_t PermuteZ,
+	uint32_t PermuteW);
 
 // *** 3X3 matrix math ***
 Mat3X3 MathMat3X3Identity(void);

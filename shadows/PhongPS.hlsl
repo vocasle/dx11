@@ -10,7 +10,7 @@ float4 main(VSOut In) : SV_TARGET
 
 	float3 normal = normalTexture.Sample(defaultSampler, In.TexCoords).rgb;
 
-	normal = normalize(normal * 2.0f - 1.0f);
+	normal = NormalSampleToWorldSpace(normal, In.NormalW, In.TangentW);
 
 	const float3 toEye = normalize(cameraPosW - In.PosW);
 
@@ -33,13 +33,13 @@ float4 main(VSOut In) : SV_TARGET
 	material.Specular += part.Specular * shadow[0];
 
 
-	//for (int i = 0; i < 4; ++i)
-	//{
-	//	part = ComputePointLight(mat, pointLights[i], In.PosW, normal, toEye);
-	//	material.Ambient += part.Ambient;
-	//	material.Diffuse += part.Diffuse;
-	//	material.Specular += part.Specular;
-	//}
+	for (int i = 0; i < 4; ++i)
+	{
+		part = ComputePointLight(mat, pointLights[i], In.PosW, normal, toEye);
+		material.Ambient += part.Ambient;
+		material.Diffuse += part.Diffuse;
+		material.Specular += part.Specular;
+	}
 
 	//for (int i = 0; i < 2; ++i)
 	//{

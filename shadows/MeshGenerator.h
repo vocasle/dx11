@@ -56,12 +56,6 @@ inline struct std::unique_ptr<Mesh> MGGeneratePlane(const Vec3D* origin, const f
 	return mesh;
 }
 
-HRESULT ComputeTangentFrame(
-	const std::vector<uint32_t>& indices,
-	size_t nFaces,
-	const std::vector<Vec3D>& positions,
-	const std::vector<Vec3D>& normals,
-	const std::vector<Vec2D>& texcoords,
-	size_t nVerts,
-	std::vector<Vec3D>& tangents,
-	std::vector<Vec3D>& bitangents);
+struct Vertex;
+
+HRESULT ComputeTangentFrame(const std::vector<uint32_t>& indices, std::vector<Vertex>& vertices);
