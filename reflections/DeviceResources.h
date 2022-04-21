@@ -34,6 +34,15 @@ public:
 	ID3D11RasterizerState* GetRasterizerState() const { return m_RasterizerState.Get(); }
 	const D3D11_VIEWPORT& GetViewport() const { return m_ScreenViewport; }
 	IDXGISwapChain* GetSwapChain() const { return m_SwapChain.Get(); }
+	void PIXBeginEvent(_In_z_ const wchar_t* name)
+	{
+		m_d3dAnnotation->BeginEvent(name);
+	}
+
+	void PIXEndEvent()
+	{
+		m_d3dAnnotation->EndEvent();
+	}
 
 private:
 	void CreateFactory();
@@ -48,6 +57,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_RenderTarget;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_DepthStencil;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_RasterizerState;
+	Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation> m_d3dAnnotation;
 	uint32_t m_BackbufferWidth;
 	uint32_t m_BackbufferHeight;
 	uint32_t m_MultiSampleQualityLevel;

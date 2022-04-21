@@ -244,6 +244,8 @@ void DeviceResources::CreateWindowSizeDependentResources()
 	m_ScreenViewport.MaxDepth = 1;
 
 	CreateRasterizerState();
+
+	HR(m_Context.As(&m_d3dAnnotation));
 }
 
 void DeviceResources::ReportLiveObjects(void)
