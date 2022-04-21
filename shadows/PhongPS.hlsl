@@ -8,7 +8,10 @@ float4 main(VSOut In) : SV_TARGET
 	mat.Specular = specularTexture.Sample(defaultSampler, In.TexCoords);
 	mat.Specular.w = material.Specular.w;
 
-	const float3 normal = normalize(In.NormalW);
+	float3 normal = normalTexture.Sample(defaultSampler, In.TexCoords).rgb;
+
+	normal = normalize(normal * 2.0f - 1.0f);
+
 	const float3 toEye = normalize(cameraPosW - In.PosW);
 
 	Material material;
