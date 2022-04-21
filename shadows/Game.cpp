@@ -282,6 +282,7 @@ void Game::Render()
 				0);
 		}
 	}
+	m_ShadowMap.Unbind(m_DR->GetDeviceContext());
 	// reset view proj matrix back to camera
 	{
 		m_PerFrameData.view = m_Camera.GetViewMat();
