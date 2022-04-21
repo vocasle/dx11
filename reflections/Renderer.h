@@ -5,7 +5,7 @@
 
 #include "DeviceResources.h"
 
-#define R_MAX_SRV_NUM 5
+#define R_MAX_SRV_NUM 6
 #define R_MAX_CB_NUM 3
 #define R_MAX_SAMPLERS 2
 
@@ -28,6 +28,8 @@ public:
 	void SetInputLayout(ID3D11InputLayout* inputLayout);
 	void SetRasterizerState(ID3D11RasterizerState* rasterizerState);
 	void SetSamplerState(ID3D11SamplerState* state, uint32_t slot);
+	void SetIndexBuffer(ID3D11Buffer* buffer, uint32_t startIndexLocation);
+	void SetVertexBuffer(ID3D11Buffer* buffer, uint32_t strides, uint32_t offsets);
 	
 	void BindPixelShader(ID3D11PixelShader* shader);
 	void BindVertexShader(ID3D11VertexShader* shader);
@@ -36,24 +38,13 @@ public:
 	void BindShaderResource(enum BindTargets bindTarget, ID3D11ShaderResourceView* srv, uint32_t slot);
 	void BindConstantBuffer(enum BindTargets bindTarget, ID3D11Buffer* cb, uint32_t slot);
 	
-	void DrawIndexed(ID3D11Buffer* indexBuffer,
-		ID3D11Buffer* vertexBuffer,
-		uint32_t strides,
-		uint32_t indexCount,
+	void DrawIndexed(uint32_t indexCount,
 		uint32_t startIndexLocation,
 		uint32_t baseVertexLocation);
 	void Clear();
 	void Present();
 
 private:
-	D3D11_PRIMITIVE_TOPOLOGY m_Topology;
-	ID3D11InputLayout* m_InputLayout;
-	ID3D11RasterizerState* m_RasterizerState;
-	ID3D11SamplerState* m_SamplerStates[R_MAX_SAMPLERS];
-	ID3D11PixelShader* m_PS;
-	ID3D11VertexShader* m_VS;
-	ID3D11ShaderResourceView* m_PS_SRV[R_MAX_SRV_NUM];
-	ID3D11Buffer* m_PS_CB[R_MAX_CB_NUM];
-	ID3D11Buffer* m_VS_CB[R_MAX_CB_NUM];
+
 	DeviceResources* m_DR;
 };

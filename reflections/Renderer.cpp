@@ -3,7 +3,7 @@
 #include <cassert>
 
 
-Renderer::Renderer()
+Renderer::Renderer(): m_DR{nullptr}
 {
 }
 
@@ -18,95 +18,88 @@ void Renderer::SetDeviceResources(DeviceResources* dr)
 
 void Renderer::SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY topology)
 {
-	m_Topology = topology;
+	m_DR->GetDeviceContext()->IASetPrimitiveTopology(topology);
 }
 
 void Renderer::SetInputLayout(ID3D11InputLayout* inputLayout)
 {
-	m_InputLayout = inputLayout;
+	m_DR->GetDeviceContext()->IASetInputLayout(inputLayout);
 }
 
 void Renderer::SetRasterizerState(ID3D11RasterizerState* rasterizerState)
 {
-	m_RasterizerState = rasterizerState;
+	m_DR->GetDeviceContext()->RSSetState(rasterizerState);
 }
 
 void Renderer::BindPixelShader(ID3D11PixelShader* shader)
 {
-	m_PS = shader;
+	m_DR->GetDeviceContext()->PSSetShader(shader, nullptr, 0);
 }
 
 void Renderer::BindVertexShader(ID3D11VertexShader* shader)
 {
-	m_VS = shader;
+	m_DR->GetDeviceContext()->VSSetShader(shader, nullptr, 0);
 }
 
 void Renderer::SetSamplerState(ID3D11SamplerState* state, uint32_t slot)
 {
 	assert(slot < R_MAX_SAMPLERS);
-	m_SamplerStates[slot] =state;
+	m_DR->GetDeviceContext()->PSSetSamplers(slot, 1, &state);
+}
+
+void Renderer::SetIndexBuffer(ID3D11Buffer* buffer, uint32_t startIndexLocation)
+{
+	m_DR->GetDeviceContext()->IASetIndexBuffer(buffer, DXGI_FORMAT_R32_UINT, startIndexLocation);
+}
+
+void Renderer::SetVertexBuffer(ID3D11Buffer* buffer, uint32_t strides, uint32_t offsets)
+{
+	m_DR->GetDeviceContext()->IASetVertexBuffers(0, 1, &buffer, &strides, &offsets);
 }
 
 void Renderer::BindShaderResources(enum BindTargets bindTarget, ID3D11ShaderResourceView** SRVs, uint32_t numSRVs)
 {
 	assert(numSRVs <= R_MAX_SRV_NUM && "numSRVs is above limit!");
-
-	for (uint32_t i = 0; i < numSRVs; ++i)
-	{
-		m_PS_SRV[i] = SRVs[i];
-	}
+	m_DR->GetDeviceContext()->PSSetShaderResources(0, numSRVs, SRVs);
 }
 
 void Renderer::BindConstantBuffers(enum BindTargets bindTarget, ID3D11Buffer** CBs, uint32_t numCBs)
 {
 	assert(numCBs <= R_MAX_CB_NUM && "numCBs is above limit!");
-
-	ID3D11Buffer** buffers = bindTarget == BindTargets::PixelShader ? m_PS_CB : m_VS_CB;
-
-	for (uint32_t i = 0; i < numCBs; ++i)
+	if (bindTarget == BindTargets::PixelShader)
 	{
-		buffers[i] = CBs[i];
+		m_DR->GetDeviceContext()->PSSetConstantBuffers(0, numCBs, CBs);
+	}
+	else
+	{
+		m_DR->GetDeviceContext()->VSSetConstantBuffers(0, numCBs, CBs);
 	}
 }
 
 void Renderer::BindShaderResource(enum BindTargets bindTarget, ID3D11ShaderResourceView* srv, uint32_t slot)
 {
 	assert(slot < R_MAX_SRV_NUM);
-	m_PS_SRV[slot] = srv;
+	m_DR->GetDeviceContext()->PSSetShaderResources(slot, 1, &srv);
 }
 
 void Renderer::BindConstantBuffer(enum BindTargets bindTarget, ID3D11Buffer* cb, uint32_t slot)
 {
 	assert(slot < R_MAX_CB_NUM);
-	ID3D11Buffer** buffers = bindTarget == BindTargets::PixelShader ? m_PS_CB : m_VS_CB;
-	buffers[slot] = cb;
+	if (bindTarget == BindTargets::PixelShader)
+	{
+		m_DR->GetDeviceContext()->PSSetConstantBuffers(slot, 1, &cb);
+	}
+	else
+	{
+		m_DR->GetDeviceContext()->VSSetConstantBuffers(slot, 1, &cb);
+	}
 }
 
-void Renderer::DrawIndexed(ID3D11Buffer* indexBuffer,
-	ID3D11Buffer* vertexBuffer,
-	uint32_t strides,
-	uint32_t indexCount,
+void Renderer::DrawIndexed(uint32_t indexCount,
 	uint32_t startIndexLocation,
 	uint32_t baseVertexLocation)
 {
-	const uint32_t offsets = 0;
-	static ID3D11ShaderResourceView* nullSRV[] = { NULL };
-	ID3D11DeviceContext* context = m_DR->GetDeviceContext();
-
-	context->IASetPrimitiveTopology(m_Topology);
-	context->IASetInputLayout(m_InputLayout);
-	context->IASetVertexBuffers(0, 1, &vertexBuffer, &strides, &offsets);
-	context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-	context->RSSetState(m_RasterizerState);
-	context->PSSetSamplers(0, R_MAX_SAMPLERS, m_SamplerStates);
-	context->VSSetShader(m_VS, NULL, 0);
-	context->PSSetShader(m_PS, NULL, 0);
-
-	context->PSSetShaderResources(0, R_MAX_SRV_NUM, m_PS_SRV);
-	context->PSSetConstantBuffers(0, R_MAX_CB_NUM, m_PS_CB);
-	context->VSSetConstantBuffers(0, R_MAX_CB_NUM, m_VS_CB);
-	context->DrawIndexed(indexCount, startIndexLocation, baseVertexLocation);
-
+	m_DR->GetDeviceContext()->DrawIndexed(indexCount, startIndexLocation, baseVertexLocation);
 }
 
 void Renderer::Clear()
@@ -117,6 +110,9 @@ void Renderer::Clear()
 
 	static const float CLEAR_COLOR[4] = { 0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f };
 	static const float BLACK_COLOR[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+	static ID3D11ShaderResourceView* nullSRVs[R_MAX_SRV_NUM] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	BindShaderResources(BindTargets::PixelShader, nullSRVs, R_MAX_SRV_NUM);
 
 	ctx->ClearRenderTargetView(rtv, BLACK_COLOR);
 	ctx->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
