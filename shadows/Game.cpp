@@ -69,7 +69,25 @@ static void GameCreateInputLayout(ID3D11Device* device, ID3D11InputLayout** il, 
 				0,
 				DXGI_FORMAT_R32G32B32_FLOAT,
 				0,
-				sizeof(float) * 3,
+				12,
+				D3D11_INPUT_PER_VERTEX_DATA,
+				0,
+			},
+			{
+				"TANGENT",
+				0,
+				DXGI_FORMAT_R32G32B32_FLOAT,
+				0,
+				24,
+				D3D11_INPUT_PER_VERTEX_DATA,
+				0,
+			},
+			{
+				"BITANGENT",
+				0,
+				DXGI_FORMAT_R32G32B32_FLOAT,
+				0,
+				36,
 				D3D11_INPUT_PER_VERTEX_DATA,
 				0,
 			},
@@ -78,7 +96,7 @@ static void GameCreateInputLayout(ID3D11Device* device, ID3D11InputLayout** il, 
 				0,
 				DXGI_FORMAT_R32G32_FLOAT,
 				0,
-				sizeof(float) * 3 * 2,
+				48,
 				D3D11_INPUT_PER_VERTEX_DATA,
 				0
 			}
@@ -204,7 +222,6 @@ void Game::InitPerSceneConstants()
 Game::Game():
 	m_Camera{ {0.0f, 0.0f, -5.0f} }
 {
-	memset(this, 0, sizeof(Game));
 	m_DR = std::make_unique<DeviceResources>();
 }
 
@@ -371,30 +388,30 @@ void Game::CreateActors()
 
 	const char* diffuseTextures[] = {
 		//"assets/textures/drywall_diffuse.jpg",
-		//"assets/textures/bricks_diffuse.jpg",
+		"assets/textures/bricks_diffuse.jpg",
 		//"assets/textures/cliff_diffuse.jpg",
-		"assets/textures/marble_diffuse.jpg",
+		//"assets/textures/marble_diffuse.jpg",
 	};
 
 	const char* specularTextures[] = {
 		//"assets/textures/drywall_reflection.jpg",
-		//"assets/textures/bricks_reflection.jpg",
+		"assets/textures/bricks_reflection.jpg",
 		//"assets/textures/cliff_reflection.jpg",
-		"assets/textures/marble_reflection.jpg",
+		//"assets/textures/marble_reflection.jpg",
 	};
 
 	const char* normalTextures[] = {
 		//"assets/textures/drywall_normal.png",
-		//"assets/textures/bricks_normal.png",
+		"assets/textures/bricks_normal.png",
 		//"assets/textures/cliff_normal.jpg",
-		"assets/textures/marble_normal.png",
+		//"assets/textures/marble_normal.png",
 	};
 
 	const char* glossTextures[] = {
 		//"assets/textures/drywall_gloss.jpg",
-		//"assets/textures/bricks_gloss.jpg",
+		"assets/textures/bricks_gloss.jpg",
 		//"assets/textures/cliff_gloss.jpg",
-		"assets/textures/marble_gloss.jpg",
+		//"assets/textures/marble_gloss.jpg",
 	};
 
 	const float scales[] = {
@@ -443,9 +460,8 @@ void Game::CreateActors()
 
 	{
 		const Vec3D origin = { 0.0f, 0.0f, 0.0f };
-		struct Mesh* mesh = MGGeneratePlane(&origin, 10.0f, 10.0f);
-		Actor plane = Actor(mesh);
-		MeshFree(mesh);
+		std::unique_ptr<Mesh> mesh = MGGeneratePlane(&origin, 10.0f, 10.0f);
+		Actor plane = Actor(mesh.get());
 		plane.CreateIndexBuffer(m_DR->GetDevice());
 		plane.CreateVertexBuffer(m_DR->GetDevice());
 		const Vec3D offset = { 0.0f, -1.0f, 0.0f };
