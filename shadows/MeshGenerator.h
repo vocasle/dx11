@@ -31,7 +31,7 @@ inline struct Mesh* MGGeneratePlane(const Vec3D* origin, const float width, cons
 
 	mesh->Normals = new Normal;
 	mesh->Normals[0].x = 0.0f;
-	mesh->Normals[0].y = 1.0f;
+	mesh->Normals[0].y = -1.0f;
 	mesh->Normals[0].z = 0.0f;
 	mesh->NumNormals = 1;
 
