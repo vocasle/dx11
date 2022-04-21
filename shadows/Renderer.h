@@ -1,13 +1,13 @@
 #pragma once
 
-#include <stdint.h>
-
+#include <cstdint>
 #include <d3d11.h>
 
 #include "DeviceResources.h"
 
-#define R_MAX_SRV_NUM 4
+#define R_MAX_SRV_NUM 5
 #define R_MAX_CB_NUM 3
+#define R_MAX_SAMPLERS 2
 
 #define R_DEFAULT_PRIMTIVE_TOPOLOGY D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
 
@@ -27,7 +27,7 @@ public:
 	void SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY topology);
 	void SetInputLayout(ID3D11InputLayout* inputLayout);
 	void SetRasterizerState(ID3D11RasterizerState* rasterizerState);
-	void SetSamplerState(ID3D11SamplerState* state);
+	void SetSamplerState(ID3D11SamplerState* state, uint32_t slot);
 	
 	void BindPixelShader(ID3D11PixelShader* shader);
 	void BindVertexShader(ID3D11VertexShader* shader);
@@ -49,7 +49,7 @@ private:
 	D3D11_PRIMITIVE_TOPOLOGY m_Topology;
 	ID3D11InputLayout* m_InputLayout;
 	ID3D11RasterizerState* m_RasterizerState;
-	ID3D11SamplerState* m_SamplerState;
+	ID3D11SamplerState* m_SamplerStates[R_MAX_SAMPLERS];
 	ID3D11PixelShader* m_PS;
 	ID3D11VertexShader* m_VS;
 	ID3D11ShaderResourceView* m_PS_SRV[R_MAX_SRV_NUM];

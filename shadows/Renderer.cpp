@@ -41,9 +41,10 @@ void Renderer::BindVertexShader(ID3D11VertexShader* shader)
 	m_VS = shader;
 }
 
-void Renderer::SetSamplerState(ID3D11SamplerState* state)
+void Renderer::SetSamplerState(ID3D11SamplerState* state, uint32_t slot)
 {
-	m_SamplerState = state;
+	assert(slot < R_MAX_SAMPLERS);
+	m_SamplerStates[slot] =state;
 }
 
 void Renderer::BindShaderResources(enum BindTargets bindTarget, ID3D11ShaderResourceView** SRVs, uint32_t numSRVs)
@@ -97,7 +98,7 @@ void Renderer::DrawIndexed(ID3D11Buffer* indexBuffer,
 	context->IASetVertexBuffers(0, 1, &vertexBuffer, &strides, &offsets);
 	context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	context->RSSetState(m_RasterizerState);
-	context->PSSetSamplers(0, 1, &m_SamplerState);
+	context->PSSetSamplers(0, R_MAX_SAMPLERS, m_SamplerStates);
 	context->VSSetShader(m_VS, NULL, 0);
 	context->PSSetShader(m_PS, NULL, 0);
 
