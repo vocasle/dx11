@@ -180,7 +180,7 @@ void Game::InitPerSceneConstants()
 	}
 
 	DirectionalLight dirLight = {};
-	dirLight.Ambient = ColorFromRGBA(0.2f, 0.2f, 0.2f, 1.0f);
+	dirLight.Ambient = ColorFromRGBA(0.02f, 0.02f, 0.02f, 1.0f);
 	dirLight.Diffuse = ColorFromRGBA(0.7f, 0.7f, 0.6f, 1.0f);
 	dirLight.Specular = ColorFromRGBA(0.8f, 0.8f, 0.7f, 1.0f);
 	dirLight.Direction = MathVec3DFromXYZ(5.0f / sqrtf(50.0f), -5.0f / sqrtf(50.0f), 0.0f);
@@ -242,15 +242,16 @@ void Game::Update()
 	BuildShadowTransform();
 
 	// update directional light
-	//static float elapsedTime = 0.0f;
-	//elapsedTime += (float)m_Timer.DeltaMillis / 1000.0f;
-	//m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);
-	//m_PerSceneData.dirLight.Direction.Y = 1.0f;
-	//m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
+	static float elapsedTime = 0.0f;
+	elapsedTime += (float)m_Timer.DeltaMillis / 1000.0f;
+	m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);
+	m_PerSceneData.dirLight.Direction.Y = 0.5f;
+	m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
+	MathVec3DNormalize(&m_PerSceneData.dirLight.Direction);
 
 	//m_PerSceneData.spotLights[0].Position = m_Camera.CameraPos;
 	//m_PerSceneData.spotLights[0].Direction = m_Camera.FocusPoint;
-	//GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB);
+	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
 }
 
 void Game::Render()
@@ -363,36 +364,36 @@ void Game::CreateActors()
 {
 	const char* models[] = {
 		"assets/meshes/rocket.obj",
-		"assets/meshes/cube.obj",
-		"assets/meshes/sphere.obj",
-		"assets/meshes/bunny.obj",
+		//"assets/meshes/cube.obj",
+		//"assets/meshes/sphere.obj",
+		//"assets/meshes/bunny.obj",
 	};
 
 	const char* diffuseTextures[] = {
-		"assets/textures/drywall_diffuse.jpg",
-		"assets/textures/bricks_diffuse.jpg",
-		"assets/textures/cliff_diffuse.jpg",
+		//"assets/textures/drywall_diffuse.jpg",
+		//"assets/textures/bricks_diffuse.jpg",
+		//"assets/textures/cliff_diffuse.jpg",
 		"assets/textures/marble_diffuse.jpg",
 	};
 
 	const char* specularTextures[] = {
-		"assets/textures/drywall_reflection.jpg",
-		"assets/textures/bricks_reflection.jpg",
-		"assets/textures/cliff_reflection.jpg",
+		//"assets/textures/drywall_reflection.jpg",
+		//"assets/textures/bricks_reflection.jpg",
+		//"assets/textures/cliff_reflection.jpg",
 		"assets/textures/marble_reflection.jpg",
 	};
 
 	const char* normalTextures[] = {
-		"assets/textures/drywall_normal.png",
-		"assets/textures/bricks_normal.png",
-		"assets/textures/cliff_normal.jpg",
+		//"assets/textures/drywall_normal.png",
+		//"assets/textures/bricks_normal.png",
+		//"assets/textures/cliff_normal.jpg",
 		"assets/textures/marble_normal.png",
 	};
 
 	const char* glossTextures[] = {
-		"assets/textures/drywall_gloss.jpg",
-		"assets/textures/bricks_gloss.jpg",
-		"assets/textures/cliff_gloss.jpg",
+		//"assets/textures/drywall_gloss.jpg",
+		//"assets/textures/bricks_gloss.jpg",
+		//"assets/textures/cliff_gloss.jpg",
 		"assets/textures/marble_gloss.jpg",
 	};
 
