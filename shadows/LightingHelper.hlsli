@@ -196,3 +196,23 @@ float CalcShadowFactor(SamplerComparisonState samShadow,
 
     return percentLit /= 9.0f;
 }
+
+float3 NormalSampleToWorldSpace(float3 normalMapSample,
+    float3 unitNormalW,
+    float4 tangentW)
+{
+    // Restore each component of the normal vector read from [0, 1] to [-1, 1]
+    float3 normalT = 2.0f * normalMapSample - 1.0f;
+
+    // Construct tangent space in world coordinate system
+    float3 N = unitNormalW;
+    float3 T = normalize(tangentW.xyz - dot(tangentW.xyz, N) * N); // Schmitt orthogonalization
+    float3 B = cross(N, T);
+
+    float3x3 TBN = float3x3(T, B, N);
+
+    // Transform bump normal vector from tangent space to world coordinate system
+    float3 bumpedNormalW = mul(normalT, TBN);
+
+    return bumpedNormalW;
+}
