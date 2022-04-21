@@ -1,10 +1,14 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
+#include <string>
+#include <vector>
+#include <memory>
 
 struct Position
 {
 	Position(): x{0}, y{0}, z{0} {}
+	Position(float X, float Y, float Z): x{X}, y{Y}, z{Z} {}
 	float x;
 	float y;
 	float z;
@@ -13,6 +17,7 @@ struct Position
 struct TexCoord
 {
 	TexCoord(): u{0}, v{0} {}
+	TexCoord(float U, float V): u{U}, v{V} {}
 	float u;
 	float v;
 };
@@ -20,6 +25,7 @@ struct TexCoord
 struct Normal
 {
 	Normal() : x{0}, y{0}, z{0} {}
+	Normal(float X, float Y, float Z): x{X}, y{Y}, z{Z} {}
 	float x;
 	float y;
 	float z;
@@ -28,6 +34,7 @@ struct Normal
 struct Face
 {
 	Face(): posIdx{0}, texIdx{0}, normIdx{0} {}
+	Face(uint32_t pIdx, uint32_t tIdx, uint32_t nIdx) : posIdx{pIdx}, texIdx{tIdx}, normIdx{nIdx} {}
 	uint32_t posIdx;
 	uint32_t texIdx;
 	uint32_t normIdx;
@@ -35,44 +42,19 @@ struct Face
 
 struct Mesh
 {
-	Mesh(): 
-		Name{nullptr}, 
-		Positions{nullptr}, 
-		NumPositions{0}, 
-		TexCoords{nullptr}, 
-		NumTexCoords{0}, 
-		Normals{nullptr}, 
-		NumNormals{0}, 
-		Faces{nullptr}, 
-		NumFaces{0}
-	{}
-	char* Name;
-	struct Position* Positions;
-	uint32_t NumPositions;
-	struct TexCoord* TexCoords;
-	uint32_t NumTexCoords;
-	struct Normal* Normals;
-	uint32_t NumNormals;
-	struct Face* Faces;
-	uint32_t NumFaces;
+	std::string Name;
+	std::vector<Position> Positions;
+	std::vector<TexCoord> TexCoords;
+	std::vector<Normal> Normals;
+	std::vector<Face> Faces;
 };
 
 struct Model
 {
-	Model(): Meshes{nullptr}, NumMeshes{0}, Directory{nullptr} {}
-	struct Mesh* Meshes;
-	uint32_t NumMeshes;
-	char* Directory;
+	std::vector<Mesh> Meshes;
+	std::string Directory;
 };
 
-struct Model* OLLoad(const char* filename);
-void OLDumpModelToFile(const struct Model* model, const char* filename);
-
-struct Mesh* MeshNew(void);
-void MeshFree(struct Mesh* mesh);
-void MeshDeinit(struct Mesh* mesh);
-
-struct Model* ModelNew(void);
-void ModelFree(struct Model* model);
-void ModelDeinit(struct Model* model);
+std::unique_ptr<Model> OLLoad(const char* filename);
+void OLDumpModelToFile(const Model* model, const char* filename);
 
