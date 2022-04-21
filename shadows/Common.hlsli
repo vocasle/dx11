@@ -25,6 +25,7 @@ cbuffer PerFrameConstants : register(b1)
 {
 	float4x4 view;
 	float4x4 proj;
+	float4x4 shadowTransform;
 	float3 cameraPosW;
 };
 

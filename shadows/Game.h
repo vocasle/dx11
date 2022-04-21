@@ -21,9 +21,10 @@
 
 struct PerFrameConstants
 {
-	PerFrameConstants() : view{}, proj{}, cameraPosW{}, pad{0} {}
+	PerFrameConstants() : view{}, proj{}, cameraPosW{}, shadowTransform{}, pad{ 0 } {}
 	Mat4X4 view;
 	Mat4X4 proj;
+	Mat4X4 shadowTransform;
 	Vec3D cameraPosW;
 	float pad;
 };
@@ -69,6 +70,7 @@ private:
 	void Update();
 	void Render();
 	void CreateActors();
+	void BuildShadowTransform();
 
 	std::unique_ptr<DeviceResources> m_DR;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VS;

@@ -228,15 +228,14 @@ void Game::Update()
 {
 	m_Camera.UpdatePos(m_Timer.DeltaMillis);
 	m_Camera.ProcessMouse(m_Timer.DeltaMillis);
-
-	const float width = (float)m_DR->GetBackBufferWidth();
-	const float height = (float)m_DR->GetBackBufferHeight();
 	
 	m_PerFrameData.view = m_Camera.GetViewMat();
-	m_PerFrameData.proj = MathMat4X4PerspectiveFov(MathToRadians(45.0f), width / height, 0.1f, 100.0f);;
+	m_PerFrameData.proj = m_Camera.GetProjMat();
 	m_PerFrameData.cameraPosW = m_Camera.GetPos();
 
 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+
+	BuildShadowTransform();
 
 	// update directional light
 	//static float elapsedTime = 0.0f;
@@ -278,6 +277,12 @@ void Game::Render()
 				0,
 				0);
 		}
+	}
+	// reset view proj matrix back to camera
+	{
+		m_PerFrameData.view = m_Camera.GetViewMat();
+		m_PerFrameData.proj = m_Camera.GetProjMat();
+		m_PerFrameData.cameraPosW = m_Camera.GetPos();
 	}
 
 	m_Renderer.Clear();
@@ -451,6 +456,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	TimerInitialize(&m_Timer);
 	Mouse::Get().SetWindowDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
 	m_ShadowMap.InitResources(m_DR->GetDevice(), 2048, 2048);
+	m_Camera.SetViewDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
 
 	// init actors
 	CreateActors();
@@ -501,4 +507,53 @@ void Game::OnKeyUp(WPARAM key)
 void Game::OnMouseMove(uint32_t message, WPARAM wParam, LPARAM lParam)
 {
 	Mouse::Get().OnMouseMove(message, wParam, lParam);
+}
+
+void Game::BuildShadowTransform()
+{
+	struct BoundingSphere
+	{
+		BoundingSphere() : Center(0.0f, 0.0f, 0.0f), Radius(0.0f) {}
+		Vec3D Center;
+		float Radius;
+	};
+
+	BoundingSphere sceneBounds = {};
+	sceneBounds.Center = { 0.0f, 0.0f, 0.0f };
+	sceneBounds.Radius = 10.0f;
+
+	// Only the first "main" light casts a shadow.
+	Vec3D lightDir = m_PerSceneData.dirLight.Direction;
+	Vec3D lightPos = MathVec3DModulateByScalar(&lightDir, -2.0f * sceneBounds.Radius);
+	Vec3D targetPos = { 0.0f, 0.0f, 0.0f };
+	Vec3D up = { 0.0f, 1.0f, 0.0f };
+
+	Mat4X4 view = MathMat4X4ViewAt(&lightPos, &targetPos, &up);
+
+	// Transform bounding sphere to light space.
+	Vec4D targetPos4 = { targetPos.X, targetPos.Y, targetPos.Z, 1.0f };
+	Vec4D sphereCenterLS = MathMat4X4MultVec4DByMat4X4(&targetPos4 , &view);
+
+	// Ortho frustum in light space encloses scene.
+	float l = sphereCenterLS.X - sceneBounds.Radius;
+	float b = sphereCenterLS.Y - sceneBounds.Radius;
+	float n = sphereCenterLS.Z - sceneBounds.Radius;
+	float r = sphereCenterLS.X + sceneBounds.Radius;
+	float t = sphereCenterLS.Y + sceneBounds.Radius;
+	float f = sphereCenterLS.Z + sceneBounds.Radius;
+	Mat4X4 proj = MathMat4X4OrthographicOffCenter(l, r, b, t, n, f);
+
+	// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
+	Mat4X4 T(
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f);
+
+	Mat4X4 shadowTransform = view * proj * T;
+
+	m_PerFrameData.shadowTransform = shadowTransform;
+	m_PerFrameData.cameraPosW = lightPos;
+	m_PerFrameData.proj = proj;
+	m_PerFrameData.view = view;
 }
