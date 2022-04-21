@@ -58,4 +58,17 @@ void CubeMap::LoadCubeMap(ID3D11Device* device, const char* filepath)
 	}
 
 	stbi_image_free(bytes);
+
+	CreateSampler(device);
+}
+
+void CubeMap::CreateSampler(ID3D11Device* device)
+{
+	D3D11_SAMPLER_DESC desc = {};
+	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	
+	HR(device->CreateSamplerState(&desc, m_sampler.ReleaseAndGetAddressOf()));
 }
