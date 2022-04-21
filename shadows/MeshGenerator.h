@@ -3,55 +3,32 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
+#include <memory>
 
 #include <Windows.h>
 
 #include "Math.h"
 #include "objloader.h"
 
-inline struct Mesh* MGGeneratePlane(const Vec3D* origin, const float width, const float height)
+inline struct std::unique_ptr<Mesh> MGGeneratePlane(const Vec3D* origin, const float width, const float height)
 {
-	struct Mesh* mesh = MeshNew();
+	std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
 	
-	mesh->Positions = new Position[4];
-	mesh->Positions[0].x = origin->X + width / 2.0f;
-	mesh->Positions[0].y = origin->Y;
-	mesh->Positions[0].z = origin->Z - height / 2.0f;
+	mesh->Positions.reserve(4);
+	mesh->Positions.emplace_back(origin->X + width / 2.0f, origin->Y, origin->Z - height / 2.0f);
+	mesh->Positions.emplace_back(origin->X - width / 2.0f, origin->Y, origin->Z - height / 2.0f);
+	mesh->Positions.emplace_back(origin->X - width / 2.0f, origin->Y, origin->Z + height / 2.0f);
+	mesh->Positions.emplace_back(origin->X + width / 2.0f, origin->Y, origin->Z + height / 2.0f);
 
-	mesh->Positions[1].x = origin->X - width / 2.0f;
-	mesh->Positions[1].y = origin->Y;
-	mesh->Positions[1].z = origin->Z - height / 2.0f;
+	mesh->Normals.emplace_back(0.0f, -1.0f, 0.0f);
 
-	mesh->Positions[2].x = origin->X - width / 2.0f;
-	mesh->Positions[2].y = origin->Y;
-	mesh->Positions[2].z = origin->Z + height / 2.0f;
+	mesh->TexCoords.reserve(4);
+	mesh->TexCoords.emplace_back(1.0f, 1.0f);
+	mesh->TexCoords.emplace_back(0.0f, 1.0f);
+	mesh->TexCoords.emplace_back(0.0f, 0.0f);
+	mesh->TexCoords.emplace_back(1.0f, 0.0f);
 
-	mesh->Positions[3].x = origin->X + width / 2.0f;
-	mesh->Positions[3].y = origin->Y;
-	mesh->Positions[3].z = origin->Z + height / 2.0f;
-	mesh->NumPositions = 4;
-
-	mesh->Normals = new Normal;
-	mesh->Normals[0].x = 0.0f;
-	mesh->Normals[0].y = -1.0f;
-	mesh->Normals[0].z = 0.0f;
-	mesh->NumNormals = 1;
-
-	mesh->TexCoords = new TexCoord[4];
-	mesh->TexCoords[0].u = 1.0f;
-	mesh->TexCoords[0].v = 1.0f;
-
-	mesh->TexCoords[1].u = 0.0f;
-	mesh->TexCoords[1].v = 1.0f;
-
-	mesh->TexCoords[2].u = 0.0f;
-	mesh->TexCoords[2].v = 0.0f;
-
-	mesh->TexCoords[3].u = 1.0f;
-	mesh->TexCoords[3].v = 0.0f;
-	mesh->NumTexCoords = 4;
-
-	mesh->Faces = new Face[6];
+	mesh->Faces = std::vector<Face>(6);
 	mesh->Faces[0].normIdx = 0;
 	mesh->Faces[0].posIdx = 0;
 	mesh->Faces[0].texIdx = 0;
@@ -75,7 +52,6 @@ inline struct Mesh* MGGeneratePlane(const Vec3D* origin, const float width, cons
 	mesh->Faces[5].normIdx = 0;
 	mesh->Faces[5].posIdx = 0;
 	mesh->Faces[5].texIdx = 0;
-	mesh->NumFaces = 6;
 
 	return mesh;
 }
