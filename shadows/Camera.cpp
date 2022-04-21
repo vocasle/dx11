@@ -23,7 +23,7 @@ Mat4X4 Camera::GetViewMat() const
 
 Mat4X4 Camera::GetProjMat() const
 {
-	return MathMat4X4PerspectiveFov(MathToRadians(45.0f), m_backBufferWidth / m_backBufferHeight, 0.1f, 100.0f);
+	return MathMat4X4PerspectiveFov(MathToRadians(45.0f), m_backBufferWidth / m_backBufferHeight, 1.0f, 100.0f);
 }
 
 void Camera::UpdateSpeed()
