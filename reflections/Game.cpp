@@ -363,6 +363,9 @@ void Game::Render()
 		m_Renderer.DrawIndexed(sphere.GetNumIndices(), 0, 0);
 	}
 
+	// draw sky
+	m_CubeMap.Draw(m_DR->GetDeviceContext());
+
 	m_Renderer.Present();
 }
 
@@ -484,9 +487,11 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_ShadowMap.InitResources(m_DR->GetDevice(), 2048, 2048);
 	m_Camera.SetViewDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
 	m_CubeMap.LoadCubeMap(m_DR->GetDevice(), "assets/textures/dreifaltigkeitsberg_1k.hdr");
+	m_CubeMap.SetCamera(&m_Camera);
 
 	// init actors
 	CreateActors();
+	m_CubeMap.SetActor(m_Actors[1]);
 	InitPerSceneConstants();
 
 	ID3D11Device* device = m_DR->GetDevice();
