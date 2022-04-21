@@ -13,6 +13,7 @@ struct VSOut
 	float3 NormalW : NORMAL;
 	float2 TexCoords : TEXCOORDS;
 	float3 PosW : POSITION;
+	float4 ShadowPosH : TEXCOORD1;
 };
 
 cbuffer PerObjectConstants : register(b0)
@@ -36,9 +37,11 @@ cbuffer PerSceneConstants : register(b2)
 	SpotLight spotLights[2];
 };
 
-sampler defaultSampler : register(s0);
+sampler defaultSampler					: register(s0);
+SamplerComparisonState shadowSampler	: register(s1);
 
 Texture2D<float4> diffuseTexture	: register(t0);
 Texture2D<float4> specularTexture	: register(t1);
 Texture2D<float4> glossTexture		: register(t2);
 Texture2D<float4> normalTexture		: register(t3);
+Texture2D<float4> shadowTexture		: register(t4);
