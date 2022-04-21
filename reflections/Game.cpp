@@ -198,14 +198,14 @@ void Game::InitPerSceneConstants()
 	}
 
 	DirectionalLight dirLight = {};
-	dirLight.Ambient = ColorFromRGBA(0.02f, 0.02f, 0.02f, 1.0f);
-	dirLight.Diffuse = ColorFromRGBA(0.7f, 0.7f, 0.6f, 1.0f);
-	dirLight.Specular = ColorFromRGBA(0.8f, 0.8f, 0.7f, 1.0f);
-	dirLight.Direction = MathVec3DFromXYZ(5.0f / sqrtf(50.0f), -5.0f / sqrtf(50.0f), 0.0f);
-	Mat4X4 rotMat = MathMat4X4RotateY(MathToRadians(90.0f));
-	Vec4D direction = { dirLight.Direction, 1.0f };
-	direction = MathMat4X4MultVec4DByMat4X4(&direction, &rotMat);
-	dirLight.Direction = { direction.X, direction.Y, direction.Z };
+	dirLight.Ambient = ColorFromRGBA(0.2f, 0.2f, 0.2f, 1.0f);
+	dirLight.Diffuse = ColorFromRGBA(0.5f, 0.5f, 0.5f, 1.0f);
+	dirLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	dirLight.Direction = MathVec3DFromXYZ(-0.2f, 1.0f, -0.3f);
+	//Mat4X4 rotMat = MathMat4X4RotateY(MathToRadians(90.0f));
+	//Vec4D direction = { dirLight.Direction, 1.0f };
+	//direction = MathMat4X4MultVec4DByMat4X4(&direction, &rotMat);
+	//dirLight.Direction = { direction.X, direction.Y, direction.Z };
 	m_PerSceneData.dirLight = dirLight;
 
 	SpotLight spotLight = {};
@@ -259,12 +259,12 @@ void Game::Update()
 	BuildShadowTransform();
 
 	// update directional light
-	static float elapsedTime = 0.0f;
-	elapsedTime += (float)m_Timer.DeltaMillis / 1000.0f;
-	m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);
-	m_PerSceneData.dirLight.Direction.Y = 0.5f;
-	m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
-	MathVec3DNormalize(&m_PerSceneData.dirLight.Direction);
+	//static float elapsedTime = 0.0f;
+	//elapsedTime += (float)m_Timer.DeltaMillis / 1000.0f;
+	//m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);
+	//m_PerSceneData.dirLight.Direction.Y = 0.5f;
+	//m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
+	//MathVec3DNormalize(&m_PerSceneData.dirLight.Direction);
 
 	//m_PerSceneData.spotLights[0].Position = m_Camera.CameraPos;
 	//m_PerSceneData.spotLights[0].Direction = m_Camera.FocusPoint;
@@ -467,10 +467,10 @@ void Game::CreateActors()
 		plane.CreateVertexBuffer(m_DR->GetDevice());
 		const Vec3D offset = { 0.0f, -1.0f, 0.0f };
 		plane.Translate(offset);
-		plane.LoadTexture("assets/textures/drywall_diffuse.jpg", TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		plane.LoadTexture("assets/textures/drywall_normal.png", TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		plane.LoadTexture("assets/textures/drywall_gloss.jpg", TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		plane.LoadTexture("assets/textures/drywall_reflection.jpg", TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture("assets/textures/marble_diffuse.jpg", TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture("assets/textures/marble_normal.png", TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture("assets/textures/marble_gloss.jpg", TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture("assets/textures/marble_reflection.jpg", TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		plane.SetMaterial(&material);
 		m_Actors.emplace_back(plane);
 	}
