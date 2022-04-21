@@ -2,34 +2,35 @@
 #include <cstdint>
 #include <cstring>
 
-typedef struct Vec2D
+struct Vec2D
 {
 	Vec2D(): X{0}, Y{0} {}
 	Vec2D(float x, float y): X{x}, Y{y} {}
 	float X;
 	float Y;
-} Vec2D;
+};
 
-typedef struct Vec3D
+struct Vec3D
 {
 	Vec3D() : X{0}, Y{0}, Z{0} {}
 	Vec3D(float x, float y, float z) : X{x}, Y{y}, Z{z} {}
 	float X;
 	float Y;
 	float Z;
-} Vec3D;
+};
 
-typedef struct Vec4D
+struct Vec4D
 {
 	Vec4D() : X{0}, Y{0}, Z{0}, W{0} {}
 	Vec4D(float x, float y, float z, float w) : X{x}, Y{y}, Z{z}, W{w} {}
+	Vec4D(const Vec3D& v, float w) : Vec4D(v.X, v.Y, v.Z, w) {}
 	float X;
 	float Y;
 	float Z;
 	float W;
-} Vec4D;
+};
 
-typedef struct Mat3X3
+struct Mat3X3
 {
 	Mat3X3()
 	{
@@ -46,9 +47,9 @@ typedef struct Mat3X3
 		Vec3D V[3];
 		float A[3][3];
 	};
-} Mat3X3;
+};
 
-typedef struct Mat4X4
+struct Mat4X4
 {
 	Mat4X4(): Mat4X4(0.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, 0.0f, 0.0f,
@@ -79,7 +80,7 @@ typedef struct Mat4X4
 		Vec4D V[4];
 		float A[4][4];
 	};
-} Mat4X4;
+};
 
 Mat4X4 operator*(const Mat4X4& lhs, const Mat4X4& rhs);
 
