@@ -48,11 +48,24 @@ void ShadowMap::InitResources(ID3D11Device* device, uint32_t texWidth, uint32_t 
 	m_OutputViewPort.Height = (float)texHeight;
 	m_OutputViewPort.MinDepth = 0.0f;
 	m_OutputViewPort.MaxDepth = 1.0f;
+
+	D3D11_SAMPLER_DESC sampDesc = {};
+	ZeroMemory(&sampDesc, sizeof(sampDesc));
+	sampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
+	sampDesc.BorderColor[0] = { 1.0f };
+	sampDesc.MinLOD = 0;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	HR(device->CreateSamplerState(&sampDesc, m_ShadowSampler.ReleaseAndGetAddressOf()))
 }
 
 void ShadowMap::Bind(ID3D11DeviceContext* ctx)
 {
 	ctx->ClearDepthStencilView(m_pOutputTextureDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-	ctx->OMSetRenderTargets(0, 0, m_pOutputTextureDSV.Get());
+	ID3D11RenderTargetView* renderTargets[1] = { nullptr };
+	ctx->OMSetRenderTargets(1, renderTargets, m_pOutputTextureDSV.Get());
 	ctx->RSSetViewports(1, &m_OutputViewPort);
 }

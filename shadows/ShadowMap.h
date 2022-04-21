@@ -14,8 +14,12 @@ public:
 
 	void Bind(ID3D11DeviceContext* ctx);
 
+	ID3D11ShaderResourceView* GetDepthMapSRV() const { return m_pOutputTextureSRV.Get(); }
+	ID3D11SamplerState* GetShadowSampler() const { return m_ShadowSampler.Get(); }
+
 private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	m_pOutputTextureSRV;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		m_pOutputTextureDSV;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState>			m_ShadowSampler;
 	D3D11_VIEWPORT										m_OutputViewPort;
 };
