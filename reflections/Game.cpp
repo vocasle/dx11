@@ -273,6 +273,7 @@ void Game::Update()
 
 void Game::Render()
 {
+	m_Renderer.Clear();
 
 	m_ShadowMap.Bind(m_DR->GetDeviceContext());
 	{
@@ -291,16 +292,14 @@ void Game::Render()
 				&m_PerObjectData,
 				m_PerObjectCB.Get());
 			m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-			m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+			m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
+			m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), sizeof(Vertex), 0);
 
-			m_Renderer.DrawIndexed(actor.GetIndexBuffer(), actor.GetVertexBuffer(),
-				sizeof(Vertex),
-				actor.GetNumIndices(),
-				0,
-				0);
+			m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
 		}
 	}
 	m_ShadowMap.Unbind(m_DR->GetDeviceContext());
+	
 	// reset view proj matrix back to camera
 	{
 		m_PerFrameData.view = m_Camera.GetViewMat();
@@ -309,11 +308,8 @@ void Game::Render()
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 	}
 
-	m_Renderer.Clear();
-
 	m_Renderer.BindPixelShader(m_PhongPS.Get());
 	m_Renderer.BindVertexShader(m_VS.Get());
-
 	
 	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_ShadowMap.GetDepthMapSRV(), 4);
 	m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
@@ -323,6 +319,8 @@ void Game::Render()
 
 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerSceneCB.Get(), 2);
 	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerSceneCB.Get(), 2);
+
+	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_CubeMap.GetCubeMap(), 5);
 
 	for (size_t i = 0; i < m_Actors.size(); ++i)
 	{
@@ -337,11 +335,10 @@ void Game::Render()
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
 
-		m_Renderer.DrawIndexed(actor.GetIndexBuffer(), actor.GetVertexBuffer(),
-			sizeof(Vertex),
-			actor.GetNumIndices(),
-			0,
-			0);
+		m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
+		m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), sizeof(Vertex), 0);
+
+		m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
 	}
 	
 	//// Light properties
@@ -360,12 +357,10 @@ void Game::Render()
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
 		const Actor& sphere = m_Actors[2];
-		m_Renderer.DrawIndexed(sphere.GetIndexBuffer(),
-			sphere.GetVertexBuffer(),
-			sizeof(struct Vertex),
-			sphere.GetNumIndices(),
-			0,
-			0);
+		m_Renderer.SetIndexBuffer(sphere.GetIndexBuffer(), 0);
+		m_Renderer.SetVertexBuffer(sphere.GetVertexBuffer(), sizeof(Vertex), 0);
+
+		m_Renderer.DrawIndexed(sphere.GetNumIndices(), 0, 0);
 	}
 
 	m_Renderer.Present();
