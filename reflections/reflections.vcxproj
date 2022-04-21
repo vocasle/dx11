@@ -235,6 +235,7 @@
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CubeMap.cpp" />
     <ClCompile Include="DeviceResources.cpp" />
     <ClCompile Include="dx11.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -251,6 +252,7 @@
   <ItemGroup>
     <ClInclude Include="Actor.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CubeMap.h" />
     <ClInclude Include="DeviceResources.h" />
     <ClInclude Include="dx11.h" />
     <ClInclude Include="framework.h" />

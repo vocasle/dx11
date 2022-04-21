@@ -11,6 +11,7 @@
 #include "Actor.h"
 #include "LightHelper.h"
 #include "ShadowMap.h"
+#include "CubeMap.h"
 
 #include <vector>
 #include <memory>
@@ -92,4 +93,5 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_PerObjectCB;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_PerSceneCB;
 	ShadowMap m_ShadowMap;
+	CubeMap m_CubeMap;
 };

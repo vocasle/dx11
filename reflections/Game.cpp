@@ -488,6 +488,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	Mouse::Get().SetWindowDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
 	m_ShadowMap.InitResources(m_DR->GetDevice(), 2048, 2048);
 	m_Camera.SetViewDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
+	m_CubeMap.LoadCubeMap(m_DR->GetDevice(), "assets/textures/dreifaltigkeitsberg_1k.hdr");
 
 	// init actors
 	CreateActors();
