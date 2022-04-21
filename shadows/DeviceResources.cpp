@@ -54,9 +54,13 @@ void DeviceResources::CreateFactory()
 void DeviceResources::CreateRasterizerState()
 {
 	D3D11_RASTERIZER_DESC rasterizerDesc = {};
-	rasterizerDesc.FrontCounterClockwise = FALSE;
+	rasterizerDesc.FrontCounterClockwise = false;
 	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	rasterizerDesc.CullMode = D3D11_CULL_BACK;
+	rasterizerDesc.DepthClipEnable = true;
+	rasterizerDesc.DepthBias = 100000;
+	rasterizerDesc.DepthBiasClamp = 0.0f;
+	rasterizerDesc.SlopeScaledDepthBias = 1.0f;
 
 	if (FAILED(m_Device->CreateRasterizerState(&rasterizerDesc, m_RasterizerState.ReleaseAndGetAddressOf())))
 	{
