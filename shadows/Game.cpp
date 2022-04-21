@@ -184,6 +184,10 @@ void Game::InitPerSceneConstants()
 	dirLight.Diffuse = ColorFromRGBA(0.7f, 0.7f, 0.6f, 1.0f);
 	dirLight.Specular = ColorFromRGBA(0.8f, 0.8f, 0.7f, 1.0f);
 	dirLight.Direction = MathVec3DFromXYZ(5.0f / sqrtf(50.0f), -5.0f / sqrtf(50.0f), 0.0f);
+	Mat4X4 rotMat = MathMat4X4RotateY(MathToRadians(90.0f));
+	Vec4D direction = { dirLight.Direction, 1.0f };
+	direction = MathMat4X4MultVec4DByMat4X4(&direction, &rotMat);
+	dirLight.Direction = { direction.X, direction.Y, direction.Z };
 	m_PerSceneData.dirLight = dirLight;
 
 	SpotLight spotLight = {};
@@ -290,6 +294,10 @@ void Game::Render()
 
 	m_Renderer.BindPixelShader(m_PhongPS.Get());
 	m_Renderer.BindVertexShader(m_VS.Get());
+
+	
+	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_ShadowMap.GetDepthMapSRV(), 4);
+	m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
 	
 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
 	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
@@ -481,7 +489,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_Renderer.SetPrimitiveTopology(R_DEFAULT_PRIMTIVE_TOPOLOGY);
 	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
 	m_Renderer.SetInputLayout(m_InputLayout.Get());
-	m_Renderer.SetSamplerState(m_DefaultSampler.Get());
+	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 }
 
 void Game::GetDefaultSize(uint32_t* width, uint32_t* height)
