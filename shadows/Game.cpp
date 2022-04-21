@@ -283,6 +283,7 @@ void Game::Render()
 		m_PerFrameData.view = m_Camera.GetViewMat();
 		m_PerFrameData.proj = m_Camera.GetProjMat();
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
+		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 	}
 
 	m_Renderer.Clear();
@@ -556,4 +557,6 @@ void Game::BuildShadowTransform()
 	m_PerFrameData.cameraPosW = lightPos;
 	m_PerFrameData.proj = proj;
 	m_PerFrameData.view = view;
+
+	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 }
