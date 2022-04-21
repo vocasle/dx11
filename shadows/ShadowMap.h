@@ -13,6 +13,7 @@ public:
 	void InitResources(ID3D11Device* device, uint32_t texWidth, uint32_t texHeight);
 
 	void Bind(ID3D11DeviceContext* ctx);
+	void Unbind(ID3D11DeviceContext* ctx);
 
 	ID3D11ShaderResourceView* GetDepthMapSRV() const { return m_pOutputTextureSRV.Get(); }
 	ID3D11SamplerState* GetShadowSampler() const { return m_ShadowSampler.Get(); }

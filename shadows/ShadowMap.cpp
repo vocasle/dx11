@@ -69,3 +69,9 @@ void ShadowMap::Bind(ID3D11DeviceContext* ctx)
 	ctx->OMSetRenderTargets(1, renderTargets, m_pOutputTextureDSV.Get());
 	ctx->RSSetViewports(1, &m_OutputViewPort);
 }
+
+void ShadowMap::Unbind(ID3D11DeviceContext* ctx)
+{
+	ID3D11RenderTargetView* renderTargets[1] = { nullptr };
+	ctx->OMSetRenderTargets(1, renderTargets, nullptr);
+}
