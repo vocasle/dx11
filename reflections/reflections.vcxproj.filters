@@ -13,6 +13,12 @@
     <FxCompile Include="VertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="SkyPS.hlsl">
+      <Filter>Shaders\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyVS.hlsl">
+      <Filter>Shaders\Sky</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico">
@@ -34,6 +40,9 @@
     </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{420ae037-8a99-4716-bd40-26233b539371}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Sky">
+      <UniqueIdentifier>{13ff486a-abd3-459d-905b-ca3de5c25ba2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -156,6 +165,9 @@
     </None>
     <None Include="Common.hlsli">
       <Filter>Shaders</Filter>
+    </None>
+    <None Include="Sky.hlsli">
+      <Filter>Shaders\Sky</Filter>
     </None>
   </ItemGroup>
 </Project>
