@@ -81,6 +81,9 @@
     <ClCompile Include="ShadowMap.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="MeshGenerator.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">

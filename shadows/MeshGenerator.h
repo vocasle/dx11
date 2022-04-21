@@ -1,11 +1,13 @@
 #pragma once
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
+#include <vector>
+
+#include <Windows.h>
 
 #include "Math.h"
 #include "objloader.h"
-
 
 inline struct Mesh* MGGeneratePlane(const Vec3D* origin, const float width, const float height)
 {
@@ -77,3 +79,13 @@ inline struct Mesh* MGGeneratePlane(const Vec3D* origin, const float width, cons
 
 	return mesh;
 }
+
+HRESULT ComputeTangentFrame(
+	const std::vector<uint32_t>& indices,
+	size_t nFaces,
+	const std::vector<Vec3D>& positions,
+	const std::vector<Vec3D>& normals,
+	const std::vector<Vec2D>& texcoords,
+	size_t nVerts,
+	std::vector<Vec3D>& tangents,
+	std::vector<Vec3D>& bitangents);
