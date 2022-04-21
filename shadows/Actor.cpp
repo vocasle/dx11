@@ -1,6 +1,7 @@
 #include "Actor.h"
 #include "Utils.h"
 #include "stb_image.h"
+#include "MeshGenerator.h"
 
 Actor::Actor():
 	m_IndexBuffer{nullptr},
@@ -87,50 +88,56 @@ void Actor::Swap(Actor& actor)
 
 void Actor::LoadMesh(Mesh* mesh)
 {
-	m_Vertices.reserve(mesh->NumFaces + m_Vertices.size());
-	m_Indices.reserve(mesh->NumFaces + m_Indices.size());
+	m_Vertices.reserve(mesh->Faces.size() + m_Vertices.size());
+	m_Indices.reserve(mesh->Faces.size() + m_Indices.size());
 
 	Vertex vert = {};
 
-	for (uint32_t j = 0; j < mesh->NumFaces; ++j)
+	for (uint32_t j = 0; j < mesh->Faces.size(); ++j)
 	{
-		const struct Face* face = mesh->Faces + j;
-		const struct Position* pos = mesh->Positions + face->posIdx;
-		const struct Normal* norm = mesh->Normals + face->normIdx;
-		const struct TexCoord* tc = mesh->TexCoords + face->texIdx;
-		assert(face && pos && norm && tc);
+		const Face& face = mesh->Faces[j];
+		const Position& pos = mesh->Positions[face.posIdx];
+		const Normal& norm = mesh->Normals[face.normIdx];
+		const TexCoord& tc = mesh->TexCoords[face.texIdx];
 
-		vert.Position.X = pos->x;
-		vert.Position.Y = pos->y;
-		vert.Position.Z = pos->z;
+		vert.Position.X = pos.x;
+		vert.Position.Y = pos.y;
+		vert.Position.Z = pos.z;
 
-		vert.Normal.X = norm->x;
-		vert.Normal.Y = norm->y;
-		vert.Normal.Z = norm->z;
+		vert.Normal.X = norm.x;
+		vert.Normal.Y = norm.y;
+		vert.Normal.Z = norm.z;
 
-		vert.TexCoords.X = tc->u;
-		vert.TexCoords.Y = tc->v;
+		vert.TexCoords.X = tc.u;
+		vert.TexCoords.Y = tc.v;
 
-		assert(m_Indices.size() + 1 <= mesh->NumFaces);
+		assert(m_Indices.size() + 1 <= mesh->Faces.size());
 		m_Indices.emplace_back(m_Indices.size());
-		assert(m_Vertices.size() + 1 <= mesh->NumFaces);
+		assert(m_Vertices.size() + 1 <= mesh->Faces.size());
 		m_Vertices.emplace_back(vert);
 	}
 }
 
+void Actor::GenerateTangents()
+{
+	std::vector<Vec3D> tangents;
+	std::vector<Vec3D> bitangents;
+	//ComputeTangentFrame(m_Indices, m_Vertices, tangents, bitangents);
+}
+
 void Actor::LoadModel(const char* filename)
 {
-	struct Model* model = OLLoad(filename);
+	std::unique_ptr<Model> model = OLLoad(filename);
 	if (!model)
 	{
 		UTILS_FATAL_ERROR("Failed to load model %s", filename);
 	}
 
 	size_t numFaces = 0;
-	for (uint32_t i = 0; i < model->NumMeshes; ++i)
+	for (uint32_t i = 0; i < model->Meshes.size(); ++i)
 	{
-		struct Mesh* mesh = model->Meshes + i;
-		numFaces += mesh->NumFaces;
+		const Mesh* mesh = &model->Meshes[i];
+		numFaces += mesh->Faces.size();
 	}
 
 	m_Vertices.reserve(numFaces);
@@ -141,37 +148,36 @@ void Actor::LoadModel(const char* filename)
 	size_t tcOffs = 0;
 	Vertex vert = {};
 
-	for (uint32_t i = 0; i < model->NumMeshes; ++i)
+	for (uint32_t i = 0; i < model->Meshes.size(); ++i)
 	{
-		const struct Mesh* mesh = model->Meshes + i;
-		for (uint32_t j = 0; j < mesh->NumFaces; ++j)
+		const Mesh* mesh = &model->Meshes[i];
+		for (uint32_t j = 0; j < mesh->Faces.size(); ++j)
 		{
-			const struct Face* face = model->Meshes[i].Faces + j;
-			const struct Position* pos = mesh->Positions + face->posIdx - posOffs;
-			const struct Normal* norm = mesh->Normals + face->normIdx - normOffs;
-			const struct TexCoord* tc = mesh->TexCoords + face->texIdx - tcOffs;
-			assert(face && pos && norm && tc);
+			const Face& face = model->Meshes[i].Faces[j];
+			const Position& pos = mesh->Positions[face.posIdx - posOffs];
+			const Normal& norm = mesh->Normals[face.normIdx - normOffs];
+			const TexCoord& tc = mesh->TexCoords[face.texIdx - tcOffs];
 
-			vert.Position.X = pos->x;
-			vert.Position.Y = pos->y;
-			vert.Position.Z = pos->z;
+			vert.Position.X = pos.x;
+			vert.Position.Y = pos.y;
+			vert.Position.Z = pos.z;
 
-			vert.Normal.X = norm->x;
-			vert.Normal.Y = norm->y;
-			vert.Normal.Z = norm->z;
+			vert.Normal.X = norm.x;
+			vert.Normal.Y = norm.y;
+			vert.Normal.Z = norm.z;
 
-			vert.TexCoords.X = tc->u;
-			vert.TexCoords.Y = tc->v;
+			vert.TexCoords.X = tc.u;
+			vert.TexCoords.Y = tc.v;
 
 			m_Indices.emplace_back(m_Indices.size());
 			m_Vertices.emplace_back(vert);
 		}
-		posOffs += mesh->NumPositions;
-		normOffs += mesh->NumNormals;
-		tcOffs += mesh->NumTexCoords;
+		posOffs += mesh->Positions.size();
+		normOffs += mesh->Normals.size();
+		tcOffs += mesh->TexCoords.size();
 	}
 
-	ModelFree(model);
+	GenerateTangents();
 }
 
 void Actor::CreateVertexBuffer(ID3D11Device* device)

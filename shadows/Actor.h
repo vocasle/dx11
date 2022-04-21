@@ -22,6 +22,8 @@ struct Vertex
 {
 	Vec3D Position;
 	Vec3D Normal;
+	Vec3D Tangent;
+	Vec3D Bitangent;
 	Vec2D TexCoords;
 };
 
@@ -63,6 +65,7 @@ public:
 private:
 	void Swap(Actor& actor);
 	void LoadMesh(Mesh* mesh);
+	void GenerateTangents();
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_IndexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_VertexBuffer;
