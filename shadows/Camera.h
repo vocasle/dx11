@@ -12,10 +12,12 @@ class Camera
 public:
 	Camera(const Vec3D& cameraPos);
 	Mat4X4 GetViewMat() const;
+	Mat4X4 GetProjMat() const;
 	void UpdatePos(double deltaMillis);
 	void ProcessMouse(double deltaMillis);
 	Vec3D GetPos() const { return m_Pos; }
 	Vec3D GetAt() const { return m_At; }
+	void SetViewDimensions(uint32_t width, uint32_t height);
 
 private:
 	void UpdateVectors();
@@ -28,4 +30,6 @@ private:
 	Vec3D m_Right;
 	Vec3D m_Up;
 	float m_Speed;
+	float m_backBufferWidth;
+	float m_backBufferHeight;
 };

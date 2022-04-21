@@ -21,6 +21,11 @@ Mat4X4 Camera::GetViewMat() const
 	return MathMat4X4ViewAt(&m_Pos, &direction, &m_Up);
 }
 
+Mat4X4 Camera::GetProjMat() const
+{
+	return MathMat4X4PerspectiveFov(MathToRadians(45.0f), m_backBufferWidth / m_backBufferHeight, 0.1f, 100.0f);
+}
+
 void Camera::UpdateSpeed()
 {
 	if (Keyboard::Get().IsKeyDown(VK_OEM_PLUS))
@@ -129,4 +134,10 @@ void Camera::ProcessMouse(double deltaMillis)
 	//Pitch = MathClamp(-MAX_PITCH, MAX_PITCH, Pitch);
 
 	UpdateVectors();
+}
+
+void Camera::SetViewDimensions(uint32_t width, uint32_t height)
+{
+	m_backBufferWidth = width;
+	m_backBufferHeight = height;
 }
