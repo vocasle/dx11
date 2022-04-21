@@ -23,4 +23,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		m_pOutputTextureDSV;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState>			m_ShadowSampler;
 	D3D11_VIEWPORT										m_OutputViewPort;
+
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>		m_cachedRTV;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		m_cachedDSV;
+	D3D11_VIEWPORT										m_cachedViewPort;
 };

@@ -1,7 +1,7 @@
 #include "ShadowMap.h"
 #include "Utils.h"
 
-ShadowMap::ShadowMap(): m_OutputViewPort{}
+ShadowMap::ShadowMap(): m_OutputViewPort{}, m_cachedViewPort{}
 {
 }
 
@@ -64,14 +64,21 @@ void ShadowMap::InitResources(ID3D11Device* device, uint32_t texWidth, uint32_t 
 
 void ShadowMap::Bind(ID3D11DeviceContext* ctx)
 {
+	ctx->OMGetRenderTargets(1, m_cachedRTV.ReleaseAndGetAddressOf(), m_cachedDSV.ReleaseAndGetAddressOf());
+	uint32_t numViewports = 1;
+	ctx->RSGetViewports(&numViewports, &m_cachedViewPort);
+
 	ctx->ClearDepthStencilView(m_pOutputTextureDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-	ID3D11RenderTargetView* renderTargets[1] = { nullptr };
-	ctx->OMSetRenderTargets(1, renderTargets, m_pOutputTextureDSV.Get());
+	ctx->OMSetRenderTargets(0, nullptr, m_pOutputTextureDSV.Get());
 	ctx->RSSetViewports(1, &m_OutputViewPort);
 }
 
 void ShadowMap::Unbind(ID3D11DeviceContext* ctx)
 {
-	ID3D11RenderTargetView* renderTargets[1] = { nullptr };
-	ctx->OMSetRenderTargets(1, renderTargets, nullptr);
+	ctx->OMSetRenderTargets(0, nullptr, nullptr);
+	ctx->OMSetRenderTargets(1, m_cachedRTV.GetAddressOf(), m_cachedDSV.Get());
+	ctx->RSSetViewports(1, &m_cachedViewPort);
+
+	m_cachedDSV.Reset();
+	m_cachedRTV.Reset();
 }
