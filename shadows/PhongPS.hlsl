@@ -23,14 +23,19 @@ float4 main(VSOut In) : SV_TARGET
 	part = ComputeDirectionalLight(mat, dirLight, normal, toEye);
 	shadow[0] = CalcShadowFactor(shadowSampler, shadowTexture, In.ShadowPosH);
 
-	material.Ambient = part.Ambient;
-	material.Diffuse = part.Diffuse * shadow[0];
-	material.Specular = part.Specular * shadow[0];
+	//return float4(shadow[0], shadow[0], shadow[0], 1.0f);
+
+	material.Ambient += part.Ambient;
+	material.Diffuse += part.Diffuse * shadow[0];
+	material.Specular += part.Specular * shadow[0];
 
 
 	//for (int i = 0; i < 4; ++i)
 	//{
-	//	resultColor += ComputePointLight(mat, pointLights[i], In.PosW, normal, toEye);
+	//	part = ComputePointLight(mat, pointLights[i], In.PosW, normal, toEye);
+	//	material.Ambient += part.Ambient;
+	//	material.Diffuse += part.Diffuse;
+	//	material.Specular += part.Specular;
 	//}
 
 	//for (int i = 0; i < 2; ++i)
