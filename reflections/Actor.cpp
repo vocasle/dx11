@@ -251,7 +251,7 @@ void Actor::LoadTexture(const char* filename,
 		D3D11_TEXTURE2D_DESC desc = {};
 		desc.Width = width;
 		desc.Height = height;
-		desc.MipLevels = 1;
+		desc.MipLevels = 0;
 		desc.ArraySize = 1;
 		desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		desc.SampleDesc.Count = 1;
@@ -260,26 +260,24 @@ void Actor::LoadTexture(const char* filename,
 		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
 		desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
-		D3D11_SUBRESOURCE_DATA subresourceData = {};
-		subresourceData.pSysMem = bytes;
-		subresourceData.SysMemPitch = width * sizeof(unsigned char) * desiredChannels;
+		HR(device->CreateTexture2D( &desc, nullptr, texture.ReleaseAndGetAddressOf()))
 
-		HR(device->CreateTexture2D( &desc, &subresourceData, texture.ReleaseAndGetAddressOf()))
+		context->UpdateSubresource(texture.Get(), 0, nullptr, bytes, width * sizeof(uint8_t) * desiredChannels, 0);
 	}
 
 	{
-		// TODO: Fix mip map generation
 		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		memset(&srvDesc, 0, sizeof(srvDesc));
 		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
 		srvDesc.Texture2D.MipLevels = -1;
 		
 		switch (type)
 		{
 		case TextureType::Diffuse:
 			HR(device->CreateShaderResourceView(texture.Get(), &srvDesc, m_DiffuseTexture.ReleaseAndGetAddressOf()))
-				context->GenerateMips(m_DiffuseTexture.Get());
+			context->GenerateMips(m_DiffuseTexture.Get());
 			break;
 		case TextureType::Specular:
 			HR(device->CreateShaderResourceView(texture.Get(), &srvDesc, m_SpecularTexture.ReleaseAndGetAddressOf()));
