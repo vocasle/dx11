@@ -66,7 +66,7 @@ void UtilsStrSub(const char* str, uint32_t start, uint32_t end, char out[], uint
     out[max] = 0;
 }
 
-unsigned char* UtilsReadData(const char* filepath, unsigned int* bufferSize)
+std::vector<uint8_t> UtilsReadData(const char* filepath)
 {
     FILE* f;
     fopen_s(&f, filepath, "rb");
@@ -80,9 +80,8 @@ unsigned char* UtilsReadData(const char* filepath, unsigned int* bufferSize)
     {
         UTILS_FATAL_ERROR("Failed to get file stats from %s", filepath);
     }
-    unsigned char* bytes = new unsigned char[sb.st_size];
-    fread(bytes, sb.st_size, 1, f);
+    std::vector<uint8_t> bytes(sb.st_size);
+    fread(&bytes[0], sb.st_size, 1, f);
     fclose(f);
-    *bufferSize = sb.st_size;
     return bytes;
 }

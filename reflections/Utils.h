@@ -7,6 +7,7 @@
 #include <d3d11.h>
 #include <dinput.h>
 #include <stdint.h>
+#include <vector>
 
 static const WORD MAX_CONSOLE_LINES = 500;
 
@@ -22,7 +23,7 @@ int UtilStrFindLastChar(const char* str, const char ch);
 
 void UtilsStrSub(const char* str, uint32_t start, uint32_t end, char out[], uint32_t maxSize);
 
-unsigned char* UtilsReadData(const char* filepath, unsigned int* bufferSize);
+std::vector<uint8_t> UtilsReadData(const char* filepath);
 
 /* Dynamic Array */
 
