@@ -275,6 +275,7 @@ void Game::Render()
 {
 	m_Renderer.Clear();
 
+	m_DR->PIXBeginEvent(L"Shadow pass");
 	m_ShadowMap.Bind(m_DR->GetDeviceContext());
 	{
 		m_Renderer.BindVertexShader(m_VS.Get());
@@ -299,7 +300,8 @@ void Game::Render()
 		}
 	}
 	m_ShadowMap.Unbind(m_DR->GetDeviceContext());
-	
+	m_DR->PIXEndEvent();
+	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
 	{
 		m_PerFrameData.view = m_Camera.GetViewMat();
@@ -340,8 +342,9 @@ void Game::Render()
 
 		m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
 	}
-	
-	//// Light properties
+	m_DR->PIXEndEvent();
+	m_DR->PIXBeginEvent(L"Draw lights");
+	// Light properties
 	for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
 	{
 		const Vec3D scale = { 0.2f, 0.2f, 0.2f };
@@ -362,10 +365,11 @@ void Game::Render()
 
 		m_Renderer.DrawIndexed(sphere.GetNumIndices(), 0, 0);
 	}
-
+	m_DR->PIXEndEvent();
+	m_DR->PIXBeginEvent(L"Draw sky");
 	// draw sky
 	m_CubeMap.Draw(m_DR->GetDeviceContext());
-
+	m_DR->PIXEndEvent();
 	m_Renderer.Present();
 }
 
