@@ -69,6 +69,7 @@ void Game::CreateDefaultSampler()
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.ComparisonFunc = D3D11_COMPARISON_GREATER;
 	samplerDesc.MaxAnisotropy = 16;
+	samplerDesc.MipLODBias = 0.0f;
 	samplerDesc.MinLOD = 0;
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
@@ -273,15 +274,28 @@ void Game::Render()
 	// TODO: Need to have a reflection mechanism to query amount of SRV that is possible to bind to PS
 	// After this this clear code could be placed to Renderer::Clear
 	ID3D11ShaderResourceView* nullSRVs[5] = { nullptr, nullptr, nullptr, nullptr, nullptr, };
+	m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 5);
 	m_DR->PIXEndEvent();
 	// draw sky
-	m_DR->PIXBeginEvent(L"Draw sky");
-	m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 5);
-	m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
-	m_Renderer.BindVertexShader(m_SkyVS.Get());
-	m_Renderer.BindPixelShader(m_SkyPS.Get());
-	m_CubeMap.Draw(m_DR->GetDeviceContext());
-	m_DR->PIXEndEvent();
+	//m_DR->PIXBeginEvent(L"Draw sky");
+	//m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
+	//m_Renderer.BindVertexShader(m_SkyVS.Get());
+	//m_Renderer.BindPixelShader(m_SkyPS.Get());
+	//m_Renderer.BindShaderResource(BindTargets::PixelShader, m_CubeMap.GetCubeMap(), 0);
+	//// Erase the translation component to avoid skybox jitter caused by camera movement
+	//Mat4X4 V = m_Camera.GetViewMat();
+	//V.V[3] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	//m_PerFrameData.view = V;
+	//Vec3D scale = { 2.0f, 2.0f, 2.0f };
+	//m_PerObjectData.world = MathMat4X4ScaleFromVec3D(&scale);
+	//GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+	//GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerObjectConstants), &m_PerObjectData, m_PerObjectCB.Get());
+	//m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
+	//m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+
+	//m_CubeMap.Draw(m_DR->GetDeviceContext());
+	//m_DR->PIXEndEvent();
+
 	m_Renderer.Present();
 }
 
@@ -402,7 +416,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	Mouse::Get().SetWindowDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
 	m_ShadowMap.InitResources(m_DR->GetDevice(), 2048, 2048);
 	m_Camera.SetViewDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
-	m_CubeMap.LoadCubeMap(m_DR->GetDevice(), "assets/textures/dreifaltigkeitsberg_1k.hdr");
+	m_CubeMap.LoadCubeMap(m_DR->GetDevice(), "assets/textures/daylight.jpg");
 	m_CubeMap.SetCamera(&m_Camera);
 
 	// init actors
