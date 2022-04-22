@@ -39,122 +39,25 @@ static void GameCreateConstantBuffer(ID3D11Device* device,
 	}
 }
 
-static void GameCreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps)
+void Game::CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps)
 {
-	unsigned int bufferSize = 0;
-	unsigned char* bytes = UtilsReadData(filepath, &bufferSize);
+	auto bytes = UtilsReadData(filepath);
 
-	if (FAILED(device->CreatePixelShader(bytes, bufferSize, NULL, ps)))
+	if (FAILED(device->CreatePixelShader(&bytes[0], bytes.size(), NULL, ps)))
 	{
 		UTILS_FATAL_ERROR("Failed to create pixel shader from %s", filepath);
 	}
-
-	free(bytes);
 }
 
-static void GameCreateInputLayout(ID3D11Device* device, ID3D11InputLayout** il, unsigned char* bytes, size_t bufferSize)
+std::vector<uint8_t> Game::CreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs)
 {
-	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[] = {
-			{
-				"POSITION",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				0,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			},
-			{
-				"NORMAL",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				12,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0,
-			},
-			{
-				"TANGENT",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				24,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0,
-			},
-			{
-				"BITANGENT",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				36,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0,
-			},
-			{
-				"TEXCOORDS",
-				0,
-				DXGI_FORMAT_R32G32_FLOAT,
-				0,
-				48,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			}
-	};
+	auto bytes = UtilsReadData(filepath);
 
-	if (FAILED(device->CreateInputLayout(inputElementDesc, sizeof(inputElementDesc) / sizeof(*inputElementDesc), bytes, bufferSize, il)))
-	{
-		UtilsFatalError("Failed to create input layout");
-	}
-}
-
-static void GameCreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs, ID3D11InputLayout** il)
-{
-	unsigned int bufferSize = 0;
-	unsigned char* bytes = UtilsReadData(filepath, &bufferSize);
-
-	if (FAILED(device->CreateVertexShader(bytes, bufferSize, NULL, vs)))
+	if (FAILED(device->CreateVertexShader(&bytes[0], bytes.size(), NULL, vs)))
 	{
 		UTILS_FATAL_ERROR("Failed to create vertex shader from %s", filepath);
 	}
-	GameCreateInputLayout(device, il, bytes, bufferSize);
-	free(bytes);
-}
-
-static void GameCreateVertexBuffer(const void* vertexData, const uint32_t numVertices, ID3D11Device* device, ID3D11Buffer** vb)
-{
-	D3D11_SUBRESOURCE_DATA subresourceData = {};
-	subresourceData.pSysMem = vertexData;
-
-	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(Vertex) * (uint32_t)numVertices;
-	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.StructureByteStride = sizeof(Vertex);
-	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-
-	if (FAILED(device->CreateBuffer(&bufferDesc, &subresourceData, vb)))
-	{
-		OutputDebugStringA("ERROR: Failed to create vertex buffer\n");
-		ExitProcess(EXIT_FAILURE);
-	}
-}
-
-static void GameCreateIndexBuffer(const void* indexData, const uint32_t numIndices, ID3D11Device* device, ID3D11Buffer** ib)
-{
-	D3D11_SUBRESOURCE_DATA subresourceData = {};
-	subresourceData.pSysMem = indexData;
-
-	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(uint32_t) * numIndices;
-	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	bufferDesc.StructureByteStride = 0;
-	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-
-	if (FAILED(device->CreateBuffer(&bufferDesc, &subresourceData, ib)))
-	{
-		OutputDebugStringA("ERROR: Failed to create index buffer\n");
-		ExitProcess(EXIT_FAILURE);
-	}
+	return bytes;
 }
 
 void Game::CreateDefaultSampler()
@@ -276,6 +179,8 @@ void Game::Render()
 	m_Renderer.Clear();
 
 	m_DR->PIXBeginEvent(L"Shadow pass");
+	m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
+
 	m_ShadowMap.Bind(m_DR->GetDeviceContext());
 	{
 		m_Renderer.BindVertexShader(m_VS.Get());
@@ -365,9 +270,16 @@ void Game::Render()
 
 		m_Renderer.DrawIndexed(sphere.GetNumIndices(), 0, 0);
 	}
+	// TODO: Need to have a reflection mechanism to query amount of SRV that is possible to bind to PS
+	// After this this clear code could be placed to Renderer::Clear
+	ID3D11ShaderResourceView* nullSRVs[5] = { nullptr, nullptr, nullptr, nullptr, nullptr, };
 	m_DR->PIXEndEvent();
-	m_DR->PIXBeginEvent(L"Draw sky");
 	// draw sky
+	m_DR->PIXBeginEvent(L"Draw sky");
+	m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 5);
+	m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
+	m_Renderer.BindVertexShader(m_SkyVS.Get());
+	m_Renderer.BindPixelShader(m_SkyPS.Get());
 	m_CubeMap.Draw(m_DR->GetDeviceContext());
 	m_DR->PIXEndEvent();
 	m_Renderer.Present();
@@ -500,10 +412,14 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 
 	ID3D11Device* device = m_DR->GetDevice();
 
-	GameCreatePixelShader("PixelShader.cso", (ID3D11Device*)device, m_PS.ReleaseAndGetAddressOf());
-	GameCreatePixelShader("PhongPS.cso", (ID3D11Device*)device, m_PhongPS.ReleaseAndGetAddressOf());
-	GameCreatePixelShader("LightPS.cso", (ID3D11Device*)device, m_LightPS.ReleaseAndGetAddressOf());
-	GameCreateVertexShader("VertexShader.cso", (ID3D11Device*)device, m_VS.ReleaseAndGetAddressOf(), m_InputLayout.ReleaseAndGetAddressOf());
+	CreatePixelShader("PixelShader.cso", (ID3D11Device*)device, m_PS.ReleaseAndGetAddressOf());
+	CreatePixelShader("PhongPS.cso", (ID3D11Device*)device, m_PhongPS.ReleaseAndGetAddressOf());
+	CreatePixelShader("LightPS.cso", (ID3D11Device*)device, m_LightPS.ReleaseAndGetAddressOf());
+	CreatePixelShader("SkyPS.cso", device, m_SkyPS.ReleaseAndGetAddressOf());
+	auto bytes = CreateVertexShader("VertexShader.cso", (ID3D11Device*)device, m_VS.ReleaseAndGetAddressOf());
+	m_InputLayout.CreateDefaultLayout(device, &bytes[0], bytes.size());
+	bytes = CreateVertexShader("SkyVS.cso", device, m_SkyVS.ReleaseAndGetAddressOf());
+	m_InputLayout.CreateSkyLayout(device, &bytes[0], bytes.size());
 
 	GameCreateConstantBuffer(m_DR->GetDevice(), sizeof(PerSceneConstants), &m_PerSceneCB);
 	GameCreateConstantBuffer(m_DR->GetDevice(), sizeof(PerObjectConstants), &m_PerObjectCB);
@@ -515,7 +431,6 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_Renderer.SetDeviceResources(m_DR.get());
 	m_Renderer.SetPrimitiveTopology(R_DEFAULT_PRIMTIVE_TOPOLOGY);
 	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
-	m_Renderer.SetInputLayout(m_InputLayout.Get());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 }
 

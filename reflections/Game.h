@@ -12,6 +12,7 @@
 #include "LightHelper.h"
 #include "ShadowMap.h"
 #include "CubeMap.h"
+#include "InputLayout.h"
 
 #include <vector>
 #include <memory>
@@ -72,13 +73,16 @@ private:
 	void Render();
 	void CreateActors();
 	void BuildShadowTransform();
+	std::vector<uint8_t> CreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs);
+	void CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps);
 
 	std::unique_ptr<DeviceResources> m_DR;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VS;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PS;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PhongPS;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_LightPS;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_InputLayout;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_SkyVS;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_SkyPS;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_DefaultSampler;
 	Timer m_Timer;
 	Camera m_Camera;
@@ -94,4 +98,5 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_PerSceneCB;
 	ShadowMap m_ShadowMap;
 	CubeMap m_CubeMap;
+	InputLayout m_InputLayout;
 };
