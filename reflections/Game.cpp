@@ -68,7 +68,7 @@ void Game::CreateDefaultSampler()
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.ComparisonFunc = D3D11_COMPARISON_GREATER;
-	samplerDesc.MaxAnisotropy = 16;
+	samplerDesc.MaxAnisotropy = D3D11_REQ_MAXANISOTROPY;
 	samplerDesc.MipLODBias = 0.0f;
 	samplerDesc.MinLOD = 0;
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
