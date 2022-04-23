@@ -20,7 +20,7 @@ inline struct std::unique_ptr<Mesh> MGGeneratePlane(const Vec3D* origin, const f
 	mesh->Positions.emplace_back(origin->X - width / 2.0f, origin->Y, origin->Z + height / 2.0f);
 	mesh->Positions.emplace_back(origin->X + width / 2.0f, origin->Y, origin->Z + height / 2.0f);
 
-	mesh->Normals.emplace_back(0.0f, -1.0f, 0.0f);
+	mesh->Normals.emplace_back(0.0f, 1.0f, 0.0f);
 
 	mesh->TexCoords.reserve(4);
 	mesh->TexCoords.emplace_back(1.0f, 1.0f);
