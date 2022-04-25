@@ -50,20 +50,11 @@ class Game
 {
 public:
 	Game();
-
 	~Game();
 
 	void Tick();
-
 	void Initialize(HWND hWnd, uint32_t width, uint32_t height);
-
 	void GetDefaultSize(uint32_t* width, uint32_t* height);
-
-	void OnKeyDown(WPARAM key);
-
-	void OnKeyUp(WPARAM key);
-
-	void OnMouseMove(uint32_t message, WPARAM wParam, LPARAM lParam);
 
 private:
 	void InitPerSceneConstants();
@@ -77,7 +68,15 @@ private:
 	void CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps);
 
 #if WITH_IMGUI
-	void UpdateImgui();
+	void UpdateImgui(); 
+
+	struct ImguiState
+	{
+		ImguiState(): RotateDirLight{false} {}
+		bool RotateDirLight;
+	};
+
+	ImguiState m_ImguiState;
 #endif
 
 	std::unique_ptr<DeviceResources> m_DR;

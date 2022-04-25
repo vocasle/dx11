@@ -58,7 +58,7 @@ void Game::CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11P
 void Game::UpdateImgui()
 {
 	// Any application code here
-	ImGui::Text("Hello, world!");
+	ImGui::Checkbox("Rotate dir light", &m_ImguiState.RotateDirLight);
 }
 
 std::vector<uint8_t> Game::CreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs)
@@ -179,17 +179,23 @@ void Game::Update()
 
 	BuildShadowTransform();
 
+#if WITH_IMGUI
+
 	// update directional light
 	static float elapsedTime = 0.0f;
 	elapsedTime += (float)m_Timer.DeltaMillis / 1000.0f;
-	m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);
-	m_PerSceneData.dirLight.Direction.Y = 0.5f;
-	m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
-	MathVec3DNormalize(&m_PerSceneData.dirLight.Direction);
+	if (m_ImguiState.RotateDirLight)
+	{
+		m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);
+		m_PerSceneData.dirLight.Direction.Y = 0.5f;
+		m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
+		MathVec3DNormalize(&m_PerSceneData.dirLight.Direction);
 
-	//m_PerSceneData.spotLights[0].Position = m_Camera.CameraPos;
-	//m_PerSceneData.spotLights[0].Direction = m_Camera.FocusPoint;
-	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
+		//m_PerSceneData.spotLights[0].Position = m_Camera.CameraPos;
+		//m_PerSceneData.spotLights[0].Direction = m_Camera.FocusPoint;
+		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
+	}
+#endif
 }
 
 void Game::Render()
@@ -198,7 +204,9 @@ void Game::Render()
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
+#endif
 
+#if WITH_IMGUI
 	UpdateImgui();
 #endif
 
@@ -479,6 +487,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 
 #if WITH_IMGUI
 	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable some options
 	ImGui_ImplWin32_Init(hWnd);
 	ImGui_ImplDX11_Init(m_DR->GetDevice(), m_DR->GetDeviceContext());
 #endif
@@ -488,26 +498,6 @@ void Game::GetDefaultSize(uint32_t* width, uint32_t* height)
 {
 	*width = DEFAULT_WIN_WIDTH;
 	*height = DEFAULT_WIN_HEIGHT;
-}
-
-void Game::OnKeyDown(WPARAM key)
-{
-	Keyboard::Get().OnKeyDown(key);
-
-	if (key == VK_ESCAPE)
-	{
-		PostQuitMessage(0);
-	}
-}
-
-void Game::OnKeyUp(WPARAM key)
-{
-	Keyboard::Get().OnKeyUp(key);
-}
-
-void Game::OnMouseMove(uint32_t message, WPARAM wParam, LPARAM lParam)
-{
-	Mouse::Get().OnMouseMove(message, wParam, lParam);
 }
 
 void Game::BuildShadowTransform()

@@ -14,7 +14,11 @@
 #include <vld.h>
 #endif
 
-#define MAX_LOADSTRING 100
+#if WITH_IMGUI
+#include <backends/imgui_impl_win32.h>
+#endif
+
+#define MAX_LOADSTRING 1000
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -174,6 +178,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     static BOOL s_in_suspend = FALSE;
     static BOOL s_minimized = FALSE;
     static BOOL s_fullscreen = FALSE;
+
+#if WITH_IMGUI
+    extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+    {
+        return true;
+    }
+#endif
 
     switch (message)
     {
@@ -342,15 +355,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return MAKELRESULT(0, MNC_CLOSE);
 
     case WM_MOUSEMOVE:
-        gGame->OnMouseMove(message, wParam, lParam);
+        Mouse::Get().OnMouseMove(message, wParam, lParam);
         break;
     case WM_INPUT:
     case WM_LBUTTONDOWN:
+        Mouse::Get().OnMouseDown(message, wParam, lParam, Mouse::ButtonType::Left);
+        break;
     case WM_LBUTTONUP:
+        Mouse::Get().OnMouseUp(message, wParam, lParam, Mouse::ButtonType::Left);
+        break;
     case WM_RBUTTONDOWN:
+        Mouse::Get().OnMouseDown(message, wParam, lParam, Mouse::ButtonType::Right);
+        break;
     case WM_RBUTTONUP:
+        Mouse::Get().OnMouseUp(message, wParam, lParam, Mouse::ButtonType::Right);
+        break;
     case WM_MBUTTONDOWN:
+        Mouse::Get().OnMouseDown(message, wParam, lParam, Mouse::ButtonType::Scroll);
+        break;
     case WM_MBUTTONUP:
+        Mouse::Get().OnMouseUp(message, wParam, lParam, Mouse::ButtonType::Scroll);
+        break;
     case WM_MOUSEWHEEL:
     case WM_XBUTTONDOWN:
     case WM_XBUTTONUP:
@@ -359,10 +384,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_KEYDOWN:
     case WM_CHAR:
-        gGame->OnKeyDown(wParam);
+        Keyboard::Get().OnKeyDown(wParam);
+        if (wParam == VK_ESCAPE)
+        {
+            PostQuitMessage(0);
+        }
         break;
     case WM_KEYUP:
-        gGame->OnKeyUp(wParam);
+        Keyboard::Get().OnKeyUp(wParam);
         break;
     case WM_SYSKEYUP:
 	{
