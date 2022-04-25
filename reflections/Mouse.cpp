@@ -15,7 +15,7 @@ Mouse& Mouse::Get()
 	return *m_Instance;
 }
 
-Mouse::Mouse()
+Mouse::Mouse(): m_LeftBtnState{false}, m_RightBtnState{false}
 {
 }
 
@@ -27,7 +27,6 @@ void Mouse::SetWindowDimensions(uint32_t width, uint32_t height)
 {
 	WinSize.X = width;
 	WinSize.Y = height;
-	ShowCursor(0);
 }
 
 Vec2D Mouse::GetCursorPos()
@@ -35,21 +34,63 @@ Vec2D Mouse::GetCursorPos()
 	return MousePos;
 }
 
+// TODO: On first mouse move after right button click MousePos should be fetched from
+// last cursor position
+// Try to save last mouse position when right button is released
 void Mouse::OnMouseMove(uint32_t message, WPARAM wParam, LPARAM lParam)
 {
-	static uint32_t firstLaunch = 1;
-	MousePos.X = GET_X_LPARAM(lParam);
-	MousePos.Y = GET_Y_LPARAM(lParam);
-	POINT pos = {};
-	::GetCursorPos(&pos);
-	MousePos.X = pos.x;
-	MousePos.Y = pos.y;
-	SetCursorPos((int32_t)WinSize.X / 2, (int32_t)WinSize.Y / 2);
-	if (firstLaunch)
+	if (m_RightBtnState)
 	{
-		firstLaunch = 0;
-		MousePos.X = WinSize.X / 2;
-		MousePos.Y = WinSize.Y / 2;
+		static uint32_t firstLaunch = 1;
+		MousePos.X = GET_X_LPARAM(lParam);
+		MousePos.Y = GET_Y_LPARAM(lParam);
+		POINT pos = {};
+		::GetCursorPos(&pos);
+		MousePos.X = pos.x;
+		MousePos.Y = pos.y;
+		SetCursorPos((int32_t)WinSize.X / 2, (int32_t)WinSize.Y / 2);
+		if (firstLaunch)
+		{
+			firstLaunch = 0;
+			MousePos.X = WinSize.X / 2;
+			MousePos.Y = WinSize.Y / 2;
+		}
+	}
+}
+
+void Mouse::OnMouseDown(uint32_t message, WPARAM wParam, LPARAM lParam, ButtonType type)
+{
+	switch (type)
+	{
+	case Mouse::ButtonType::Left:
+		m_LeftBtnState = true;
+		break;
+	case Mouse::ButtonType::Scroll:
+		break;
+	case Mouse::ButtonType::Right:
+		m_RightBtnState = true;
+		ShowCursor(false);
+		break;
+	default:
+		break;
+	}
+}
+
+void Mouse::OnMouseUp(uint32_t message, WPARAM wParam, LPARAM lParam, ButtonType type)
+{
+	switch (type)
+	{
+	case Mouse::ButtonType::Left:
+		m_LeftBtnState = false;
+		break;
+	case Mouse::ButtonType::Scroll:
+		break;
+	case Mouse::ButtonType::Right:
+		m_RightBtnState = false;
+		ShowCursor(true);
+		break;
+	default:
+		break;
 	}
 }
 
