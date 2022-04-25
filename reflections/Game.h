@@ -76,6 +76,10 @@ private:
 	std::vector<uint8_t> CreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs);
 	void CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps);
 
+#if WITH_IMGUI
+	void UpdateImgui();
+#endif
+
 	std::unique_ptr<DeviceResources> m_DR;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VS;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PS;

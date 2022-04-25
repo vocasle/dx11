@@ -4,6 +4,12 @@
 #include "Camera.h"
 #include "MeshGenerator.h"
 
+#if WITH_IMGUI
+#include <imgui.h>
+#include <backends/imgui_impl_dx11.h>
+#include <backends/imgui_impl_win32.h>
+#endif
+
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
 	size_t bufferSize,
 	void* data,
@@ -47,6 +53,12 @@ void Game::CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11P
 	{
 		UTILS_FATAL_ERROR("Failed to create pixel shader from %s", filepath);
 	}
+}
+
+void Game::UpdateImgui()
+{
+	// Any application code here
+	ImGui::Text("Hello, world!");
 }
 
 std::vector<uint8_t> Game::CreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs)
@@ -131,6 +143,11 @@ Game::Game():
 
 Game::~Game()
 {
+#if WITH_IMGUI
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+#endif
 }
 
 void Game::Clear()
@@ -163,12 +180,12 @@ void Game::Update()
 	BuildShadowTransform();
 
 	// update directional light
-	//static float elapsedTime = 0.0f;
-	//elapsedTime += (float)m_Timer.DeltaMillis / 1000.0f;
-	//m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);
-	//m_PerSceneData.dirLight.Direction.Y = 0.5f;
-	//m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
-	//MathVec3DNormalize(&m_PerSceneData.dirLight.Direction);
+	static float elapsedTime = 0.0f;
+	elapsedTime += (float)m_Timer.DeltaMillis / 1000.0f;
+	m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);
+	m_PerSceneData.dirLight.Direction.Y = 0.5f;
+	m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
+	MathVec3DNormalize(&m_PerSceneData.dirLight.Direction);
 
 	//m_PerSceneData.spotLights[0].Position = m_Camera.CameraPos;
 	//m_PerSceneData.spotLights[0].Direction = m_Camera.FocusPoint;
@@ -177,6 +194,14 @@ void Game::Update()
 
 void Game::Render()
 {
+#if WITH_IMGUI
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	UpdateImgui();
+#endif
+
 	m_Renderer.Clear();
 
 	m_DR->PIXBeginEvent(L"Shadow pass");
@@ -295,6 +320,11 @@ void Game::Render()
 
 	//m_CubeMap.Draw(m_DR->GetDeviceContext());
 	//m_DR->PIXEndEvent();
+
+#if WITH_IMGUI
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+#endif
 
 	m_Renderer.Present();
 }
@@ -446,6 +476,12 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_Renderer.SetPrimitiveTopology(R_DEFAULT_PRIMTIVE_TOPOLOGY);
 	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
+
+#if WITH_IMGUI
+	ImGui::CreateContext();
+	ImGui_ImplWin32_Init(hWnd);
+	ImGui_ImplDX11_Init(m_DR->GetDevice(), m_DR->GetDeviceContext());
+#endif
 }
 
 void Game::GetDefaultSize(uint32_t* width, uint32_t* height)

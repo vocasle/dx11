@@ -44,6 +44,9 @@
     <Filter Include="Shaders\Sky">
       <UniqueIdentifier>{13ff486a-abd3-459d-905b-ca3de5c25ba2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Sources\ImGui">
+      <UniqueIdentifier>{651fbc29-4daa-4ae7-84c5-2c5f6b02231f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dx11.rc">
@@ -98,6 +101,24 @@
     </ClCompile>
     <ClCompile Include="InputLayout.cpp">
       <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui-1.87\imgui.cpp">
+      <Filter>Sources\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui-1.87\imgui_draw.cpp">
+      <Filter>Sources\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui-1.87\imgui_tables.cpp">
+      <Filter>Sources\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui-1.87\imgui_widgets.cpp">
+      <Filter>Sources\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui-1.87\backends\imgui_impl_dx11.cpp">
+      <Filter>Sources\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui-1.87\backends\imgui_impl_win32.cpp">
+      <Filter>Sources\ImGui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -163,6 +184,27 @@
     </ClInclude>
     <ClInclude Include="InputLayout.h">
       <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui-1.87\imgui.h">
+      <Filter>Sources\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui-1.87\imgui_internal.h">
+      <Filter>Sources\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui-1.87\imstb_rectpack.h">
+      <Filter>Sources\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui-1.87\imstb_textedit.h">
+      <Filter>Sources\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui-1.87\imstb_truetype.h">
+      <Filter>Sources\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui-1.87\backends\imgui_impl_dx11.h">
+      <Filter>Sources\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui-1.87\backends\imgui_impl_win32.h">
+      <Filter>Sources\ImGui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
