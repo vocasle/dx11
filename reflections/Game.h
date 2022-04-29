@@ -32,7 +32,8 @@ struct PerFrameConstants
 
 struct PerObjectConstants
 {
-	PerObjectConstants() : world{}, material{} {}
+	PerObjectConstants() : worldInvTranspose{}, world {}, material{} {}
+	Mat4X4 worldInvTranspose;
 	Mat4X4 world;
 	Material material;
 };

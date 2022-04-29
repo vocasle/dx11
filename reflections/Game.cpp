@@ -286,6 +286,7 @@ void Game::Render()
 		for (size_t i = 0; i < m_Actors.size(); ++i)
 		{
 			const Actor& actor = m_Actors[i];
+			m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
 			m_PerObjectData.world = actor.GetWorld();
 			m_PerObjectData.material = actor.GetMaterial();
 			GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
