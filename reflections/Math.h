@@ -23,7 +23,9 @@ struct Vec4D
 {
 	Vec4D() : X{0}, Y{0}, Z{0}, W{0} {}
 	Vec4D(float x, float y, float z, float w) : X{x}, Y{y}, Z{z}, W{w} {}
+#ifdef __cplusplus
 	Vec4D(const Vec3D& v, float w) : Vec4D(v.X, v.Y, v.Z, w) {}
+#endif
 	float X;
 	float Y;
 	float Z;
@@ -68,6 +70,12 @@ struct Mat4X4
 		A30{a30}, A31{a31}, A32{a32}, A33{a33}
 	{}
 
+	Mat4X4(const float* data): Mat4X4(data[0], data[1], data[2], data[3],
+									data[4], data[5], data[6], data[7],
+									data[8], data[9], data[10], data[11],
+									data[12], data[13], data[14], data[15]) 
+	{}
+
 	union
 	{
 		struct
@@ -82,7 +90,6 @@ struct Mat4X4
 	};
 };
 
-Mat4X4 operator*(const Mat4X4& lhs, const Mat4X4& rhs);
 
 // *** 2D vector math ***
 Vec2D MathVec2DZero(void);
@@ -116,8 +123,6 @@ Vec3D MathVec3DAddition(const Vec3D* vec1, const Vec3D* vec2);
 
 Vec3D MathVec3DSubtraction(const Vec3D* vec1, const Vec3D* vec2);
 
-Vec3D MathVec3DSubtraction(const Vec3D& vec1, const Vec3D& vec2);
-
 float MathVec3DDot(const Vec3D* vec1, const Vec3D* vec2);
 
 void MathVec3DProj(const Vec3D* vec1, const Vec3D* vec2, Vec3D* out);
@@ -132,8 +137,6 @@ void MathVec3DNegate(Vec3D* vec);
 
 void MathVec3DPrint(const Vec3D* vec);
 
-float MathVec3DLength(const Vec3D& v);
-
 // *** 4D vector math ***
 Vec4D MathVec4DZero(void);
 
@@ -144,8 +147,6 @@ void MathVec4DModulateByVec4D(const Vec4D* vec1, const Vec4D* vec2, Vec4D* out);
 void MathVec4DModulateByScalar(const Vec4D* vec1, float s, Vec4D* out);
 
 Vec4D MathVec4DAddition(const Vec4D* vec1, const Vec4D* vec2);
-
-Vec4D MathVec4DAddition(const Vec4D& vec1, const Vec4D& vec2);
 
 void MathVec4DSubtraction(const Vec4D* vec1, const Vec4D* vec2, Vec4D* out);
 
@@ -224,6 +225,8 @@ Mat4X4 MathMat4X4OrthographicOffCenter(float viewLeft,
 	float nearZ,
 	float farZ);
 
+Mat4X4 MathMat4X4Inverse(const Mat4X4* mat);
+
 // *** misc math helpers ***
 float MathClamp(float min, float max, float v);
 
@@ -239,4 +242,16 @@ float MathRandom(float min, float max);
 
 #ifdef MATH_TEST
 void MathTest(void);
+#endif
+
+#ifdef __cplusplus
+Mat4X4 operator*(const Mat4X4& lhs, const Mat4X4& rhs);
+
+Vec3D MathVec3DSubtraction(const Vec3D& vec1, const Vec3D& vec2);
+
+Vec4D MathVec4DAddition(const Vec4D& vec1, const Vec4D& vec2);
+
+float MathVec3DLength(const Vec3D& v);
+
+Mat4X4 MathMat4X4Inverse(const Mat4X4& mat);
 #endif
