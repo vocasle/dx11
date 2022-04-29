@@ -132,6 +132,7 @@ void Game::InitPerSceneConstants()
 	spotLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	spotLight.Att = MathVec3DFromXYZ(1.0f, 0.09f, 0.032f);
 	spotLight.Range = 5.0f;
+	spotLight.Spot = 2.0f;
 	m_PerSceneData.spotLights[0] = spotLight;
 }
 
@@ -191,8 +192,12 @@ void Game::Update()
 		m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
 		MathVec3DNormalize(&m_PerSceneData.dirLight.Direction);
 
-		//m_PerSceneData.spotLights[0].Position = m_Camera.CameraPos;
-		//m_PerSceneData.spotLights[0].Direction = m_Camera.FocusPoint;
+		const Vec3D at = m_Camera.GetAt();
+		const Vec3D pos = m_Camera.GetPos();
+
+		m_PerSceneData.spotLights[0].Position = pos;
+		m_PerSceneData.spotLights[0].Direction = at;
+		UtilsDebugPrint("CameraAt: %f %f %f\n", at.X, at.Y, at.Z);
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
 	}
 #endif
@@ -351,7 +356,6 @@ void Game::CreateActors()
 		"assets/meshes/rocket.obj",
 		"assets/meshes/cube.obj",
 		"assets/meshes/sphere.obj",
-		"assets/meshes/bunny.obj",
 	};
 
 	const char* diffuseTextures[] = {
