@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <DirectXMath.h>
+
 #define EPSILON 0.00001f
 
 // In this math helper file all matrices are row major matrices
@@ -29,11 +31,6 @@ int32_t MathIsNaN(float n)
 float MathRandom(float min, float max)
 {
 	return ((float)rand() / (float)RAND_MAX) * (max - min) + min;
-}
-
-Mat4X4 operator*(const Mat4X4& lhs, const Mat4X4& rhs)
-{
-	return MathMat4X4MultMat4X4ByMat4X4(&lhs, &rhs);
 }
 
 Vec2D MathVec2DZero(void)
@@ -443,6 +440,15 @@ Mat4X4 MathMat4X4OrthographicOffCenter(float viewLeft,
 	return m;
 }
 
+Mat4X4 MathMat4X4Inverse(const Mat4X4* mat)
+{
+	using namespace DirectX;
+	const XMFLOAT4X4 xmmat = XMFLOAT4X4{ static_cast<const float*>(&mat->A00) };
+	XMFLOAT4X4 xminverse;
+	XMStoreFloat4x4(&xminverse, XMMatrixInverse(nullptr, XMLoadFloat4x4(&xmmat)));
+	return Mat4X4{ static_cast<const float*>(&xminverse._11) };
+}
+
 float MathClamp(float min, float max, float v)
 {
 	if (v > max)
@@ -562,11 +568,6 @@ Vec3D MathVec3DSubtraction(const Vec3D* vec1, const Vec3D* vec2)
 	return out;
 }
 
-Vec3D MathVec3DSubtraction(const Vec3D& vec1, const Vec3D& vec2)
-{
-	return MathVec3DSubtraction(&vec1, &vec2);
-}
-
 float MathVec3DDot(const Vec3D* vec1, const Vec3D* vec2)
 {
 	return vec1->X * vec2->X + vec1->Y * vec2->Y + vec1->Z * vec2->Z;
@@ -615,11 +616,6 @@ void MathVec3DPrint(const Vec3D* vec)
 	printf("{ %f %f %f }\n", vec->X, vec->Y, vec->Z);
 }
 
-float MathVec3DLength(const Vec3D& v)
-{
-	return sqrtf(MathVec3DDot(&v, &v));
-}
-
 Vec4D MathVec4DAddition(const Vec4D* vec1, const Vec4D* vec2)
 {
 	Vec4D res = {};
@@ -628,11 +624,6 @@ Vec4D MathVec4DAddition(const Vec4D* vec1, const Vec4D* vec2)
 	res.Z = vec1->Z + vec2->Z;
 	res.W = vec1->W + vec2->W;
 	return res;
-}
-
-Vec4D MathVec4DAddition(const Vec4D& vec1, const Vec4D& vec2)
-{
-	return MathVec4DAddition(&vec1, &vec2);
 }
 
 void MathVec4DSubtraction(const Vec4D* vec1, const Vec4D* vec2, Vec4D* out)
@@ -890,6 +881,33 @@ void MathTest(void)
 	TestVec3D();
 	TestMat3X3();
 	TestMat4X4();
+}
+#endif
+
+#ifdef __cplusplus
+Mat4X4 operator*(const Mat4X4& lhs, const Mat4X4& rhs)
+{
+	return MathMat4X4MultMat4X4ByMat4X4(&lhs, &rhs);
+}
+
+Vec3D MathVec3DSubtraction(const Vec3D& vec1, const Vec3D& vec2)
+{
+	return MathVec3DSubtraction(&vec1, &vec2);
+}
+
+Vec4D MathVec4DAddition(const Vec4D& vec1, const Vec4D& vec2)
+{
+	return MathVec4DAddition(&vec1, &vec2);
+}
+
+float MathVec3DLength(const Vec3D& v)
+{
+	return sqrtf(MathVec3DDot(&v, &v));
+}
+
+Mat4X4 MathMat4X4Inverse(const Mat4X4& mat)
+{
+	return MathMat4X4Inverse(&mat);
 }
 #endif
 

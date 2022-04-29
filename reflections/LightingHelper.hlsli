@@ -38,6 +38,8 @@ struct Material
 	float4 Specular;
 };
 
+static const float4 ZERO_VEC4 = { 0.0f, 0.0f, 0.0f, 0.0f };
+
 Material ComputeDirectionalLight(Material mat, DirectionalLight L, float3 normal, float3 toEye)
 {
     float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -215,4 +217,25 @@ float3 NormalSampleToWorldSpace(float3 normalMapSample,
     float3 bumpedNormalW = mul(normalT, TBN);
 
     return bumpedNormalW;
+}
+
+float DirectionalLightIntensity(DirectionalLight dl)
+{
+    return 1.0f;
+}
+
+float SpotLightIntensity(SpotLight sl, float3 surfPos)
+{
+    const float distance = length(sl.Position - surfPos);
+    const float3 L = (sl.Position - surfPos) / distance;
+
+    return pow(max(dot(-sl.Direction, L), 0.0f), sl.Spot) / (distance * distance);
+}
+
+float PointLightIntensity(PointLight pl, float3 surfPos)
+{
+    const float distance = length(pl.Position - surfPos);
+    const float3 L = (pl.Position - surfPos) / distance;
+
+    return 1.0f / (distance * distance);
 }
