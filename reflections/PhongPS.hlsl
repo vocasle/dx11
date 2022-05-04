@@ -10,7 +10,8 @@ float4 main(VSOut In) : SV_TARGET
 	const float3 viewDir = normalize(cameraPosW - In.PosW);
 
 	LightIntensity intensities[MAX_LIGHTS];
-	intensities[0] = DirectionalLightIntensity(dirLight, normal, viewDir);
+	//intensities[0] = DirectionalLightIntensity(dirLight, normal, viewDir);
+	intensities[/*1*/0] = PointLightIntensity(pointLights[0], normal, In.PosW, viewDir);
 
 	//return float4(In.NormalW.xyz * 0.5f + 0.5f, 1.0f);
 	//return float4(intensities[0].intensity, 1.0f);

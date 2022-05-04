@@ -60,6 +60,19 @@ LightIntensity DirectionalLightIntensity(DirectionalLight light, float3 normal, 
     intensity.H = H;
     return intensity;
 }
+
+LightIntensity PointLightIntensity(PointLight light, float3 normal, float3 surfPoint, float3 viewDir)
+{
+    LightIntensity intensity;
+    const float distance = length(light.Position - surfPoint);
+    const float atten = 1.0f / (distance * distance);
+    intensity.intensity = float3(atten, atten, atten);
+    const float3 L = normalize(light.Position - surfPoint);
+    const float3 H = normalize(L + viewDir);
+    intensity.L = L;
+    intensity.H = H;
+    return intensity;
+}
 // Blinn-Phong
 // K = EM + DTA + Sum {Ci[DT(dot(N,Li) + SG(dot(N,Hi)^m]}
 // E - emission color
