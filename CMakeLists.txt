@@ -25,3 +25,4 @@ endforeach()
 set(assets_root "${CMAKE_BINARY_DIR}/assets")
 
 add_subdirectory(dx11)
+add_subdirectory(shadows)
