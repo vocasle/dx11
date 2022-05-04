@@ -585,12 +585,12 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	CameraInit(&game->Cam, &cameraPos, &game->Keyboard, &game->Mouse);
 	RenderDataInit(&game->RenderData, &cameraPos);
 
-	GameLoadModel(game, "assets/meshes/cube.obj");
-	GameLoadModel(game, "assets/meshes/sphere.obj");
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_COL_VAR1_1K.jpg", &game->RenderData.DefaultTexture);
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_REFL_1K.jpg", &game->RenderData.SpecularTexture);
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_GLOSS_1K.jpg", &game->RenderData.GlossTexture);
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_NRM_1K.png", &game->RenderData.NormalTexture);
+	GameLoadModel(game, UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT));
+	GameLoadModel(game, UtilsFormatStr("%s/meshes/sphere.obj", ASSETS_ROOT));
+	GameLoadTextureFromFile(game->DR, UtilsFormatStr("%s/textures/bricks_diffuse.jpg", ASSETS_ROOT), &game->RenderData.DefaultTexture);
+	GameLoadTextureFromFile(game->DR, UtilsFormatStr("%s/textures/bricks_reflection.jpg", ASSETS_ROOT), &game->RenderData.SpecularTexture);
+	GameLoadTextureFromFile(game->DR, UtilsFormatStr("%s/textures/bricks_gloss.jpg", ASSETS_ROOT), &game->RenderData.GlossTexture);
+	GameLoadTextureFromFile(game->DR, UtilsFormatStr("%s/textures/bricks_normal.png", ASSETS_ROOT), &game->RenderData.NormalTexture);
 	GameCreateSharedBuffers(game);
 	GameGenerateRandomOffsets(game);
 	ID3D11Device1* device = game->DR->Device;
