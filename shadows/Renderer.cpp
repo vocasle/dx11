@@ -98,12 +98,14 @@ void Renderer::DrawIndexed(ID3D11Buffer* indexBuffer,
 	context->IASetVertexBuffers(0, 1, &vertexBuffer, &strides, &offsets);
 	context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	context->RSSetState(m_RasterizerState);
-	context->PSSetSamplers(0, R_MAX_SAMPLERS, m_SamplerStates);
+	if (m_PS)
+	{
+		context->PSSetSamplers(0, R_MAX_SAMPLERS, m_SamplerStates);
+		context->PSSetShaderResources(0, R_MAX_SRV_NUM, m_PS_SRV);
+		context->PSSetConstantBuffers(0, R_MAX_CB_NUM, m_PS_CB);
+	}
 	context->VSSetShader(m_VS, NULL, 0);
 	context->PSSetShader(m_PS, NULL, 0);
-
-	context->PSSetShaderResources(0, R_MAX_SRV_NUM, m_PS_SRV);
-	context->PSSetConstantBuffers(0, R_MAX_CB_NUM, m_PS_CB);
 	context->VSSetConstantBuffers(0, R_MAX_CB_NUM, m_VS_CB);
 	context->DrawIndexed(indexCount, startIndexLocation, baseVertexLocation);
 
