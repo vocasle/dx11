@@ -24,6 +24,7 @@ endforeach()
 
 set(assets_root "${CMAKE_BINARY_DIR}/assets")
 
+add_subdirectory(imgui-1.87)
 add_subdirectory(dx11)
 add_subdirectory(shadows)
 add_subdirectory(reflections)
