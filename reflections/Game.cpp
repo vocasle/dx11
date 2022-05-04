@@ -60,6 +60,7 @@ void Game::UpdateImgui()
 {
 	// Any application code here
 	ImGui::Checkbox("Rotate dir light", &m_ImguiState.RotateDirLight);
+	ImGui::Checkbox("Animate first point light", &m_ImguiState.AnimatePointLight);
 }
 #endif
 
@@ -98,7 +99,7 @@ void Game::InitPerSceneConstants()
 {
 	struct PointLight pl = {};
 	const Vec3D positions[] = {
-		{-4.0f, 1.5f, -4.0f},
+		{-4.0f, 2.2f, -4.0f},
 		{-4.0f, 1.5f, 4.0f},
 		{4.0f, 1.5f, 4.0f},
 		{4.0f, 1.5f, -4.0f},
@@ -183,7 +184,6 @@ void Game::Update()
 	BuildShadowTransform();
 
 #if WITH_IMGUI
-
 	// update directional light
 	static float elapsedTime = 0.0f;
 	elapsedTime += (float)m_Timer.DeltaMillis / (1000.0f * 2.0f);
@@ -200,8 +200,16 @@ void Game::Update()
 		m_PerSceneData.spotLights[0].Position = pos;
 		m_PerSceneData.spotLights[0].Direction = at;
 		UtilsDebugPrint("CameraAt: %f %f %f\n", at.X, at.Y, at.Z);
-		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
 	}
+
+	if (m_ImguiState.AnimatePointLight)
+	{
+		static const float radius = 3.0f;
+		m_PerSceneData.pointLights[0].Position.X = sinf(elapsedTime) * radius;
+		m_PerSceneData.pointLights[0].Position.Z = cosf(elapsedTime) * radius;
+	}
+
+	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
 #endif
 }
 
