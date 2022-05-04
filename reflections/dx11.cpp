@@ -10,7 +10,7 @@
 #include <shellapi.h>
 
 
-#if _DEBUG
+#if WITH_VLD
 #include <vld.h>
 #endif
 
@@ -22,8 +22,8 @@
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
-WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
-WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+WCHAR szTitle[MAX_LOADSTRING] = L"reflections";                  // The title bar text
+WCHAR szWindowClass[MAX_LOADSTRING] = L"reflectionsWindowClass";            // the main window class name
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -56,8 +56,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // Initialize global strings
-    LoadStringW(NULL, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(NULL, IDC_DX11, szWindowClass, MAX_LOADSTRING);
+    //LoadStringW(NULL, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    //LoadStringW(NULL, IDC_DX11, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     gGame = std::make_unique<Game>();

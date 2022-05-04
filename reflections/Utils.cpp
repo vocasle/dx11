@@ -29,12 +29,17 @@ void UtilsFatalError(const char* fmt, ...)
     ExitProcess(EXIT_FAILURE);
 }
 
-const char* UtilsFormatStr(const char* fmt, ...)
+std::string UtilsFormatStr(const char* fmt, ...)
 {
-    static char out[512];
+    std::string out;
     va_list args;
     va_start(args, fmt);
-    vsnprintf(out, sizeof(out), fmt, args);
+    va_list args_copy;
+    va_copy(args_copy, args);
+    size_t len = vsnprintf(nullptr, 0, fmt, args_copy);
+    out.resize(len);
+    vsnprintf(&out[0], len + 1, fmt, args);
+    va_end(args_copy);
     va_end(args);
     return out;
 }

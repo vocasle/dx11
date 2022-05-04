@@ -55,11 +55,13 @@ void Game::CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11P
 	}
 }
 
+#if WITH_IMGUI
 void Game::UpdateImgui()
 {
 	// Any application code here
 	ImGui::Checkbox("Rotate dir light", &m_ImguiState.RotateDirLight);
 }
+#endif
 
 std::vector<uint8_t> Game::CreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs)
 {
@@ -352,38 +354,38 @@ void Game::Tick()
 
 void Game::CreateActors()
 {
-	const char* models[] = {
-		"assets/meshes/rocket.obj",
-		"assets/meshes/cube.obj",
-		"assets/meshes/sphere.obj",
+	const std::string models[] = {
+		UtilsFormatStr("%s/meshes/rocket.obj", ASSETS_ROOT),
+		UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT),
+		UtilsFormatStr("%s/meshes/sphere.obj", ASSETS_ROOT),
 	};
 
-	const char* diffuseTextures[] = {
-		"assets/textures/drywall_diffuse.jpg",
-		"assets/textures/bricks_diffuse.jpg",
-		"assets/textures/cliff_diffuse.jpg",
-		"assets/textures/marble_diffuse.jpg",
+	const std::string diffuseTextures[] = {
+		UtilsFormatStr("%s/textures/drywall_diffuse.jpg", ASSETS_ROOT),
+		UtilsFormatStr("%s/textures/bricks_diffuse.jpg", ASSETS_ROOT),
+		UtilsFormatStr("%s/textures/cliff_diffuse.jpg", ASSETS_ROOT),
+		UtilsFormatStr("%s/textures/marble_diffuse.jpg", ASSETS_ROOT),
 	};
 
-	const char* specularTextures[] = {
-		"assets/textures/drywall_reflection.jpg",
-		"assets/textures/bricks_reflection.jpg",
-		"assets/textures/cliff_reflection.jpg",
-		"assets/textures/marble_reflection.jpg",
+	const std::string specularTextures[] = {
+		UtilsFormatStr("%s/textures/drywall_reflection.jpg", ASSETS_ROOT),
+		UtilsFormatStr("%s/textures/bricks_reflection.jpg", ASSETS_ROOT),
+		UtilsFormatStr("%s/textures/cliff_reflection.jpg", ASSETS_ROOT),
+		UtilsFormatStr("%s/textures/marble_reflection.jpg", ASSETS_ROOT),
 	};
 
-	const char* normalTextures[] = {
-		"assets/textures/drywall_normal.png",
-		"assets/textures/bricks_normal.png",
-		"assets/textures/cliff_normal.jpg",
-		"assets/textures/marble_normal.png",
+	const std::string normalTextures[] = {
+		UtilsFormatStr("%s/textures/drywall_normal.png", ASSETS_ROOT),
+		UtilsFormatStr("%s/textures/bricks_normal.png", ASSETS_ROOT),
+		UtilsFormatStr("%s/textures/cliff_normal.jpg", ASSETS_ROOT),
+		UtilsFormatStr("%s/textures/marble_normal.png", ASSETS_ROOT),
 	};
 
-	const char* glossTextures[] = {
-		"assets/textures/drywall_gloss.jpg",
-		"assets/textures/bricks_gloss.jpg",
-		"assets/textures/cliff_gloss.jpg",
-		"assets/textures/marble_gloss.jpg",
+	const std::string glossTextures[] = {
+		UtilsFormatStr("%s/textures/drywall_gloss.jpg", ASSETS_ROOT),
+		UtilsFormatStr("%s/textures/bricks_gloss.jpg", ASSETS_ROOT),
+		UtilsFormatStr("%s/textures/cliff_gloss.jpg", ASSETS_ROOT),
+		UtilsFormatStr("%s/textures/marble_gloss.jpg", ASSETS_ROOT),
 	};
 
 	const float scales[] = {
@@ -415,16 +417,16 @@ void Game::CreateActors()
 	for (size_t i = 0; i < _countof(models); ++i)
 	{
 		Actor actor = Actor();
-		actor.LoadModel(models[i]);
+		actor.LoadModel(models[i].c_str());
 		actor.CreateIndexBuffer(m_DR->GetDevice());
 		actor.CreateVertexBuffer(m_DR->GetDevice());
 		actor.Scale(scales[i]);
 		actor.Rotate(rotations[i].X, rotations[i].Y, rotations[i].Z);
 		actor.Translate(offsets[i]);
-		actor.LoadTexture(diffuseTextures[i], TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.LoadTexture(specularTextures[i], TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.LoadTexture(glossTextures[i], TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.LoadTexture(normalTextures[i], TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		actor.LoadTexture(diffuseTextures[i].c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		actor.LoadTexture(specularTextures[i].c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		actor.LoadTexture(glossTextures[i].c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		actor.LoadTexture(normalTextures[i].c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		actor.SetMaterial(&material);
 
 		m_Actors.emplace_back(actor);
@@ -438,10 +440,11 @@ void Game::CreateActors()
 		plane.CreateVertexBuffer(m_DR->GetDevice());
 		const Vec3D offset = { 0.0f, -1.0f, 0.0f };
 		plane.Translate(offset);
-		plane.LoadTexture("assets/textures/marble_diffuse.jpg", TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		plane.LoadTexture("assets/textures/marble_normal.png", TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		plane.LoadTexture("assets/textures/marble_gloss.jpg", TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		plane.LoadTexture("assets/textures/marble_reflection.jpg", TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		
+		plane.LoadTexture(UtilsFormatStr("%s/textures/marble_diffuse.jpg", ASSETS_ROOT).c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture(UtilsFormatStr("%s/textures/marble_normal.png", ASSETS_ROOT).c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture(UtilsFormatStr("%s/textures/marble_gloss.jpg", ASSETS_ROOT).c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture(UtilsFormatStr("%s/textures/marble_reflection.jpg", ASSETS_ROOT).c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		plane.SetMaterial(&material);
 		m_Actors.emplace_back(plane);
 	}
@@ -459,7 +462,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	Mouse::Get().SetWindowDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
 	m_ShadowMap.InitResources(m_DR->GetDevice(), 2048, 2048);
 	m_Camera.SetViewDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
-	m_CubeMap.LoadCubeMap(m_DR->GetDevice(), "assets/textures/daylight.jpg");
+	m_CubeMap.LoadCubeMap(m_DR->GetDevice(), UtilsFormatStr("%s/textures/daylight.jpg", ASSETS_ROOT).c_str());
 	m_CubeMap.SetCamera(&m_Camera);
 
 	// init actors
