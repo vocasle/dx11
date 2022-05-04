@@ -20,8 +20,8 @@
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
-WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
-WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+WCHAR szTitle[MAX_LOADSTRING] = L"dx11";                  // The title bar text
+WCHAR szWindowClass[MAX_LOADSTRING] = L"dx11WindowClass";            // the main window class name
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -52,8 +52,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     Game* pGame = GameNew();
 
     // Initialize global strings
-    LoadStringW(NULL, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(NULL, IDC_DX11, szWindowClass, MAX_LOADSTRING);
+    //LoadStringW(NULL, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    //LoadStringW(NULL, IDC_DX11, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
