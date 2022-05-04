@@ -106,13 +106,9 @@ float4 BlinnPhong(float4 E,
     for (uint i = 0; i < numLights; ++i)
     {
         const float3 Ci = intensities[i].intensity;
-        const float3 Li = intensities[i].L;
-        const float3 Hi = intensities[i].H;
-        const float diffuseFactor = max(dot(N, Li), 0.0f);
-        if (diffuseFactor > 0.0f)
-        {
-            sum += float4(Ci, 1.0f) * (DT * diffuseFactor + SG * pow(max(dot(N, Hi), 0.0f), m));
-        }
+        const float3 Li = normalize(intensities[i].L);
+        const float3 Hi = normalize(intensities[i].H);
+        sum += float4(Ci, 1.0f) * (DT * max(dot(N, Li), 0.0f) + SG * pow(max(dot(N, Hi), 0.0f), m));
     }
     return EM + DT * A + sum;
 }
