@@ -60,11 +60,12 @@ set(shader_headers
 
 add_executable(${current_target} WIN32 ${sources} ${headers} ${pixel_shaders} ${vertex_shaders} ${shader_headers})
 
-target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib)
+target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui)
 
 target_compile_definitions(${current_target} PUBLIC 
 	ASSETS_ROOT="${assets_root}"
-	NOMINMAX=1)
+	NOMINMAX=1
+	WITH_IMGUI=1)
 
 set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_TYPE Pixel)
 set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_ENTRYPOINT main)
