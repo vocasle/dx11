@@ -119,7 +119,7 @@ void Game::InitPerSceneConstants()
 	dirLight.Ambient = ColorFromRGBA(0.2f, 0.2f, 0.2f, 1.0f);
 	dirLight.Diffuse = ColorFromRGBA(0.5f, 0.5f, 0.5f, 1.0f);
 	dirLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-	dirLight.Direction = MathVec3DFromXYZ(-0.2f, 1.0f, -0.3f);
+	dirLight.Direction = MathVec3DFromXYZ(1.0f, 1.0f, 1.0f);
 	//Mat4X4 rotMat = MathMat4X4RotateY(MathToRadians(90.0f));
 	//Vec4D direction = { dirLight.Direction, 1.0f };
 	//direction = MathMat4X4MultVec4DByMat4X4(&direction, &rotMat);
@@ -186,7 +186,7 @@ void Game::Update()
 
 	// update directional light
 	static float elapsedTime = 0.0f;
-	elapsedTime += (float)m_Timer.DeltaMillis / 1000.0f;
+	elapsedTime += (float)m_Timer.DeltaMillis / (1000.0f * 2.0f);
 	if (m_ImguiState.RotateDirLight)
 	{
 		m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);

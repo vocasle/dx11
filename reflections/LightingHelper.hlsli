@@ -1,3 +1,6 @@
+static const float4 ZERO_VEC4 = { 0.0f, 0.0f, 0.0f, 0.0f };
+static const float4 ONE_VEC4 = { 1.0f, 1.0f, 1.0f, 1.0f };
+
 struct DirectionalLight
 {
 	float4 Ambient;
@@ -38,131 +41,67 @@ struct Material
 	float4 Specular;
 };
 
-static const float4 ZERO_VEC4 = { 0.0f, 0.0f, 0.0f, 0.0f };
+#define MAX_LIGHTS 8
 
-Material ComputeDirectionalLight(Material mat, DirectionalLight L, float3 normal, float3 toEye)
+struct LightIntensity
 {
-    float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float3 intensity;
+    float3 L;
+    float3 H;
+};
 
-    float3 lightVec = -L.Direction;
-
-    ambient = mat.Ambient * L.Ambient;
-
-    float diffuseFactor = dot(lightVec, normal);
-
-    [flatten]
-    if (diffuseFactor > 0.0f)
-    {
-        float3 v = reflect(-lightVec, normal);
-        float specFactor = pow(max(dot(v, toEye), 0.0f), mat.Specular.w);
-
-        diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
-        spec = specFactor * mat.Specular * L.Specular;
-    }
-
-    Material material;
-    material.Ambient = ambient;
-    material.Diffuse = diffuse;
-    material.Specular = spec;
-
-    return material;
+LightIntensity DirectionalLightIntensity(DirectionalLight light, float3 normal, float3 viewDir)
+{
+    LightIntensity intensity;
+    intensity.intensity = float3(1.0f, 1.0f, 1.0f);
+    const float3 L = normalize(-light.Direction);
+    const float3 H = normalize(L + viewDir);
+    intensity.L = L;
+    intensity.H = H;
+    return intensity;
 }
-
-
-Material ComputePointLight(Material mat, PointLight L, float3 pos, float3 normal, float3 toEye)
+// Blinn-Phong
+// K = EM + DTA + Sum {Ci[DT(dot(N,Li) + SG(dot(N,Hi)^m]}
+// E - emission color
+// M - sampled color from emission map
+// D - surface's diffuse reflection color
+// T - sampled color from diffuse map
+// A - ambient intensity
+// Ci - light intensity
+// N - normal in world space
+// Li - unit vector that point from surface point towards i-th light source
+// S - surface's specular color
+// G - sampled color from gloss map
+// Hi - halfway vector of i-th light source, i.e. H = Li + V / ||Li + V||, where V is unit direction vector to viewer from surface point
+// m - specular exponent
+float4 BlinnPhong(float4 E, 
+    float4 M, 
+    float4 D, 
+    float4 T, 
+    float4 A, 
+    float4 S, 
+    float4 G, 
+    float m, 
+    float3 N, 
+    LightIntensity intensities[MAX_LIGHTS],
+    uint numLights)
 {
-    float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
-
-    Material material;
-    material.Ambient = ambient;
-    material.Diffuse = diffuse;
-    material.Specular = spec;
-
-    float3 lightVec = L.Position - pos;
-
-    float d = length(lightVec);
-
-    if (d > L.Range)
-        return material;
-
-    lightVec /= d;
-
-    ambient = mat.Ambient * L.Ambient;
-
-    float diffuseFactor = dot(lightVec, normal);
-
-    [flatten]
-    if (diffuseFactor > 0.0f)
+    float4 sum = ZERO_VEC4;
+    const float4 EM = E * M;
+    const float4 DT = D * T;
+    const float4 SG = float4(S.rgb, 1.0f) * G;
+    for (uint i = 0; i < numLights; ++i)
     {
-        float3 v = reflect(-lightVec, normal);
-        float specFactor = pow(max(dot(v, toEye), 0.0f), mat.Specular.w);
-
-        diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
-        spec = specFactor * mat.Specular * L.Specular;
+        const float3 Ci = intensities[i].intensity;
+        const float3 Li = intensities[i].L;
+        const float3 Hi = intensities[i].H;
+        const float diffuseFactor = max(dot(N, Li), 0.0f);
+        if (diffuseFactor > 0.0f)
+        {
+            sum += float4(Ci, 1.0f) * (DT * diffuseFactor + SG * pow(max(dot(N, Hi), 0.0f), m));
+        }
     }
-
-    float att = 1.0f / dot(L.Att, float3(1.0f, d, d * d));
-
-    diffuse *= att;
-    spec *= att;
-
-    material.Ambient = ambient;
-    material.Diffuse = diffuse;
-    material.Specular = spec;
-
-    return material;
-}
-
-
-Material ComputeSpotLight(Material mat, SpotLight L, float3 pos, float3 normal, float3 toEye)
-{
-    float4 ambient = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 spec = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    Material material;
-    material.Ambient = ambient;
-    material.Diffuse = diffuse;
-    material.Specular = spec;
-
-    float3 lightVec = L.Position - pos;
-
-    float d = length(lightVec);
-
-    if (d > L.Range)
-        return material;
-
-    lightVec /= d;
-
-    ambient = mat.Ambient * L.Ambient;
-
-
-    float diffuseFactor = dot(lightVec, normal);
-
-    [flatten]
-    if (diffuseFactor > 0.0f)
-    {
-        float3 v = reflect(-lightVec, normal);
-        float specFactor = pow(max(dot(v, toEye), 0.0f), mat.Specular.w);
-
-        diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
-        spec = specFactor * mat.Specular * L.Specular;
-    }
-
-    float spot = pow(max(dot(-lightVec, L.Direction), 0.0f), L.Spot);
-    float att = spot / dot(L.Att, float3(1.0f, d, d * d));
-
-    ambient *= spot;
-    diffuse *= att;
-    spec *= att;
-    material.Ambient = ambient;
-    material.Diffuse = diffuse;
-    material.Specular = spec;
-
-    return material;
+    return EM + DT * A + sum;
 }
 
 static const float SMAP_SIZE = 2048.0f;
