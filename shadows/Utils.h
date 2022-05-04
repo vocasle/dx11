@@ -7,6 +7,7 @@
 #include <d3d11.h>
 #include <dinput.h>
 #include <stdint.h>
+#include <string>
 
 static const WORD MAX_CONSOLE_LINES = 500;
 
@@ -14,9 +15,9 @@ void UtilsDebugPrint(const char* fmt, ...);
 
 void UtilsFatalError(const char* fmt, ...);
 
-const char* UtilsFormatStr(const char* fmt, ...);
+std::string UtilsFormatStr(const char* fmt, ...);
 
-#define UTILS_FATAL_ERROR(msg, ...) UtilsFatalError("ERROR: %s:%d: %s", __FILE__, __LINE__, UtilsFormatStr(msg, __VA_ARGS__))
+#define UTILS_FATAL_ERROR(msg, ...) UtilsFatalError("ERROR: %s:%d: %s", __FILE__, __LINE__, UtilsFormatStr(msg, __VA_ARGS__).c_str())
 
 int UtilStrFindLastChar(const char* str, const char ch);
 
