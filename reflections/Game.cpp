@@ -117,14 +117,10 @@ void Game::InitPerSceneConstants()
 	}
 
 	DirectionalLight dirLight = {};
-	dirLight.Ambient = ColorFromRGBA(0.2f, 0.2f, 0.2f, 1.0f);
+	dirLight.Ambient = ColorFromRGBA(0.1f, 0.1f, 0.1f, 1.0f);
 	dirLight.Diffuse = ColorFromRGBA(0.5f, 0.5f, 0.5f, 1.0f);
 	dirLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	dirLight.Direction = MathVec3DFromXYZ(-1.0f, -1.0f, -1.0f);
-	//Mat4X4 rotMat = MathMat4X4RotateY(MathToRadians(90.0f));
-	//Vec4D direction = { dirLight.Direction, 1.0f };
-	//direction = MathMat4X4MultVec4DByMat4X4(&direction, &rotMat);
-	//dirLight.Direction = { direction.X, direction.Y, direction.Z };
 	m_PerSceneData.dirLight = dirLight;
 
 	SpotLight spotLight = {};
@@ -199,7 +195,6 @@ void Game::Update()
 
 		m_PerSceneData.spotLights[0].Position = pos;
 		m_PerSceneData.spotLights[0].Direction = at;
-		UtilsDebugPrint("CameraAt: %f %f %f\n", at.X, at.Y, at.Z);
 	}
 
 	if (m_ImguiState.AnimatePointLight)
@@ -207,6 +202,10 @@ void Game::Update()
 		static const float radius = 3.0f;
 		m_PerSceneData.pointLights[0].Position.X = sinf(elapsedTime) * radius;
 		m_PerSceneData.pointLights[0].Position.Z = cosf(elapsedTime) * radius;
+		const float color = cosf(elapsedTime) * cosf(elapsedTime);
+
+		m_PerSceneData.pointLights[0].Diffuse.R = color;
+		m_PerSceneData.pointLights[0].Diffuse.G = 1.0f - color;
 	}
 
 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
@@ -364,13 +363,9 @@ void Game::Tick()
 void Game::CreateActors()
 {
 	const std::string models[] = {
-		UtilsFormatStr("%s/meshes/test_cube.obj", ASSETS_ROOT),
-		UtilsFormatStr("%s/meshes/test_cube.obj", ASSETS_ROOT),
-		UtilsFormatStr("%s/meshes/test_cube.obj", ASSETS_ROOT),
-		UtilsFormatStr("%s/meshes/test_cube.obj", ASSETS_ROOT),
-		//UtilsFormatStr("%s/meshes/rocket.obj", ASSETS_ROOT),
-		//UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT),
-		//UtilsFormatStr("%s/meshes/sphere.obj", ASSETS_ROOT),
+		UtilsFormatStr("%s/meshes/rocket.obj", ASSETS_ROOT),
+		UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT),
+		UtilsFormatStr("%s/meshes/sphere.obj", ASSETS_ROOT),
 	};
 
 	const std::string diffuseTextures[] = {
