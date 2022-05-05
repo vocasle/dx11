@@ -18,6 +18,8 @@ float4 main(VSOut In) : SV_TARGET
 		intensities[1 + i] = PointLightIntensity(pointLights[i], normal, In.PosW, viewDir);
 	}
 
+	intensities[5] = SpotLightIntensity(spotLights[0], normal, In.PosW, viewDir);
+
 	//return float4(normalize(In.PosW), 1.0f);
 
 	//return float4(In.NormalW.xyz * 0.5f + 0.5f, 1.0f);
@@ -35,7 +37,7 @@ float4 main(VSOut In) : SV_TARGET
 		128.0f,
 		normal,
 		intensities,
-		5
+		6
 	);
 
 	return fragmentColor;
