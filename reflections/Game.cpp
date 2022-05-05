@@ -99,7 +99,7 @@ void Game::InitPerSceneConstants()
 {
 	struct PointLight pl = {};
 	const Vec3D positions[] = {
-		{-4.0f, 2.2f, -4.0f},
+		{-4.0f, 0.4f, -4.0f},
 		{-4.0f, 1.5f, 4.0f},
 		{4.0f, 1.5f, 4.0f},
 		{4.0f, 1.5f, -4.0f},
@@ -120,7 +120,7 @@ void Game::InitPerSceneConstants()
 	dirLight.Ambient = ColorFromRGBA(0.2f, 0.2f, 0.2f, 1.0f);
 	dirLight.Diffuse = ColorFromRGBA(0.5f, 0.5f, 0.5f, 1.0f);
 	dirLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-	dirLight.Direction = MathVec3DFromXYZ(1.0f, 1.0f, 1.0f);
+	dirLight.Direction = MathVec3DFromXYZ(-1.0f, -1.0f, -1.0f);
 	//Mat4X4 rotMat = MathMat4X4RotateY(MathToRadians(90.0f));
 	//Vec4D direction = { dirLight.Direction, 1.0f };
 	//direction = MathMat4X4MultVec4DByMat4X4(&direction, &rotMat);
@@ -190,7 +190,7 @@ void Game::Update()
 	if (m_ImguiState.RotateDirLight)
 	{
 		m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);
-		m_PerSceneData.dirLight.Direction.Y = 0.5f;
+		m_PerSceneData.dirLight.Direction.Y = -1.0f;
 		m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
 		MathVec3DNormalize(&m_PerSceneData.dirLight.Direction);
 
@@ -285,6 +285,7 @@ void Game::Render()
 		m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
 		m_PerObjectData.world = actor.GetWorld();
 		m_PerObjectData.material = actor.GetMaterial();
+		m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
 			sizeof(PerObjectConstants),
 			&m_PerObjectData,
@@ -363,9 +364,13 @@ void Game::Tick()
 void Game::CreateActors()
 {
 	const std::string models[] = {
-		UtilsFormatStr("%s/meshes/rocket.obj", ASSETS_ROOT),
-		UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT),
-		UtilsFormatStr("%s/meshes/sphere.obj", ASSETS_ROOT),
+		UtilsFormatStr("%s/meshes/test_cube.obj", ASSETS_ROOT),
+		UtilsFormatStr("%s/meshes/test_cube.obj", ASSETS_ROOT),
+		UtilsFormatStr("%s/meshes/test_cube.obj", ASSETS_ROOT),
+		UtilsFormatStr("%s/meshes/test_cube.obj", ASSETS_ROOT),
+		//UtilsFormatStr("%s/meshes/rocket.obj", ASSETS_ROOT),
+		//UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT),
+		//UtilsFormatStr("%s/meshes/sphere.obj", ASSETS_ROOT),
 	};
 
 	const std::string diffuseTextures[] = {
