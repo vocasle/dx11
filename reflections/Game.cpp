@@ -61,6 +61,7 @@ void Game::UpdateImgui()
 	// Any application code here
 	ImGui::Checkbox("Rotate dir light", &m_ImguiState.RotateDirLight);
 	ImGui::Checkbox("Animate first point light", &m_ImguiState.AnimatePointLight);
+	ImGui::Checkbox("Capture spotlight", &m_ImguiState.ToggleSpotlight);
 }
 #endif
 
@@ -126,12 +127,12 @@ void Game::InitPerSceneConstants()
 	SpotLight spotLight = {};
 	spotLight.Position = m_Camera.GetPos();
 	spotLight.Direction = m_Camera.GetAt();
-	spotLight.Ambient = ColorFromRGBA(0.0f, 0.0f, 0.0f, 1.0f);
-	spotLight.Diffuse = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	spotLight.Ambient = ColorFromRGBA(0.1f, 0.1f, 0.1f, 1.0f);
+	spotLight.Diffuse = ColorFromRGBA(1.0f, 0.0f, 0.0f, 1.0f);
 	spotLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	spotLight.Att = MathVec3DFromXYZ(1.0f, 0.09f, 0.032f);
 	spotLight.Range = 5.0f;
-	spotLight.Spot = 2.0f;
+	spotLight.Spot = 32.0f;
 	m_PerSceneData.spotLights[0] = spotLight;
 }
 
@@ -206,6 +207,12 @@ void Game::Update()
 
 		m_PerSceneData.pointLights[0].Diffuse.R = color;
 		m_PerSceneData.pointLights[0].Diffuse.G = 1.0f - color;
+	}
+
+	if (m_ImguiState.ToggleSpotlight)
+	{
+		m_PerSceneData.spotLights[0].Direction = m_Camera.GetAt();
+		m_PerSceneData.spotLights[0].Position = m_Camera.GetPos();
 	}
 
 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());

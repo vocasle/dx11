@@ -73,9 +73,10 @@ private:
 
 	struct ImguiState
 	{
-		ImguiState() : RotateDirLight{ false }, AnimatePointLight{ false } {}
+		ImguiState() : RotateDirLight{ false }, AnimatePointLight{ false }, ToggleSpotlight{ false }{}
 		bool RotateDirLight;
 		bool AnimatePointLight;
+		bool ToggleSpotlight;
 	};
 
 	ImguiState m_ImguiState;
