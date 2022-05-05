@@ -48,6 +48,7 @@ struct LightIntensity
     float3 intensity;
     float3 L;
     float3 H;
+    float3 diffuse;
 };
 
 LightIntensity DirectionalLightIntensity(DirectionalLight light, float3 normal, float3 viewDir)
@@ -58,6 +59,7 @@ LightIntensity DirectionalLightIntensity(DirectionalLight light, float3 normal, 
     const float3 H = normalize(L + viewDir);
     intensity.L = L;
     intensity.H = H;
+    intensity.diffuse = light.Diffuse.rgb;
     return intensity;
 }
 
@@ -71,6 +73,7 @@ LightIntensity PointLightIntensity(PointLight light, float3 normal, float3 surfP
     const float3 H = normalize(L + viewDir);
     intensity.L = L;
     intensity.H = H;
+    intensity.diffuse = light.Diffuse.rgb;
     return intensity;
 }
 // Blinn-Phong
@@ -108,7 +111,8 @@ float4 BlinnPhong(float4 E,
         const float3 Ci = intensities[i].intensity;
         const float3 Li = normalize(intensities[i].L);
         const float3 Hi = normalize(intensities[i].H);
-        sum += float4(Ci, 1.0f) * (DT * max(dot(N, Li), 0.0f) + SG * pow(max(dot(N, Hi), 0.0f), m));
+        const float3 lightDiffuse = intensities[i].diffuse;
+        sum += float4(Ci, 1.0f) * (DT * float4(lightDiffuse, 1.0f) * max(dot(N, Li), 0.0f) + SG * pow(max(dot(N, Hi), 0.0f), m));
     }
     return EM + DT * A + sum;
 }
