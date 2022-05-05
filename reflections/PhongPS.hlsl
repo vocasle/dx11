@@ -10,8 +10,8 @@ float4 main(VSOut In) : SV_TARGET
 	const float3 viewDir = normalize(cameraPosW - In.PosW);
 
 	LightIntensity intensities[MAX_LIGHTS];
-	//intensities[0] = DirectionalLightIntensity(dirLight, normal, viewDir);
-	intensities[/*1*/0] = PointLightIntensity(pointLights[0], normal, In.PosW, viewDir);
+	intensities[0] = DirectionalLightIntensity(dirLight, normal, viewDir);
+	intensities[1] = PointLightIntensity(pointLights[0], normal, In.PosW, viewDir);
 
 	//return float4(normalize(In.PosW), 1.0f);
 
@@ -30,7 +30,7 @@ float4 main(VSOut In) : SV_TARGET
 		128.0f,
 		normal,
 		intensities,
-		1
+		2
 	);
 
 	return fragmentColor;
