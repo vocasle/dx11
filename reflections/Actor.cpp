@@ -96,20 +96,12 @@ void Actor::LoadMesh(Mesh* mesh)
 	for (uint32_t j = 0; j < mesh->Faces.size(); ++j)
 	{
 		const Face& face = mesh->Faces[j];
-		const Position& pos = mesh->Positions[face.posIdx];
-		const Normal& norm = mesh->Normals[face.normIdx];
-		const TexCoord& tc = mesh->TexCoords[face.texIdx];
-
-		vert.Position.X = pos.x;
-		vert.Position.Y = pos.y;
-		vert.Position.Z = pos.z;
-
-		vert.Normal.X = norm.x;
-		vert.Normal.Y = norm.y;
-		vert.Normal.Z = norm.z;
-
-		vert.TexCoords.X = tc.u;
-		vert.TexCoords.Y = tc.v;
+		const Vec3D& pos = mesh->Positions[face.posIdx];
+		const Vec3D& norm = mesh->Normals[face.normIdx];
+		const Vec2D& tc = mesh->TexCoords[face.texIdx];
+		vert.Position = pos;
+		vert.Normal = norm;
+		vert.TexCoords = tc;
 
 		assert(m_Indices.size() + 1 <= mesh->Faces.size());
 		m_Indices.emplace_back(m_Indices.size());
@@ -152,20 +144,13 @@ void Actor::LoadModel(const char* filename)
 		for (uint32_t j = 0; j < mesh->Faces.size(); ++j)
 		{
 			const Face& face = model->Meshes[i].Faces[j];
-			const Position& pos = mesh->Positions[face.posIdx - posOffs];
-			const Normal& norm = mesh->Normals[face.normIdx - normOffs];
-			const TexCoord& tc = mesh->TexCoords[face.texIdx - tcOffs];
+			const Vec3D& pos = mesh->Positions[face.posIdx - posOffs];
+			const Vec3D& norm = mesh->Normals[face.normIdx - normOffs];
+			const Vec2D& tc = mesh->TexCoords[face.texIdx - tcOffs];
 
-			vert.Position.X = pos.x;
-			vert.Position.Y = pos.y;
-			vert.Position.Z = pos.z;
-
-			vert.Normal.X = norm.x;
-			vert.Normal.Y = norm.y;
-			vert.Normal.Z = norm.z;
-
-			vert.TexCoords.X = tc.u;
-			vert.TexCoords.Y = tc.v;
+			vert.Position = pos;
+			vert.Normal = norm;
+			vert.TexCoords = tc;
 
 			m_Indices.emplace_back(m_Indices.size());
 			m_Vertices.emplace_back(vert);
