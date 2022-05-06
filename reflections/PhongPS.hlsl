@@ -5,8 +5,9 @@ float4 main(VSOut In) : SV_TARGET
 	const float4 diffuseSampled = diffuseTexture.Sample(defaultSampler, In.TexCoords);
 	const float4 specularSampled = specularTexture.Sample(defaultSampler, In.TexCoords);
 	const float4 glossSampled = glossTexture.Sample(defaultSampler, In.TexCoords);
-
-	const float3 normal = normalize(In.NormalW);
+	const float3 normalSampled = normalTexture.Sample(defaultSampler, In.TexCoords);
+	float3 normal = 2.0f * normalSampled - 1.0f; // Uncompress each component from [0,1] to [-1,1].
+	
 	const float3 viewDir = normalize(cameraPosW - In.PosW);
 
 	LightIntensity intensities[MAX_LIGHTS];
