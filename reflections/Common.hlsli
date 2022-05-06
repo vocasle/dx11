@@ -16,8 +16,8 @@ struct VSOut
 	float2 TexCoords : TEXCOORDS;
 	float3 PosW : POSITION;
 	float4 ShadowPosH : TEXCOORD1;
-	float4 TangentW : TANGENT;
-	float4 BitangentW : BITANGENT;
+	float3 TangentW : TANGENT;
+	float3 BitangentW : BITANGENT;
 };
 
 cbuffer PerObjectConstants : register(b0)
