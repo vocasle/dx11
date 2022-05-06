@@ -4,32 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-
-struct Position
-{
-	Position(): x{0}, y{0}, z{0} {}
-	Position(float X, float Y, float Z): x{X}, y{Y}, z{Z} {}
-	float x;
-	float y;
-	float z;
-};
-
-struct TexCoord
-{
-	TexCoord(): u{0}, v{0} {}
-	TexCoord(float U, float V): u{U}, v{V} {}
-	float u;
-	float v;
-};
-
-struct Normal
-{
-	Normal() : x{0}, y{0}, z{0} {}
-	Normal(float X, float Y, float Z): x{X}, y{Y}, z{Z} {}
-	float x;
-	float y;
-	float z;
-};
+#include "Math.h"
 
 struct Face
 {
@@ -43,9 +18,9 @@ struct Face
 struct Mesh
 {
 	std::string Name;
-	std::vector<Position> Positions;
-	std::vector<TexCoord> TexCoords;
-	std::vector<Normal> Normals;
+	std::vector<Vec3D> Positions;
+	std::vector<Vec2D> TexCoords;
+	std::vector<Vec3D> Normals;
 	std::vector<Face> Faces;
 };
 

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "objloader.h"
+#include "Math.h"
 
 void OLLogInfo(const char* fmt, ...)
 {
@@ -247,21 +248,21 @@ void OLDumpModelToFile(const struct Model* model, const char* filename)
 		for (uint32_t j = 0; j < m->Positions.size(); ++j)
 		{
 			fprintf(f, "Position { %f %f %f }\n", 
-					m->Positions[j].x, m->Positions[j].y, m->Positions[j].z);
+					m->Positions[j].X, m->Positions[j].Y, m->Positions[j].Z);
 		}
 
 		fprintf(f, "NumTexCoords: %d\n", m->TexCoords.size());
 		for (uint32_t j = 0; j < m->TexCoords.size(); ++j)
 		{
 			fprintf(f, "TexCoord { %f %f }\n", 
-					m->TexCoords[j].u, m->TexCoords[j].v);
+					m->TexCoords[j].X, m->TexCoords[j].Y);
 		}
 
 		fprintf(f, "NumNormals: %d\n", m->Normals.size());
 		for (uint32_t j = 0; j < m->Normals.size(); ++j)
 		{
 			fprintf(f, "Normal { %f %f %f }\n", 
-					m->Normals[j].x, m->Normals[j].x, m->Normals[j].y);
+					m->Normals[j].X, m->Normals[j].Y, m->Normals[j].Z);
 		}
 
 		fprintf(f, "NumFaces: %llu\n", m->Faces.size());
@@ -313,5 +314,66 @@ std::unique_ptr<Model> OLLoad(const char* filename)
 	//OLDumpModelToFile(model, "model.txt");
 
 	return model;
+}
+
+struct Triangle
+{
+	uint32_t index[3];
+};
+
+void CalculateTangentArray(long vertexCount, const std::vector<Vec3D>& vertex,
+	const std::vector<Vec3D>& normal, const std::vector<Vec2D>& texcoord, long triangleCount,
+	const std::vector<Triangle>& triangle, Vec4D* tangent)
+{
+	std::vector<Vec3D> tan1(vertexCount);
+	std::vector<Vec3D> tan2(vertexCount);
+
+	for (long a = 0; a < triangleCount; a++)
+	{
+		long i1 = triangle[a].index[0];
+		long i2 = triangle[a].index[1];
+		long i3 = triangle[a].index[2];
+		const Vec3D& v1 = vertex[i1];
+		const Vec3D& v2 = vertex[i2];
+		const Vec3D& v3 = vertex[i3];
+		const Vec2D& w1 = texcoord[i1];
+		const Vec2D& w2 = texcoord[i2];
+		const Vec2D& w3 = texcoord[i3];
+		float x1 = v2.X - v1.X;
+		float x2 = v3.X - v1.X;
+		float y1 = v2.Y - v1.Y;
+		float y2 = v3.Y - v1.Y;
+		float z1 = v2.Z - v1.Z;
+		float z2 = v3.Z - v1.Z;
+		float s1 = w2.X - w1.X;
+		float s2 = w3.X - w1.X;
+		float t1 = w2.Y - w1.Y;
+		float t2 = w3.Y - w1.Y;
+		float r = 1.0F / (s1 * t2 - s2 * t1);
+		Vec3D sdir((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r,
+			(t2 * z1 - t1 * z2) * r);
+		Vec3D tdir((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r,
+			(s1 * z2 - s2 * z1) * r);
+		tan1[i1] = MathVec3DAddition(&tan1[i1], &sdir);
+		tan1[i2] = MathVec3DAddition(&tan1[i2], &sdir);
+		tan1[i3] = MathVec3DAddition(&tan1[i3], &sdir);
+		tan2[i1] = MathVec3DAddition(&tan2[i1], &tdir);
+		tan2[i2] = MathVec3DAddition(&tan2[i2], &tdir);
+		tan2[i3] = MathVec3DAddition(&tan2[i3], &tdir);
+	}
+
+	for (long a = 0; a < vertexCount; a++)
+	{
+		const Vec3D& n = normal[a];
+		const Vec3D& t = tan1[a];
+		// Gram-Schmidt orthogonalize.
+		Vec3D tmp = MathVec3DSubtraction(t, n);
+		MathVec3DModulateByScalar(&tmp, MathVec3DDot(&n, &t));
+		MathVec3DNormalize(&tmp);
+		tangent[a] = Vec4D(tmp, 0.0f);
+		// Calculate handedness.
+		tmp = MathVec3DCross(&n, &t);
+		tangent[a].W = (MathVec3DDot(&tmp, &tan2[a]) < 0.0F) ? -1.0F : 1.0F;
+	}
 }
 
