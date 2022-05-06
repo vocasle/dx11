@@ -112,7 +112,58 @@ void Actor::LoadMesh(Mesh* mesh)
 
 void Actor::GenerateTangents()
 {
-	ComputeTangentFrame(m_Indices, m_Vertices);
+	std::vector<Vec3D> tan1(m_Vertices.size());
+	std::vector<Vec3D> tan2(m_Vertices.size());
+
+	for (long a = 0; a < m_Indices.size(); a += 3)
+	{
+		long i1 = m_Indices[a];
+		long i2 = m_Indices[a + 1];
+		long i3 = m_Indices[a + 2];
+		const Vec3D& v1 = m_Vertices[i1].Position;
+		const Vec3D& v2 = m_Vertices[i2].Position;
+		const Vec3D& v3 = m_Vertices[i3].Position;
+		const Vec2D& w1 = m_Vertices[i1].TexCoords;
+		const Vec2D& w2 = m_Vertices[i2].TexCoords;
+		const Vec2D& w3 = m_Vertices[i3].TexCoords;
+		float x1 = v2.X - v1.X;
+		float x2 = v3.X - v1.X;
+		float y1 = v2.Y - v1.Y;
+		float y2 = v3.Y - v1.Y;
+		float z1 = v2.Z - v1.Z;
+		float z2 = v3.Z - v1.Z;
+		float s1 = w2.X - w1.X;
+		float s2 = w3.X - w1.X;
+		float t1 = w2.Y - w1.Y;
+		float t2 = w3.Y - w1.Y;
+		float r = 1.0F / (s1 * t2 - s2 * t1);
+		Vec3D sdir((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r,
+			(t2 * z1 - t1 * z2) * r);
+		Vec3D tdir((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r,
+			(s1 * z2 - s2 * z1) * r);
+		tan1[i1] = MathVec3DAddition(&tan1[i1], &sdir);
+		tan1[i2] = MathVec3DAddition(&tan1[i2], &sdir);
+		tan1[i3] = MathVec3DAddition(&tan1[i3], &sdir);
+		tan2[i1] = MathVec3DAddition(&tan2[i1], &tdir);
+		tan2[i2] = MathVec3DAddition(&tan2[i2], &tdir);
+		tan2[i3] = MathVec3DAddition(&tan2[i3], &tdir);
+	}
+
+	for (long a = 0; a < m_Vertices.size(); a++)
+	{
+		const Vec3D& n = m_Vertices[a].Normal;
+		const Vec3D& t = tan1[a];
+		// Gram-Schmidt orthogonalize.
+		Vec3D tmp = MathVec3DSubtraction(t, n);
+		MathVec3DModulateByScalar(&tmp, MathVec3DDot(&n, &t));
+		MathVec3DNormalize(&tmp);
+		m_Vertices[a].Tangent = /*Vec4D(tmp, 0.0f);*/tmp;
+		// Calculate handedness.
+		tmp = MathVec3DCross(&n, &t);
+		m_Vertices[a].Bitangent = MathVec3DCross(&m_Vertices[a].Normal, &m_Vertices[a].Tangent);
+		MathVec3DModulateByScalar(&m_Vertices[a].Bitangent, (MathVec3DDot(&tmp, &tan2[a]) < 0.0F) ? -1.0F : 1.0F);
+	}
+	
 }
 
 void Actor::LoadModel(const char* filename)
