@@ -47,7 +47,7 @@ static void GameCreateConstantBuffer(ID3D11Device* device,
 
 void Game::CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps)
 {
-	auto bytes = UtilsReadData(filepath);
+	auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", SHADERS_ROOT, filepath).c_str());
 
 	if (FAILED(device->CreatePixelShader(&bytes[0], bytes.size(), NULL, ps)))
 	{
@@ -67,7 +67,7 @@ void Game::UpdateImgui()
 
 std::vector<uint8_t> Game::CreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs)
 {
-	auto bytes = UtilsReadData(filepath);
+	auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", SHADERS_ROOT, filepath).c_str());
 
 	if (FAILED(device->CreateVertexShader(&bytes[0], bytes.size(), NULL, vs)))
 	{

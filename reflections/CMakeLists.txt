@@ -65,7 +65,8 @@ target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui)
 target_compile_definitions(${current_target} PUBLIC 
 	ASSETS_ROOT="${assets_root}"
 	NOMINMAX=1
-	WITH_IMGUI=1)
+	WITH_IMGUI=1
+	SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/Debug") # temporary hack, will fail on other build configurations
 
 set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_TYPE Pixel)
 set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_ENTRYPOINT main)
