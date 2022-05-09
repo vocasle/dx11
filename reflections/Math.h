@@ -1,11 +1,17 @@
 #pragma once
 #include <cstdint>
 #include <cstring>
+#ifdef __cplusplus
+#include <sstream>
+#endif
 
 struct Vec2D
 {
 	Vec2D(): X{0}, Y{0} {}
 	Vec2D(float x, float y): X{x}, Y{y} {}
+#ifdef __cplusplus
+	std::string ToString() const;
+#endif
 	float X;
 	float Y;
 };
@@ -14,6 +20,9 @@ struct Vec3D
 {
 	Vec3D() : X{0}, Y{0}, Z{0} {}
 	Vec3D(float x, float y, float z) : X{x}, Y{y}, Z{z} {}
+#ifdef __cplusplus
+	std::string ToString() const;
+#endif
 	float X;
 	float Y;
 	float Z;
@@ -25,6 +34,7 @@ struct Vec4D
 	Vec4D(float x, float y, float z, float w) : X{x}, Y{y}, Z{z}, W{w} {}
 #ifdef __cplusplus
 	Vec4D(const Vec3D& v, float w) : Vec4D(v.X, v.Y, v.Z, w) {}
+	std::string ToString() const;
 #endif
 	float X;
 	float Y;
@@ -49,6 +59,9 @@ struct Mat3X3
 		Vec3D V[3];
 		float A[3][3];
 	};
+#ifdef __cplusplus
+	std::string ToString() const;
+#endif
 };
 
 struct Mat4X4
@@ -88,6 +101,9 @@ struct Mat4X4
 		Vec4D V[4];
 		float A[4][4];
 	};
+#ifdef __cplusplus
+	std::string ToString() const;
+#endif
 };
 
 
