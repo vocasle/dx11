@@ -1,5 +1,7 @@
 #include "Common.hlsli"
 
+static const float4 AMBIENT = float4(0.1f, 0.1f, 0.1f, 1.0f);
+
 float4 main(VSOut In) : SV_TARGET
 {
 	const float4 diffuseSampled = diffuseTexture.Sample(defaultSampler, In.TexCoords);
@@ -20,11 +22,9 @@ float4 main(VSOut In) : SV_TARGET
 	}
 
 	intensities[5] = SpotLightIntensity(spotLights[0], normal, In.PosW, viewDir);
+	float shadows[MAX_LIGHTS] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+	shadows[0] = CalcShadowFactor(shadowSampler, shadowTexture, In.ShadowPosH);
 
-	//return float4(normalize(In.PosW), 1.0f);
-
-	//return float4(In.NormalW.xyz * 0.5f + 0.5f, 1.0f);
-	//return float4(intensities[0].intensity, 1.0f);
 	const float4 emissive = ZERO_VEC4;
 	const float4 emissiveSampled = ZERO_VEC4;
 	const float4 fragmentColor = BlinnPhong(
@@ -32,16 +32,15 @@ float4 main(VSOut In) : SV_TARGET
 		emissiveSampled,
 		material.Diffuse,
 		diffuseSampled,
-		material.Ambient,
+		AMBIENT,
 		material.Specular,
 		glossSampled,
 		128.0f,
 		normal,
 		intensities,
+		shadows,
 		6
 	);
 
 	return fragmentColor;
-	//return float4(1.0f - glossSampled.rgb, 1.0f);
-	//return float4(material.Specular.rgb * glossSampled.rgb, 1.0f);
 }
