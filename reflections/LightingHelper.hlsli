@@ -1,5 +1,6 @@
 static const float4 ZERO_VEC4 = { 0.0f, 0.0f, 0.0f, 0.0f };
 static const float4 ONE_VEC4 = { 1.0f, 1.0f, 1.0f, 1.0f };
+static const uint MAX_LIGHTS = 8;
 
 struct DirectionalLight
 {
@@ -40,8 +41,6 @@ struct Material
 	float4 Diffuse;
 	float4 Specular;
 };
-
-#define MAX_LIGHTS 8
 
 struct LightIntensity
 {
@@ -115,6 +114,7 @@ float4 BlinnPhong(float4 E,
     float m, 
     float3 N, 
     LightIntensity intensities[MAX_LIGHTS],
+    float shadows[MAX_LIGHTS],
     uint numLights)
 {
     float4 sum = ZERO_VEC4;
@@ -127,7 +127,7 @@ float4 BlinnPhong(float4 E,
         const float3 Li = normalize(intensities[i].L);
         const float3 Hi = normalize(intensities[i].H);
         const float3 lightDiffuse = intensities[i].diffuse;
-        sum += float4(Ci, 1.0f) * (DT * float4(lightDiffuse, 1.0f) * max(dot(N, Li), 0.0f) + SG * pow(max(dot(N, Hi), 0.0f), m));
+        sum += float4(Ci, 1.0f) * (shadows[i] * DT * float4(lightDiffuse, 1.0f) * max(dot(N, Li), 0.0f) + SG * pow(max(dot(N, Hi), 0.0f), m));
     }
     return EM + DT * A + sum;
 }

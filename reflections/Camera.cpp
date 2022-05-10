@@ -12,6 +12,8 @@ Camera::Camera(const Vec3D& cameraPos)
 	m_Pitch = 0.0f;
 	m_Yaw = (float)M_PI_2;
 	m_Speed = 1.0f;
+	m_zNear = 0.1f;
+	m_zFar = 100.0f;
 	UpdateVectors();
 }
 
@@ -23,7 +25,7 @@ Mat4X4 Camera::GetViewMat() const
 
 Mat4X4 Camera::GetProjMat() const
 {
-	return MathMat4X4PerspectiveFov(MathToRadians(45.0f), m_backBufferWidth / m_backBufferHeight, 1.0f, 100.0f);
+	return MathMat4X4PerspectiveFov(MathToRadians(45.0f), m_backBufferWidth / m_backBufferHeight, m_zNear, m_zFar);
 }
 
 void Camera::UpdateSpeed()
@@ -140,4 +142,14 @@ void Camera::SetViewDimensions(uint32_t width, uint32_t height)
 {
 	m_backBufferWidth = width;
 	m_backBufferHeight = height;
+}
+
+void Camera::SetZNear(const float zNear)
+{
+	m_zNear = zNear;
+}
+
+void Camera::SetZFar(const float zFar)
+{
+	m_zFar = zFar;
 }

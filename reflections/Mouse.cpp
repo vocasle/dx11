@@ -91,7 +91,7 @@ Vec2D Mouse::GetMouseDelta()
 {
 
 	Vec2D delta = {};
-	if (m_RightBtnState)
+	if (m_RightBtnState && (MousePos.X > 0.0f || MousePos.Y > 0.0f))
 	{
 		delta.X = WinSize.X / 2.0f - MousePos.X;
 		delta.Y = WinSize.Y / 2.0f - MousePos.Y;

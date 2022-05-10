@@ -8,7 +8,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef __cplusplus
 #include <DirectXMath.h>
+#include <string>
+#endif
 
 #define EPSILON 0.00001f
 
@@ -909,5 +912,51 @@ Mat4X4 MathMat4X4Inverse(const Mat4X4& mat)
 {
 	return MathMat4X4Inverse(&mat);
 }
-#endif
 
+std::string Vec2D::ToString() const
+{
+	std::stringstream out;
+	out << "{ " << X << ", " << Y << " }";
+	return out.str();
+}
+
+std::string Mat4X4::ToString() const
+{
+	std::stringstream out;
+	out << "{\n";
+	for (uint32_t i = 0; i < 4; ++i)
+	{
+		const Vec4D& v = V[i];
+		out << "\t" << v.ToString() << ",\n";
+	}
+	out << "}";
+	return out.str();
+}
+
+std::string Mat3X3::ToString() const
+{
+	std::stringstream out;
+	out << "{\n";
+	for (uint32_t i = 0; i < 3; ++i)
+	{
+		const Vec3D& v = V[i];
+		out << "\t" << v.ToString() << ",\n";
+	}
+	out << "}";
+	return out.str();
+}
+
+std::string Vec4D::ToString() const
+{
+	std::stringstream out;
+	out << "{ " << X << ", " << Y << ", " << Z << ", " << W << " }";
+	return out.str();
+}
+
+std::string Vec3D::ToString() const
+{
+	std::stringstream out;
+	out << "{ " << X << ", " << Y << ", " << Z << " }";
+	return out.str();
+}
+#endif

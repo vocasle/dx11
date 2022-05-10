@@ -18,6 +18,8 @@ public:
 	Vec3D GetPos() const { return m_Pos; }
 	Vec3D GetAt() const { return m_At; }
 	void SetViewDimensions(uint32_t width, uint32_t height);
+	void SetZNear(const float zNear);
+	void SetZFar(const float zFar);
 
 private:
 	void UpdateVectors();
@@ -32,4 +34,6 @@ private:
 	float m_Speed;
 	float m_backBufferWidth;
 	float m_backBufferHeight;
+	float m_zNear;
+	float m_zFar;
 };
