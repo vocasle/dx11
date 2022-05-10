@@ -39,7 +39,7 @@ float4 main(VSOut In) : SV_TARGET
 		normal,
 		intensities,
 		shadows,
-		6
+		1
 	);
 
 	return fragmentColor;
