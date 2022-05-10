@@ -82,6 +82,15 @@ private:
 	ImguiState m_ImguiState;
 #endif
 
+	struct BoundingSphere
+	{
+		BoundingSphere() : Center(0.0f, 0.0f, 0.0f), Radius(0.0f) {}
+		Vec3D Center;
+		float Radius;
+	};
+
+	BoundingSphere m_sceneBounds;
+
 	std::unique_ptr<DeviceResources> m_DR;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VS;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PS;

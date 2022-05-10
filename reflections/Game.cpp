@@ -62,6 +62,13 @@ void Game::UpdateImgui()
 	ImGui::Checkbox("Rotate dir light", &m_ImguiState.RotateDirLight);
 	ImGui::Checkbox("Animate first point light", &m_ImguiState.AnimatePointLight);
 	ImGui::Checkbox("Capture spotlight", &m_ImguiState.ToggleSpotlight);
+	static float zNear = 0.5f;
+	ImGui::SliderFloat("Z near", &zNear, 0.1f, 10.0f, "%f", 1.0f);
+	static float zFar = 200.0f;
+	ImGui::SliderFloat("Z far", &zFar, 10.0f, 1000.0f, "%f", 1.0f);
+	m_Camera.SetZFar(zFar);
+	m_Camera.SetZNear(zNear);
+	ImGui::SliderFloat("Bounding sphere radius", &m_sceneBounds.Radius, 10.0f, 500.0f, "%f", 1.0f);
 }
 #endif
 
@@ -140,6 +147,8 @@ Game::Game():
 	m_Camera{ {0.0f, 0.0f, -5.0f} }
 {
 	m_DR = std::make_unique<DeviceResources>();
+	m_sceneBounds.Center = { 0.0f, 0.0f, 0.0f };
+	m_sceneBounds.Radius = 100.0f;
 }
 
 Game::~Game()
@@ -305,33 +314,34 @@ void Game::Render()
 		m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
 	}
 	m_DR->PIXEndEvent();
-	m_DR->PIXBeginEvent(L"Draw lights");
-	// Light properties
-	for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
-	{
-		const Vec3D scale = { 0.2f, 0.2f, 0.2f };
-		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
-		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&m_PerSceneData.pointLights[i].Position);
-		m_PerObjectData.world = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
-		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-			sizeof(PerObjectConstants),
-			&m_PerObjectData,
-			m_PerObjectCB.Get());
+	//m_DR->PIXBeginEvent(L"Draw lights");
+	//// Light properties
+	//for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
+	//{
+	//	const Vec3D scale = { 0.2f, 0.2f, 0.2f };
+	//	Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
+	//	Mat4X4 translate = MathMat4X4TranslateFromVec3D(&m_PerSceneData.pointLights[i].Position);
+	//	m_PerObjectData.world = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
+	//	GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+	//		sizeof(PerObjectConstants),
+	//		&m_PerObjectData,
+	//		m_PerObjectCB.Get());
 
-		m_Renderer.BindPixelShader(m_LightPS.Get());
-		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
-		const Actor& sphere = m_Actors[2];
-		m_Renderer.SetIndexBuffer(sphere.GetIndexBuffer(), 0);
-		m_Renderer.SetVertexBuffer(sphere.GetVertexBuffer(), sizeof(Vertex), 0);
+	//	m_Renderer.BindPixelShader(m_LightPS.Get());
+	//	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+	//	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+	//	const Actor& sphere = m_Actors[2];
+	//	m_Renderer.SetIndexBuffer(sphere.GetIndexBuffer(), 0);
+	//	m_Renderer.SetVertexBuffer(sphere.GetVertexBuffer(), sizeof(Vertex), 0);
 
-		m_Renderer.DrawIndexed(sphere.GetNumIndices(), 0, 0);
-	}
+	//	m_Renderer.DrawIndexed(sphere.GetNumIndices(), 0, 0);
+	//}
+	//m_DR->PIXEndEvent();
 	// TODO: Need to have a reflection mechanism to query amount of SRV that is possible to bind to PS
 	// After this this clear code could be placed to Renderer::Clear
 	ID3D11ShaderResourceView* nullSRVs[5] = { nullptr, nullptr, nullptr, nullptr, nullptr, };
 	m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 5);
-	m_DR->PIXEndEvent();
+
 	// draw sky
 	//m_DR->PIXBeginEvent(L"Draw sky");
 	//m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
@@ -370,9 +380,9 @@ void Game::Tick()
 void Game::CreateActors()
 {
 	const std::string models[] = {
-		UtilsFormatStr("%s/meshes/rocket.obj", ASSETS_ROOT),
-		UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT),
-		UtilsFormatStr("%s/meshes/sphere.obj", ASSETS_ROOT),
+		UtilsFormatStr("%s/meshes/podium.obj", ASSETS_ROOT),
+		//UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT),
+		//UtilsFormatStr("%s/meshes/sphere.obj", ASSETS_ROOT),
 	};
 
 	const std::string diffuseTextures[] = {
@@ -525,20 +535,9 @@ void Game::GetDefaultSize(uint32_t* width, uint32_t* height)
 
 void Game::BuildShadowTransform()
 {
-	struct BoundingSphere
-	{
-		BoundingSphere() : Center(0.0f, 0.0f, 0.0f), Radius(0.0f) {}
-		Vec3D Center;
-		float Radius;
-	};
-
-	BoundingSphere sceneBounds = {};
-	sceneBounds.Center = { 0.0f, 0.0f, 0.0f };
-	sceneBounds.Radius = 10.0f;
-
 	// Only the first "main" light casts a shadow.
 	Vec3D lightDir = m_PerSceneData.dirLight.Direction;
-	Vec3D lightPos = MathVec3DModulateByScalar(&lightDir, -2.0f * sceneBounds.Radius);
+	Vec3D lightPos = MathVec3DModulateByScalar(&lightDir, -2.0f * m_sceneBounds.Radius);
 	Vec3D targetPos = { 0.0f, 0.0f, 0.0f };
 	Vec3D up = { 0.0f, 1.0f, 0.0f };
 
@@ -549,12 +548,12 @@ void Game::BuildShadowTransform()
 	Vec4D sphereCenterLS = MathMat4X4MultVec4DByMat4X4(&targetPos4 , &view);
 
 	// Ortho frustum in light space encloses scene.
-	float l = sphereCenterLS.X - sceneBounds.Radius;
-	float b = sphereCenterLS.Y - sceneBounds.Radius;
-	float n = sphereCenterLS.Z - sceneBounds.Radius;
-	float r = sphereCenterLS.X + sceneBounds.Radius;
-	float t = sphereCenterLS.Y + sceneBounds.Radius;
-	float f = sphereCenterLS.Z + sceneBounds.Radius;
+	float l = sphereCenterLS.X - m_sceneBounds.Radius;
+	float b = sphereCenterLS.Y - m_sceneBounds.Radius;
+	float n = sphereCenterLS.Z - m_sceneBounds.Radius;
+	float r = sphereCenterLS.X + m_sceneBounds.Radius;
+	float t = sphereCenterLS.Y + m_sceneBounds.Radius;
+	float f = sphereCenterLS.Z + m_sceneBounds.Radius;
 	Mat4X4 proj = MathMat4X4OrthographicOffCenter(l, r, b, t, n, f);
 
 	// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
