@@ -13,7 +13,9 @@ Actor::Actor():
 	m_SpecularTexture{nullptr},
 	m_GlossTexture{nullptr},
 	m_NormalTexture{nullptr},
-	m_Material{}
+	m_Material{},
+	m_Name{},
+	m_IsVisible{true}
 {
 }
 
@@ -29,6 +31,8 @@ Actor::Actor(const Actor& actor)
 	m_GlossTexture = actor.m_GlossTexture;
 	m_NormalTexture = actor.m_NormalTexture;
 	m_Material = actor.m_Material;
+	m_Name = actor.m_Name;
+	m_IsVisible = actor.m_IsVisible;
 }
 
 Actor& Actor::operator=(const Actor& actor)
@@ -72,6 +76,16 @@ ID3D11ShaderResourceView** Actor::GetShaderResources() const
 	return shaderResources;
 }
 
+void Actor::SetIsVisible(const bool isVisible)
+{
+	m_IsVisible = isVisible;
+}
+
+void Actor::SetName(const std::string& name)
+{
+	m_Name = name;
+}
+
 void Actor::Swap(Actor& actor)
 {
 	std::swap(m_World, actor.m_World);
@@ -84,6 +98,8 @@ void Actor::Swap(Actor& actor)
 	std::swap(m_NormalTexture, actor.m_NormalTexture);
 	std::swap(m_IndexBuffer, actor.m_IndexBuffer);
 	std::swap(m_VertexBuffer, actor.m_VertexBuffer);
+	std::swap(m_Name, actor.m_Name);
+	std::swap(m_IsVisible, actor.m_IsVisible);
 }
 
 void Actor::LoadMesh(Mesh* mesh)

@@ -60,7 +60,10 @@ public:
 	ID3D11Buffer* GetVertexBuffer() const { return m_VertexBuffer.Get(); }
 	uint32_t GetNumIndices() const { return m_Indices.size(); }
 	ID3D11ShaderResourceView** GetShaderResources() const;
-
+	bool IsVisible() const { return m_IsVisible; }
+	void SetIsVisible(const bool isVisible);
+	const std::string& GetName() const { return m_Name; };
+	void SetName(const std::string& name);
 
 private:
 	void Swap(Actor& actor);
@@ -77,4 +80,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_GlossTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_NormalTexture;
 	Material m_Material;
+	std::string m_Name;
+	bool m_IsVisible;
 };
