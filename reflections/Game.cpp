@@ -128,7 +128,7 @@ void Game::InitPerSceneConstants()
 	dirLight.Ambient = ColorFromRGBA(0.1f, 0.1f, 0.1f, 1.0f);
 	dirLight.Diffuse = ColorFromRGBA(0.5f, 0.5f, 0.5f, 1.0f);
 	dirLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-	dirLight.Direction = MathVec3DFromXYZ(-1.0f, -1.0f, -1.0f);
+	dirLight.Direction = MathVec3DFromXYZ(1.0f, 1.0f, 1.0f);
 	m_PerSceneData.dirLight = dirLight;
 
 	SpotLight spotLight = {};
@@ -196,7 +196,7 @@ void Game::Update()
 	if (m_ImguiState.RotateDirLight)
 	{
 		m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);
-		m_PerSceneData.dirLight.Direction.Y = -1.0f;
+		m_PerSceneData.dirLight.Direction.Y = 1.0f;
 		m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
 		MathVec3DNormalize(&m_PerSceneData.dirLight.Direction);
 
@@ -255,18 +255,21 @@ void Game::Render()
 		for (size_t i = 0; i < m_Actors.size(); ++i)
 		{
 			const Actor& actor = m_Actors[i];
-			m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
-			m_PerObjectData.world = actor.GetWorld();
-			m_PerObjectData.material = actor.GetMaterial();
-			GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-				sizeof(PerObjectConstants),
-				&m_PerObjectData,
-				m_PerObjectCB.Get());
-			m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-			m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
-			m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), sizeof(Vertex), 0);
+			if (actor.IsVisible())
+			{
+				m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
+				m_PerObjectData.world = actor.GetWorld();
+				m_PerObjectData.material = actor.GetMaterial();
+				GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+					sizeof(PerObjectConstants),
+					&m_PerObjectData,
+					m_PerObjectCB.Get());
+				m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+				m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
+				m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), sizeof(Vertex), 0);
 
-			m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
+				m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
+			}
 		}
 	}
 	m_ShadowMap.Unbind(m_DR->GetDeviceContext());
@@ -297,46 +300,54 @@ void Game::Render()
 	for (size_t i = 0; i < m_Actors.size(); ++i)
 	{
 		const Actor& actor = m_Actors[i];
-		m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
-		m_PerObjectData.world = actor.GetWorld();
-		m_PerObjectData.material = actor.GetMaterial();
-		m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
+		if (actor.IsVisible())
+		{
+			m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
+			m_PerObjectData.world = actor.GetWorld();
+			m_PerObjectData.material = actor.GetMaterial();
+			m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
+			GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+				sizeof(PerObjectConstants),
+				&m_PerObjectData,
+				m_PerObjectCB.Get());
+			m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+			m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+
+			m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
+			m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), sizeof(Vertex), 0);
+
+			m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
+		}
+	}
+	m_DR->PIXEndEvent();
+	m_DR->PIXBeginEvent(L"Draw lights");
+	// Light properties
+	//for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
+	{
+		const Vec3D scale = { 0.2f, 0.2f, 0.2f };
+		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
+		Vec3D dirLightPos = m_PerSceneData.dirLight.Direction;
+		dirLightPos = MathVec3DModulateByScalar(&dirLightPos, m_sceneBounds.Radius);
+		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&dirLightPos);
+		m_PerObjectData.world = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
 			sizeof(PerObjectConstants),
 			&m_PerObjectData,
 			m_PerObjectCB.Get());
+
+		m_Renderer.BindPixelShader(m_LightPS.Get());
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+		const auto sphere = std::find_if(std::begin(m_Actors), std::end(m_Actors), [](const Actor& actor)
+			{
+				return actor.GetName() == "Sphere";
+			});
+		m_Renderer.SetIndexBuffer(sphere->GetIndexBuffer(), 0);
+		m_Renderer.SetVertexBuffer(sphere->GetVertexBuffer(), sizeof(Vertex), 0);
 
-		m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
-		m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), sizeof(Vertex), 0);
-
-		m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
+		m_Renderer.DrawIndexed(sphere->GetNumIndices(), 0, 0);
 	}
 	m_DR->PIXEndEvent();
-	//m_DR->PIXBeginEvent(L"Draw lights");
-	//// Light properties
-	//for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
-	//{
-	//	const Vec3D scale = { 0.2f, 0.2f, 0.2f };
-	//	Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
-	//	Mat4X4 translate = MathMat4X4TranslateFromVec3D(&m_PerSceneData.pointLights[i].Position);
-	//	m_PerObjectData.world = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
-	//	GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-	//		sizeof(PerObjectConstants),
-	//		&m_PerObjectData,
-	//		m_PerObjectCB.Get());
-
-	//	m_Renderer.BindPixelShader(m_LightPS.Get());
-	//	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-	//	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
-	//	const Actor& sphere = m_Actors[2];
-	//	m_Renderer.SetIndexBuffer(sphere.GetIndexBuffer(), 0);
-	//	m_Renderer.SetVertexBuffer(sphere.GetVertexBuffer(), sizeof(Vertex), 0);
-
-	//	m_Renderer.DrawIndexed(sphere.GetNumIndices(), 0, 0);
-	//}
-	//m_DR->PIXEndEvent();
 	// TODO: Need to have a reflection mechanism to query amount of SRV that is possible to bind to PS
 	// After this this clear code could be placed to Renderer::Clear
 	ID3D11ShaderResourceView* nullSRVs[5] = { nullptr, nullptr, nullptr, nullptr, nullptr, };
@@ -379,10 +390,20 @@ void Game::Tick()
 
 void Game::CreateActors()
 {
+	const std::string names[] = {
+		"Cube",
+		"Sphere"
+	};
+
+	const bool visibility[] = {
+		true,
+		false
+	};
+
 	const std::string models[] = {
-		UtilsFormatStr("%s/meshes/podium.obj", ASSETS_ROOT),
-		//UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT),
-		//UtilsFormatStr("%s/meshes/sphere.obj", ASSETS_ROOT),
+		//UtilsFormatStr("%s/meshes/podium.obj", ASSETS_ROOT),
+		UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT),
+		UtilsFormatStr("%s/meshes/sphere.obj", ASSETS_ROOT),
 	};
 
 	const std::string diffuseTextures[] = {
@@ -453,6 +474,8 @@ void Game::CreateActors()
 		actor.LoadTexture(glossTextures[i].c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		actor.LoadTexture(normalTextures[i].c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		actor.SetMaterial(&material);
+		actor.SetName(names[i]);
+		actor.SetIsVisible(visibility[i]);
 
 		m_Actors.emplace_back(actor);
 	}
@@ -471,6 +494,8 @@ void Game::CreateActors()
 		plane.LoadTexture(UtilsFormatStr("%s/textures/marble_gloss.jpg", ASSETS_ROOT).c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		plane.LoadTexture(UtilsFormatStr("%s/textures/marble_reflection.jpg", ASSETS_ROOT).c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		plane.SetMaterial(&material);
+		plane.SetIsVisible(true);
+		plane.SetName("Plane");
 		m_Actors.emplace_back(plane);
 	}
 }
@@ -537,7 +562,7 @@ void Game::BuildShadowTransform()
 {
 	// Only the first "main" light casts a shadow.
 	Vec3D lightDir = m_PerSceneData.dirLight.Direction;
-	Vec3D lightPos = MathVec3DModulateByScalar(&lightDir, -2.0f * m_sceneBounds.Radius);
+	Vec3D lightPos = MathVec3DModulateByScalar(&lightDir, m_sceneBounds.Radius);
 	Vec3D targetPos = { 0.0f, 0.0f, 0.0f };
 	Vec3D up = { 0.0f, 1.0f, 0.0f };
 
