@@ -15,7 +15,7 @@ public:
 	CubeMap();
 	~CubeMap();
 
-	void LoadCubeMap(ID3D11Device* device, const char* filepath);
+	void LoadCubeMap(ID3D11Device* device, const std::vector<const char*>& filepaths);
 	ID3D11ShaderResourceView* GetCubeMap() const { return m_cubeMap.Get(); }
 	ID3D11SamplerState* GetCubeMapSampler() const { return m_sampler.Get(); }
 	void SetActor(const Actor& actor);
