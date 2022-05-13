@@ -354,24 +354,24 @@ void Game::Render()
 	m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 5);
 
 	// draw sky
-	//m_DR->PIXBeginEvent(L"Draw sky");
-	//m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
-	//m_Renderer.BindVertexShader(m_SkyVS.Get());
-	//m_Renderer.BindPixelShader(m_SkyPS.Get());
-	//m_Renderer.BindShaderResource(BindTargets::PixelShader, m_CubeMap.GetCubeMap(), 0);
-	//// Erase the translation component to avoid skybox jitter caused by camera movement
-	//Mat4X4 V = m_Camera.GetViewMat();
-	//V.V[3] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	//m_PerFrameData.view = V;
-	//Vec3D scale = { 2.0f, 2.0f, 2.0f };
-	//m_PerObjectData.world = MathMat4X4ScaleFromVec3D(&scale);
-	//GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
-	//GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerObjectConstants), &m_PerObjectData, m_PerObjectCB.Get());
-	//m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
-	//m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+	m_DR->PIXBeginEvent(L"Draw sky");
+	m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
+	m_Renderer.BindVertexShader(m_SkyVS.Get());
+	m_Renderer.BindPixelShader(m_SkyPS.Get());
+	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_CubeMap.GetCubeMap(), 0);
+	// Erase the translation component to avoid skybox jitter caused by camera movement
+	Mat4X4 V = m_Camera.GetViewMat();
+	V.V[3] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	m_PerFrameData.view = V;
+	Vec3D scale = { 100.0f, 100.0f, 100.0f };
+	m_PerObjectData.world = MathMat4X4ScaleFromVec3D(&scale);
+	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerObjectConstants), &m_PerObjectData, m_PerObjectCB.Get());
+	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
+	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
 
-	//m_CubeMap.Draw(m_DR->GetDeviceContext());
-	//m_DR->PIXEndEvent();
+	m_CubeMap.Draw(m_DR->GetDeviceContext());
+	m_DR->PIXEndEvent();
 
 #if WITH_IMGUI
 	ImGui::Render();
@@ -512,7 +512,14 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	Mouse::Get().SetWindowDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
 	m_ShadowMap.InitResources(m_DR->GetDevice(), 2048, 2048);
 	m_Camera.SetViewDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
-	m_CubeMap.LoadCubeMap(m_DR->GetDevice(), UtilsFormatStr("%s/textures/daylight.jpg", ASSETS_ROOT).c_str());
+	m_CubeMap.LoadCubeMap(m_DR->GetDevice(), {
+		UtilsFormatStr("%s/textures/back.jpg", ASSETS_ROOT).c_str(),
+		UtilsFormatStr("%s/textures/bottom.jpg", ASSETS_ROOT).c_str(),
+		UtilsFormatStr("%s/textures/front.jpg", ASSETS_ROOT).c_str(),
+		UtilsFormatStr("%s/textures/left.jpg", ASSETS_ROOT).c_str(),
+		UtilsFormatStr("%s/textures/right.jpg", ASSETS_ROOT).c_str(),
+		UtilsFormatStr("%s/textures/top.jpg", ASSETS_ROOT).c_str()
+		});
 	m_CubeMap.SetCamera(&m_Camera);
 
 	// init actors
