@@ -64,6 +64,8 @@ public:
 	void SetIsVisible(const bool isVisible);
 	const std::string& GetName() const { return m_Name; };
 	void SetName(const std::string& name);
+	const std::vector<Vertex>& GetVertices() const { return m_Vertices; }
+	const std::vector<uint32_t> GetIndices() const { return m_Indices; }
 
 private:
 	void Swap(Actor& actor);
