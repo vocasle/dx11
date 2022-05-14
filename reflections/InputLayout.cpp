@@ -72,3 +72,8 @@ void InputLayout::CreateSkyLayout(ID3D11Device* device, unsigned char* bytes, si
 	};
 	HR(device->CreateInputLayout(inputElementDesc, 1, bytes, bufferSize, m_skyLayout.ReleaseAndGetAddressOf()))
 }
+
+size_t InputLayout::GetVertexSize(VertexType vertexType) const
+{
+	return static_cast<size_t>(vertexType);
+}
