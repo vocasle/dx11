@@ -90,3 +90,31 @@ std::vector<uint8_t> UtilsReadData(const char* filepath)
     fclose(f);
     return bytes;
 }
+
+void UtilsCreateVertexBuffer(ID3D11Device* device, const void* data, size_t num, size_t structSize, ID3D11Buffer** ppBuffer)
+{
+    D3D11_SUBRESOURCE_DATA subresourceData = {};
+    subresourceData.pSysMem = data;
+
+    D3D11_BUFFER_DESC bufferDesc = {};
+    bufferDesc.ByteWidth = structSize * num;
+    bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bufferDesc.StructureByteStride = structSize;
+    bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+
+    HR(device->CreateBuffer(&bufferDesc, &subresourceData, ppBuffer))
+}
+
+void UtilsCreateIndexBuffer(ID3D11Device* device, const void* data, size_t num, ID3D11Buffer** ppBuffer)
+{
+    D3D11_SUBRESOURCE_DATA subresourceData = {};
+    subresourceData.pSysMem = data;
+
+    D3D11_BUFFER_DESC bufferDesc = {};
+    bufferDesc.ByteWidth = sizeof(uint32_t) * num;
+    bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    bufferDesc.StructureByteStride = 0;
+    bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+
+    HR(device->CreateBuffer(&bufferDesc, &subresourceData, ppBuffer));
+}

@@ -84,3 +84,7 @@ std::vector<uint8_t> UtilsReadData(const char* filepath);
 	if (FAILED(x)) { \
 		UTILS_FATAL_ERROR("%s:%d - Operation failed.", __FILE__, __LINE__); \
 	}
+
+
+void UtilsCreateIndexBuffer(ID3D11Device * device, const void* data, size_t num, ID3D11Buffer * *ppBuffer);
+void UtilsCreateVertexBuffer(ID3D11Device * device, const void* data, size_t num, size_t structSize, ID3D11Buffer * *ppBuffer);
