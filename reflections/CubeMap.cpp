@@ -69,6 +69,8 @@ void CubeMap::LoadCubeMap(ID3D11Device* device, const std::vector<const char*>& 
 	}
 
 	CreateSampler(device);
+	CreateDepthStencilState(device);
+	CreateRasterizerState(device);
 }
 
 void CubeMap::CreateCube(const Actor& actor, ID3D11Device* device)
@@ -93,4 +95,21 @@ void CubeMap::CreateSampler(ID3D11Device* device)
 	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	
 	HR(device->CreateSamplerState(&desc, m_sampler.ReleaseAndGetAddressOf()));
+}
+
+void CubeMap::CreateDepthStencilState(ID3D11Device* device)
+{
+	CD3D11_DEPTH_STENCIL_DESC desc = CD3D11_DEPTH_STENCIL_DESC{ CD3D11_DEFAULT{} };
+	desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+
+	HR(device->CreateDepthStencilState(&desc, m_depthStencilState.ReleaseAndGetAddressOf()))
+}
+
+void CubeMap::CreateRasterizerState(ID3D11Device* device)
+{
+	CD3D11_RASTERIZER_DESC desc = CD3D11_RASTERIZER_DESC{ CD3D11_DEFAULT{} };
+	desc.CullMode = D3D11_CULL_NONE;
+
+	HR(device->CreateRasterizerState(&desc, m_rasterizerState.ReleaseAndGetAddressOf()))
 }
