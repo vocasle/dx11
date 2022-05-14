@@ -5,6 +5,7 @@ sampler cubeSampler : register(s0);
 
 cbuffer PerObjectConstants : register(b0)
 {
+	float4x4 worldInvTranspose;
 	float4x4 world;
 	Material material;
 };
