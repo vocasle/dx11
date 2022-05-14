@@ -30,6 +30,7 @@ public:
 	void SetSamplerState(ID3D11SamplerState* state, uint32_t slot);
 	void SetIndexBuffer(ID3D11Buffer* buffer, uint32_t startIndexLocation);
 	void SetVertexBuffer(ID3D11Buffer* buffer, uint32_t strides, uint32_t offsets);
+	void SetDepthStencilState(ID3D11DepthStencilState* depthStencilState);
 	
 	void BindPixelShader(ID3D11PixelShader* shader);
 	void BindVertexShader(ID3D11VertexShader* shader);

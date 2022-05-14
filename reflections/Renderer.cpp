@@ -57,6 +57,11 @@ void Renderer::SetVertexBuffer(ID3D11Buffer* buffer, uint32_t strides, uint32_t 
 	m_DR->GetDeviceContext()->IASetVertexBuffers(0, 1, &buffer, &strides, &offsets);
 }
 
+void Renderer::SetDepthStencilState(ID3D11DepthStencilState* depthStencilState)
+{
+	m_DR->GetDeviceContext()->OMSetDepthStencilState(depthStencilState, 0);
+}
+
 void Renderer::BindShaderResources(enum BindTargets bindTarget, ID3D11ShaderResourceView** SRVs, uint32_t numSRVs)
 {
 	assert(numSRVs <= R_MAX_SRV_NUM && "numSRVs is above limit!");
