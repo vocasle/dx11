@@ -518,12 +518,12 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_ShadowMap.InitResources(m_DR->GetDevice(), 2048, 2048);
 	m_Camera.SetViewDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
 	m_CubeMap.LoadCubeMap(m_DR->GetDevice(), {
-		UtilsFormatStr("%s/textures/back.jpg", ASSETS_ROOT).c_str(),
+		UtilsFormatStr("%s/textures/right.jpg", ASSETS_ROOT).c_str(),
+		UtilsFormatStr("%s/textures/left.jpg", ASSETS_ROOT).c_str(),
+		UtilsFormatStr("%s/textures/top.jpg", ASSETS_ROOT).c_str(),
 		UtilsFormatStr("%s/textures/bottom.jpg", ASSETS_ROOT).c_str(),
 		UtilsFormatStr("%s/textures/front.jpg", ASSETS_ROOT).c_str(),
-		UtilsFormatStr("%s/textures/left.jpg", ASSETS_ROOT).c_str(),
-		UtilsFormatStr("%s/textures/right.jpg", ASSETS_ROOT).c_str(),
-		UtilsFormatStr("%s/textures/top.jpg", ASSETS_ROOT).c_str()
+		UtilsFormatStr("%s/textures/back.jpg", ASSETS_ROOT).c_str(),
 		});
 
 	// init actors
