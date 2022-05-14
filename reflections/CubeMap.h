@@ -18,9 +18,10 @@ public:
 	void LoadCubeMap(ID3D11Device* device, const std::vector<const char*>& filepaths);
 	ID3D11ShaderResourceView* GetCubeMap() const { return m_cubeMap.Get(); }
 	ID3D11SamplerState* GetCubeMapSampler() const { return m_sampler.Get(); }
-	void SetActor(const Actor& actor);
-	void Draw(ID3D11DeviceContext* ctx);
-	void SetCamera(Camera* camera);
+	void CreateCube(const Actor& actor, ID3D11Device* device);
+	ID3D11Buffer* GetVertexBuffer() const { return m_vertexBuffer.Get(); }
+	ID3D11Buffer* GetIndexBuffer() const { return m_indexBuffer.Get(); }
+	uint32_t GetNumIndices() const { return m_indices.size(); }
 
 private:
 	void CreateSampler(ID3D11Device* device);
@@ -31,6 +32,8 @@ private:
 	ComPtr<ID3D11ShaderResourceView> m_cubeMap;
 	ComPtr<ID3D11SamplerState> m_sampler;
 
-	Actor m_cube;
-	Camera* m_camera;
+	std::vector<Vec3D> m_vertices;
+	std::vector<uint32_t> m_indices;
+	ComPtr<ID3D11Buffer> m_vertexBuffer;
+	ComPtr<ID3D11Buffer> m_indexBuffer;
 };
