@@ -255,38 +255,37 @@ void Game::Render()
 	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 
-	m_DR->PIXBeginEvent(L"Shadow pass");
-	m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
+	//m_DR->PIXBeginEvent(L"Shadow pass");
 
-	m_ShadowMap.Bind(m_DR->GetDeviceContext());
-	{
-		m_Renderer.BindVertexShader(m_VS.Get());
-		m_Renderer.BindPixelShader(nullptr);
-		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
-		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerSceneCB.Get(), 2);
+	//m_ShadowMap.Bind(m_DR->GetDeviceContext());
+	//{
+	//	m_Renderer.BindVertexShader(m_VS.Get());
+	//	m_Renderer.BindPixelShader(nullptr);
+	//	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
+	//	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerSceneCB.Get(), 2);
 
-		for (size_t i = 0; i < m_Actors.size(); ++i)
-		{
-			const Actor& actor = m_Actors[i];
-			if (actor.IsVisible())
-			{
-				m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
-				m_PerObjectData.world = actor.GetWorld();
-				m_PerObjectData.material = actor.GetMaterial();
-				GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-					sizeof(PerObjectConstants),
-					&m_PerObjectData,
-					m_PerObjectCB.Get());
-				m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-				m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
-				m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
+	//	for (size_t i = 0; i < m_Actors.size(); ++i)
+	//	{
+	//		const Actor& actor = m_Actors[i];
+	//		if (actor.IsVisible())
+	//		{
+	//			m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
+	//			m_PerObjectData.world = actor.GetWorld();
+	//			m_PerObjectData.material = actor.GetMaterial();
+	//			GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+	//				sizeof(PerObjectConstants),
+	//				&m_PerObjectData,
+	//				m_PerObjectCB.Get());
+	//			m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+	//			m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
+	//			m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
 
-				m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
-			}
-		}
-	}
-	m_ShadowMap.Unbind(m_DR->GetDeviceContext());
-	m_DR->PIXEndEvent();
+	//			m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
+	//		}
+	//	}
+	//}
+	//m_ShadowMap.Unbind(m_DR->GetDeviceContext());
+	//m_DR->PIXEndEvent();
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
 	{
@@ -295,6 +294,7 @@ void Game::Render()
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 	}
+	m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
 
 	m_Renderer.BindPixelShader(m_PhongPS.Get());
 	m_Renderer.BindVertexShader(m_VS.Get());

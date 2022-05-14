@@ -23,7 +23,7 @@ float4 main(VSOut In) : SV_TARGET
 
 	intensities[5] = SpotLightIntensity(spotLights[0], normal, In.PosW, viewDir);
 	float shadows[MAX_LIGHTS] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
-	shadows[0] = CalcShadowFactor(shadowSampler, shadowTexture, In.ShadowPosH);
+	//shadows[0] = CalcShadowFactor(shadowSampler, shadowTexture, In.ShadowPosH);
 
 	const float4 emissive = ZERO_VEC4;
 	const float4 emissiveSampled = ZERO_VEC4;
