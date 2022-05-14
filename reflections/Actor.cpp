@@ -232,32 +232,12 @@ void Actor::LoadModel(const char* filename)
 
 void Actor::CreateVertexBuffer(ID3D11Device* device)
 {
-	D3D11_SUBRESOURCE_DATA subresourceData = {};
-	subresourceData.pSysMem = &m_Vertices[0];
-
-	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(Vertex) * m_Vertices.size();
-	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.StructureByteStride = sizeof(Vertex);
-	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-
-	HR(device->CreateBuffer( &bufferDesc, &subresourceData,
-		&m_VertexBuffer))
+	UtilsCreateVertexBuffer(device, &m_Vertices[0], m_Vertices.size(), sizeof(Vertex), m_VertexBuffer.ReleaseAndGetAddressOf());
 }
 
 void Actor::CreateIndexBuffer(ID3D11Device* device)
 {
-	D3D11_SUBRESOURCE_DATA subresourceData = {};
-	subresourceData.pSysMem = &m_Indices[0];
-
-	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(uint32_t) * m_Indices.size();
-	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	bufferDesc.StructureByteStride = 0;
-	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-
-	HR(device->CreateBuffer( &bufferDesc, &subresourceData, 
-		&m_IndexBuffer));
+	UtilsCreateIndexBuffer(device, &m_Indices[0], m_Indices.size(), m_IndexBuffer.ReleaseAndGetAddressOf());
 }
 
 void Actor::Translate(const Vec3D offset)
