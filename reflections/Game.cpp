@@ -137,7 +137,8 @@ void Game::InitPerSceneConstants()
 	dirLight.Ambient = ColorFromRGBA(0.1f, 0.1f, 0.1f, 1.0f);
 	dirLight.Diffuse = ColorFromRGBA(0.5f, 0.5f, 0.5f, 1.0f);
 	dirLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-	dirLight.Direction = MathVec3DFromXYZ(1.0f, 1.0f, 1.0f);
+	dirLight.Position = MathVec3DFromXYZ(10.0f, 10.0f, 10.0f);
+	dirLight.Radius = MathVec3DLength(dirLight.Position);
 	m_PerSceneData.dirLight = dirLight;
 
 	SpotLight spotLight = {};
@@ -204,10 +205,8 @@ void Game::Update()
 	elapsedTime += (float)m_Timer.DeltaMillis / (1000.0f * 2.0f);
 	if (m_ImguiState.RotateDirLight)
 	{
-		m_PerSceneData.dirLight.Direction.X = sinf(elapsedTime);
-		m_PerSceneData.dirLight.Direction.Y = 1.0f;
-		m_PerSceneData.dirLight.Direction.Z = cosf(elapsedTime);
-		MathVec3DNormalize(&m_PerSceneData.dirLight.Direction);
+		m_PerSceneData.dirLight.Position.X = m_PerSceneData.dirLight.Radius * sinf(elapsedTime);
+		m_PerSceneData.dirLight.Position.Z = m_PerSceneData.dirLight.Radius * cosf(elapsedTime);
 
 		const Vec3D at = m_Camera.GetAt();
 		const Vec3D pos = m_Camera.GetPos();
@@ -255,37 +254,6 @@ void Game::Render()
 	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 
-	//m_DR->PIXBeginEvent(L"Shadow pass");
-
-	//m_ShadowMap.Bind(m_DR->GetDeviceContext());
-	//{
-	//	m_Renderer.BindVertexShader(m_VS.Get());
-	//	m_Renderer.BindPixelShader(nullptr);
-	//	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
-	//	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerSceneCB.Get(), 2);
-
-	//	for (size_t i = 0; i < m_Actors.size(); ++i)
-	//	{
-	//		const Actor& actor = m_Actors[i];
-	//		if (actor.IsVisible())
-	//		{
-	//			m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
-	//			m_PerObjectData.world = actor.GetWorld();
-	//			m_PerObjectData.material = actor.GetMaterial();
-	//			GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-	//				sizeof(PerObjectConstants),
-	//				&m_PerObjectData,
-	//				m_PerObjectCB.Get());
-	//			m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-	//			m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
-	//			m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
-
-	//			m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
-	//		}
-	//	}
-	//}
-	//m_ShadowMap.Unbind(m_DR->GetDeviceContext());
-	//m_DR->PIXEndEvent();
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
 	{
@@ -335,12 +303,7 @@ void Game::Render()
 	// Light properties
 	//for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
 	{
-		const Vec3D scale = { 0.2f, 0.2f, 0.2f };
-		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
-		Vec3D dirLightPos = m_PerSceneData.dirLight.Direction;
-		dirLightPos = MathVec3DModulateByScalar(&dirLightPos, m_sceneBounds.Radius);
-		Mat4X4 translate = MathMat4X4TranslateFromVec3D(&dirLightPos);
-		m_PerObjectData.world = MathMat4X4MultMat4X4ByMat4X4(&world, &translate);
+		m_PerObjectData.world = MathMat4X4TranslateFromVec3D(&m_PerSceneData.dirLight.Position);
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
 			sizeof(PerObjectConstants),
 			&m_PerObjectData,
@@ -567,40 +530,40 @@ void Game::GetDefaultSize(uint32_t* width, uint32_t* height)
 
 void Game::BuildShadowTransform()
 {
-	// Only the first "main" light casts a shadow.
-	Vec3D lightDir = m_PerSceneData.dirLight.Direction;
-	Vec3D lightPos = MathVec3DModulateByScalar(&lightDir, m_sceneBounds.Radius);
-	Vec3D targetPos = { 0.0f, 0.0f, 0.0f };
-	Vec3D up = { 0.0f, 1.0f, 0.0f };
+	//// Only the first "main" light casts a shadow.
+	//Vec3D lightDir = m_PerSceneData.dirLight.Position;
+	//Vec3D lightPos = MathVec3DModulateByScalar(&lightDir, m_sceneBounds.Radius);
+	//Vec3D targetPos = { 0.0f, 0.0f, 0.0f };
+	//Vec3D up = { 0.0f, 1.0f, 0.0f };
 
-	Mat4X4 view = MathMat4X4ViewAt(&lightPos, &targetPos, &up);
+	//Mat4X4 view = MathMat4X4ViewAt(&lightPos, &targetPos, &up);
 
-	// Transform bounding sphere to light space.
-	Vec4D targetPos4 = { targetPos.X, targetPos.Y, targetPos.Z, 1.0f };
-	Vec4D sphereCenterLS = MathMat4X4MultVec4DByMat4X4(&targetPos4 , &view);
+	//// Transform bounding sphere to light space.
+	//Vec4D targetPos4 = { targetPos.X, targetPos.Y, targetPos.Z, 1.0f };
+	//Vec4D sphereCenterLS = MathMat4X4MultVec4DByMat4X4(&targetPos4 , &view);
 
-	// Ortho frustum in light space encloses scene.
-	float l = sphereCenterLS.X - m_sceneBounds.Radius;
-	float b = sphereCenterLS.Y - m_sceneBounds.Radius;
-	float n = sphereCenterLS.Z - m_sceneBounds.Radius;
-	float r = sphereCenterLS.X + m_sceneBounds.Radius;
-	float t = sphereCenterLS.Y + m_sceneBounds.Radius;
-	float f = sphereCenterLS.Z + m_sceneBounds.Radius;
-	Mat4X4 proj = MathMat4X4OrthographicOffCenter(l, r, b, t, n, f);
+	//// Ortho frustum in light space encloses scene.
+	//float l = sphereCenterLS.X - m_sceneBounds.Radius;
+	//float b = sphereCenterLS.Y - m_sceneBounds.Radius;
+	//float n = sphereCenterLS.Z - m_sceneBounds.Radius;
+	//float r = sphereCenterLS.X + m_sceneBounds.Radius;
+	//float t = sphereCenterLS.Y + m_sceneBounds.Radius;
+	//float f = sphereCenterLS.Z + m_sceneBounds.Radius;
+	//Mat4X4 proj = MathMat4X4OrthographicOffCenter(l, r, b, t, n, f);
 
-	// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
-	Mat4X4 T(
-		0.5f, 0.0f, 0.0f, 0.0f,
-		0.0f, -0.5f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f);
+	//// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
+	//Mat4X4 T(
+	//	0.5f, 0.0f, 0.0f, 0.0f,
+	//	0.0f, -0.5f, 0.0f, 0.0f,
+	//	0.0f, 0.0f, 1.0f, 0.0f,
+	//	0.5f, 0.5f, 0.0f, 1.0f);
 
-	Mat4X4 shadowTransform = view * proj * T;
+	//Mat4X4 shadowTransform = view * proj * T;
 
-	m_PerFrameData.shadowTransform = shadowTransform;
-	m_PerFrameData.cameraPosW = lightPos;
-	m_PerFrameData.proj = proj;
-	m_PerFrameData.view = view;
+	//m_PerFrameData.shadowTransform = shadowTransform;
+	//m_PerFrameData.cameraPosW = lightPos;
+	//m_PerFrameData.proj = proj;
+	//m_PerFrameData.view = view;
 
-	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+	//GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 }
