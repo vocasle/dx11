@@ -10,6 +10,7 @@
 class Camera
 {
 public:
+	Camera();
 	Camera(const Vec3D& cameraPos);
 	Mat4X4 GetViewMat() const;
 	Mat4X4 GetProjMat() const;

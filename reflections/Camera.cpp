@@ -6,6 +6,10 @@
 #include <corecrt_math_defines.h>
 #include <cmath>
 
+Camera::Camera(): Camera({0.0f, 0.0f, 0.0f})
+{
+}
+
 Camera::Camera(const Vec3D& cameraPos)
 {
 	m_Pos = cameraPos;
