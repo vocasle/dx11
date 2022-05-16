@@ -20,12 +20,12 @@ inline Color ColorFromRGBA(const float r, const float g, const float b, const fl
 
 struct DirectionalLight
 {
-	DirectionalLight() : Ambient{}, Diffuse{}, Specular{}, Direction{}, pad{0} {}
+	DirectionalLight() : Ambient{}, Diffuse{}, Specular{}, Position{}, Radius{0} {}
 	Color Ambient;
 	Color Diffuse;
 	Color Specular;
-	Vec3D Direction;
-	float pad;
+	Vec3D Position;
+	float Radius;
 };
 
 struct PointLight

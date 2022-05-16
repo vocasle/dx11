@@ -7,8 +7,8 @@ struct DirectionalLight
 	float4 Ambient;
 	float4 Diffuse;
 	float4 Specular;
-	float3 Direction;
-    float pad;
+	float3 Position;
+    float Radius;
 };
 
 struct PointLight
@@ -54,7 +54,7 @@ LightIntensity DirectionalLightIntensity(DirectionalLight light, float3 normal, 
 {
     LightIntensity intensity;
     intensity.intensity = float3(1.0f, 1.0f, 1.0f);
-    const float3 L = normalize(-light.Direction);
+    const float3 L = normalize(light.Position);
     const float3 H = normalize(L + viewDir);
     intensity.L = L;
     intensity.H = H;
@@ -166,43 +166,21 @@ float CalcShadowFactor(SamplerComparisonState samShadow,
     return percentLit /= 9.0f;
 }
 
+//---------------------------------------------------------------------
+// Transforms a normal map sample to world space.
+//---------------------------------------------------------------------
 float3 NormalSampleToWorldSpace(float3 normalMapSample,
     float3 unitNormalW,
-    float4 tangentW)
+    float3 tangentW)
 {
-    // Restore each component of the normal vector read from [0, 1] to [-1, 1]
+    // Uncompress each component from [0,1] to [-1,1].
     float3 normalT = 2.0f * normalMapSample - 1.0f;
-
-    // Construct tangent space in world coordinate system
+    // Build orthonormal basis.
     float3 N = unitNormalW;
-    float3 T = normalize(tangentW.xyz - dot(tangentW.xyz, N) * N); // Schmitt orthogonalization
+    float3 T = normalize(tangentW - dot(tangentW, N) * N);
     float3 B = cross(N, T);
-
     float3x3 TBN = float3x3(T, B, N);
-
-    // Transform bump normal vector from tangent space to world coordinate system
+    // Transform from tangent space to world space.
     float3 bumpedNormalW = mul(normalT, TBN);
-
     return bumpedNormalW;
-}
-
-float DirectionalLightIntensity(DirectionalLight dl)
-{
-    return 1.0f;
-}
-
-float SpotLightIntensity(SpotLight sl, float3 surfPos)
-{
-    const float distance = length(sl.Position - surfPos);
-    const float3 L = (sl.Position - surfPos) / distance;
-
-    return pow(max(dot(-sl.Direction, L), 0.0f), sl.Spot) / (distance * distance);
-}
-
-float PointLightIntensity(PointLight pl, float3 surfPos)
-{
-    const float distance = length(pl.Position - surfPos);
-    const float3 L = (pl.Position - surfPos) / distance;
-
-    return 1.0f / (distance * distance);
 }
