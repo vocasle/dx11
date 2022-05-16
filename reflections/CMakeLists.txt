@@ -17,6 +17,7 @@ set(sources
 	dx11.cpp
 	objloader.cpp
 	stb_image.cpp
+	DynamicCubeMap.cpp
 	)
 
 set(headers
@@ -41,6 +42,7 @@ set(headers
 	objloader.h
 	stb_image.h
 	targetver.h
+	DynamicCubeMap.h
 	)
 
 set(pixel_shaders
