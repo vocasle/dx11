@@ -9,9 +9,16 @@
 class DynamicCubeMap
 {
 public:
+	DynamicCubeMap();
+	~DynamicCubeMap();
 
 	void Init(ID3D11Device* device);
 	void BuildCubeFaceCamera(const Vec3D& origin);
+
+	D3D11_VIEWPORT GetViewport() const { return m_cubeMapViewport; }
+	ID3D11RenderTargetView* GetRTV(const uint32_t idx) const { return m_dynamicCubeMapRTV[idx]; }
+	ID3D11DepthStencilView* GetDSV() const { return m_dynamicCubeMapDSV.Get(); }
+	ID3D11ShaderResourceView* GetSRV() const { return m_dynamicCubeMapSRV.Get(); }
 
 private:
 
@@ -26,5 +33,4 @@ private:
 	Camera m_cubeMapCamera[6];
 
 	static const int CUBEMAP_SIZE = 256;
-
 };

@@ -5,6 +5,18 @@
 
 using namespace Microsoft::WRL;
 
+DynamicCubeMap::DynamicCubeMap()
+{
+}
+
+DynamicCubeMap::~DynamicCubeMap()
+{
+	for (int i = 0; i < 6; ++i)
+	{
+		COM_FREE(m_dynamicCubeMapRTV[i]);
+	}
+}
+
 void DynamicCubeMap::Init(ID3D11Device* device)
 {
 	CreateRenderTargets(device);
