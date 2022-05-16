@@ -19,6 +19,7 @@ public:
 	ID3D11RenderTargetView* GetRTV(const uint32_t idx) const { return m_dynamicCubeMapRTV[idx]; }
 	ID3D11DepthStencilView* GetDSV() const { return m_dynamicCubeMapDSV.Get(); }
 	ID3D11ShaderResourceView* GetSRV() const { return m_dynamicCubeMapSRV.Get(); }
+	const Camera& GetCamera(const uint32_t idx) const { return m_cubeMapCamera[idx]; }
 
 private:
 
