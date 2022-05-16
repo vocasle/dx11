@@ -64,6 +64,46 @@ const Actor* Game::FindActorByName(const std::string& name) const
 	return it == std::end(m_Actors) ? nullptr : &*it;
 }
 
+void Game::DrawScene()
+{
+	m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
+
+	m_Renderer.BindPixelShader(m_PhongPS.Get());
+	m_Renderer.BindVertexShader(m_VS.Get());
+
+	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_ShadowMap.GetDepthMapSRV(), 4);
+	m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
+
+	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
+	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
+
+	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerSceneCB.Get(), 2);
+	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerSceneCB.Get(), 2);
+
+	for (size_t i = 0; i < m_Actors.size(); ++i)
+	{
+		const Actor& actor = m_Actors[i];
+		if (actor.IsVisible())
+		{
+			m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
+			m_PerObjectData.world = actor.GetWorld();
+			m_PerObjectData.material = actor.GetMaterial();
+			m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
+			GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+				sizeof(PerObjectConstants),
+				&m_PerObjectData,
+				m_PerObjectCB.Get());
+			m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+			m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+
+			m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
+			m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
+
+			m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
+		}
+	}
+}
+
 #if WITH_IMGUI
 void Game::UpdateImgui()
 {
@@ -253,6 +293,35 @@ void Game::Render()
 	m_Renderer.SetPrimitiveTopology(R_DEFAULT_PRIMTIVE_TOPOLOGY);
 	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
+
+	m_DR->PIXBeginEvent(L"Dynamic Cube Map pass");
+	{
+		m_Renderer.SetViewport(m_dynamicCubeMap.GetViewport());
+		for (int i = 0; i < 6; ++i)
+		{
+			// Clear cube map face and depth buffer.
+			static const float SILVER_COLOR[4] = {192.0f,192.0f,192.0f, 1.0f};
+			m_Renderer.ClearRenderTargetView(
+				m_dynamicCubeMap.GetRTV(i),
+				SILVER_COLOR);
+			m_Renderer.ClearDepthStencilView(
+				m_dynamicCubeMap.GetDSV(),
+				D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+			// Bind cube map face as render target.
+			//m_Renderer.
+			m_Renderer.SetRenderTargets(m_dynamicCubeMap.GetRTV(i), m_dynamicCubeMap.GetDSV());
+
+			// Draw the scene with the exception of the
+			// center sphere, to this cube map face.
+			//DrawScene(mCubeMapCamera[i], false);
+		}
+
+
+		// reset viewport
+		m_Renderer.SetViewport(m_DR->GetViewport());
+		m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
+	}
+	m_DR->PIXEndEvent();
 
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
@@ -478,9 +547,11 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_DR->CreateWindowSizeDependentResources();
 	TimerInitialize(&m_Timer);
 	Mouse::Get().SetWindowDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
-	m_ShadowMap.InitResources(m_DR->GetDevice(), 2048, 2048);
+	ID3D11Device* device = m_DR->GetDevice();
+
+	m_ShadowMap.InitResources(device, 2048, 2048);
 	m_Camera.SetViewDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
-	m_CubeMap.LoadCubeMap(m_DR->GetDevice(), {
+	m_CubeMap.LoadCubeMap(device, {
 		UtilsFormatStr("%s/textures/right.jpg", ASSETS_ROOT).c_str(),
 		UtilsFormatStr("%s/textures/left.jpg", ASSETS_ROOT).c_str(),
 		UtilsFormatStr("%s/textures/top.jpg", ASSETS_ROOT).c_str(),
@@ -489,24 +560,25 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		UtilsFormatStr("%s/textures/back.jpg", ASSETS_ROOT).c_str(),
 		});
 
+	m_dynamicCubeMap.Init(device);
+
 	// init actors
-	ID3D11Device* device = m_DR->GetDevice();
 	CreateActors();
 	m_CubeMap.CreateCube(*FindActorByName("Cube"), device);
 	InitPerSceneConstants();
 
-	CreatePixelShader("PixelShader.cso", (ID3D11Device*)device, m_PS.ReleaseAndGetAddressOf());
-	CreatePixelShader("PhongPS.cso", (ID3D11Device*)device, m_PhongPS.ReleaseAndGetAddressOf());
-	CreatePixelShader("LightPS.cso", (ID3D11Device*)device, m_LightPS.ReleaseAndGetAddressOf());
+	CreatePixelShader("PixelShader.cso", device, m_PS.ReleaseAndGetAddressOf());
+	CreatePixelShader("PhongPS.cso", device, m_PhongPS.ReleaseAndGetAddressOf());
+	CreatePixelShader("LightPS.cso", device, m_LightPS.ReleaseAndGetAddressOf());
 	CreatePixelShader("SkyPS.cso", device, m_SkyPS.ReleaseAndGetAddressOf());
-	auto bytes = CreateVertexShader("VertexShader.cso", (ID3D11Device*)device, m_VS.ReleaseAndGetAddressOf());
+	auto bytes = CreateVertexShader("VertexShader.cso", device, m_VS.ReleaseAndGetAddressOf());
 	m_InputLayout.CreateDefaultLayout(device, &bytes[0], bytes.size());
 	bytes = CreateVertexShader("SkyVS.cso", device, m_SkyVS.ReleaseAndGetAddressOf());
 	m_InputLayout.CreateSkyLayout(device, &bytes[0], bytes.size());
 
-	GameCreateConstantBuffer(m_DR->GetDevice(), sizeof(PerSceneConstants), &m_PerSceneCB);
-	GameCreateConstantBuffer(m_DR->GetDevice(), sizeof(PerObjectConstants), &m_PerObjectCB);
-	GameCreateConstantBuffer(m_DR->GetDevice(), sizeof(PerFrameConstants), &m_PerFrameCB);
+	GameCreateConstantBuffer(device, sizeof(PerSceneConstants), &m_PerSceneCB);
+	GameCreateConstantBuffer(device, sizeof(PerObjectConstants), &m_PerObjectCB);
+	GameCreateConstantBuffer(device, sizeof(PerFrameConstants), &m_PerFrameCB);
 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
 
 	CreateDefaultSampler();

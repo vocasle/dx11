@@ -13,6 +13,7 @@
 #include "ShadowMap.h"
 #include "CubeMap.h"
 #include "InputLayout.h"
+#include "DynamicCubeMap.h"
 
 #include <vector>
 #include <memory>
@@ -68,6 +69,7 @@ private:
 	std::vector<uint8_t> CreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs);
 	void CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps);
 	const Actor* FindActorByName(const std::string& name) const;
+	void DrawScene();
 
 #if WITH_IMGUI
 	void UpdateImgui(); 
@@ -115,4 +117,5 @@ private:
 	ShadowMap m_ShadowMap;
 	CubeMap m_CubeMap;
 	InputLayout m_InputLayout;
+	DynamicCubeMap m_dynamicCubeMap;
 };
