@@ -9,6 +9,7 @@ float4 main(VSOut In) : SV_TARGET
 	const float4 glossSampled = glossTexture.Sample(defaultSampler, In.TexCoords);
 	const float3 normalSampled = normalTexture.Sample(defaultSampler, In.TexCoords);
 	float3 normal = 2.0f * normalSampled - 1.0f; // Uncompress each component from [0,1] to [-1,1].
+	normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW), normalize(In.TangentW));
 	
 	const float3 viewDir = normalize(cameraPosW - In.PosW);
 
@@ -24,6 +25,9 @@ float4 main(VSOut In) : SV_TARGET
 	intensities[5] = SpotLightIntensity(spotLights[0], normal, In.PosW, viewDir);
 	float shadows[MAX_LIGHTS] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 	//shadows[0] = CalcShadowFactor(shadowSampler, shadowTexture, In.ShadowPosH);
+
+	//const float diff = dot(normalize(normal), normalize(dirLight.Position));
+	//return float4(diff, diff, diff, 1.0f);
 
 	const float4 emissive = ZERO_VEC4;
 	const float4 emissiveSampled = ZERO_VEC4;
