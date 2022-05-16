@@ -55,7 +55,7 @@ void Game::CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11P
 	}
 }
 
-const Actor* Game::FindActorByName(const std::string& name) const
+Actor* Game::FindActorByName(const std::string& name)
 {
 	auto it = std::find_if(std::begin(m_Actors), std::end(m_Actors), [&name](const Actor& actor)
 		{
@@ -64,6 +64,7 @@ const Actor* Game::FindActorByName(const std::string& name) const
 	return it == std::end(m_Actors) ? nullptr : &*it;
 }
 
+// TODO: Update this to get list of actors to draw
 void Game::DrawScene()
 {
 	m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
@@ -297,6 +298,7 @@ void Game::Render()
 	m_DR->PIXBeginEvent(L"Dynamic Cube Map pass");
 	{
 		m_Renderer.SetViewport(m_dynamicCubeMap.GetViewport());
+		FindActorByName("Cube")->SetIsVisible(false);
 		for (int i = 0; i < 6; ++i)
 		{
 			// Clear cube map face and depth buffer.
@@ -311,15 +313,20 @@ void Game::Render()
 			//m_Renderer.
 			m_Renderer.SetRenderTargets(m_dynamicCubeMap.GetRTV(i), m_dynamicCubeMap.GetDSV());
 
+			m_PerFrameData.cameraPosW = m_dynamicCubeMap.GetCamera(i).GetPos();
+			m_PerFrameData.view = m_dynamicCubeMap.GetCamera(i).GetViewMat();
+			m_PerFrameData.proj = m_dynamicCubeMap.GetCamera(i).GetProjMat();
+			GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+
 			// Draw the scene with the exception of the
 			// center sphere, to this cube map face.
-			//DrawScene(mCubeMapCamera[i], false);
+			DrawScene();
 		}
-
 
 		// reset viewport
 		m_Renderer.SetViewport(m_DR->GetViewport());
 		m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
+		FindActorByName("Cube")->SetIsVisible(true);
 	}
 	m_DR->PIXEndEvent();
 
@@ -331,42 +338,7 @@ void Game::Render()
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 	}
-	m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
-
-	m_Renderer.BindPixelShader(m_PhongPS.Get());
-	m_Renderer.BindVertexShader(m_VS.Get());
-	
-	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_ShadowMap.GetDepthMapSRV(), 4);
-	m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
-	
-	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
-	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
-
-	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerSceneCB.Get(), 2);
-	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerSceneCB.Get(), 2);
-
-	for (size_t i = 0; i < m_Actors.size(); ++i)
-	{
-		const Actor& actor = m_Actors[i];
-		if (actor.IsVisible())
-		{
-			m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
-			m_PerObjectData.world = actor.GetWorld();
-			m_PerObjectData.material = actor.GetMaterial();
-			m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
-			GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-				sizeof(PerObjectConstants),
-				&m_PerObjectData,
-				m_PerObjectCB.Get());
-			m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-			m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
-
-			m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
-			m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
-
-			m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
-		}
-	}
+	DrawScene();
 	m_DR->PIXEndEvent();
 	m_DR->PIXBeginEvent(L"Draw lights");
 	// Light properties

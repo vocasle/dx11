@@ -68,7 +68,7 @@ private:
 	void BuildShadowTransform();
 	std::vector<uint8_t> CreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs);
 	void CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps);
-	const Actor* FindActorByName(const std::string& name) const;
+	Actor* FindActorByName(const std::string& name);
 	void DrawScene();
 
 #if WITH_IMGUI
