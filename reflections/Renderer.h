@@ -31,6 +31,8 @@ public:
 	void SetIndexBuffer(ID3D11Buffer* buffer, uint32_t startIndexLocation);
 	void SetVertexBuffer(ID3D11Buffer* buffer, uint32_t strides, uint32_t offsets);
 	void SetDepthStencilState(ID3D11DepthStencilState* depthStencilState);
+	void SetViewport(D3D11_VIEWPORT viewport);
+	void SetRenderTargets(ID3D11RenderTargetView* rtv, ID3D11DepthStencilView* dsv);
 	
 	void BindPixelShader(ID3D11PixelShader* shader);
 	void BindVertexShader(ID3D11VertexShader* shader);
@@ -42,8 +44,16 @@ public:
 	void DrawIndexed(uint32_t indexCount,
 		uint32_t startIndexLocation,
 		uint32_t baseVertexLocation);
+	
 	void Clear();
+	
 	void Present();
+
+	void ClearRenderTargetView(ID3D11RenderTargetView* rtv, const float* color);
+	void ClearDepthStencilView(ID3D11DepthStencilView* dsv, uint32_t mask, float depth, uint8_t stencil);
+
+	void GenerateMips(ID3D11ShaderResourceView* srv);
+
 
 private:
 

@@ -62,6 +62,16 @@ void Renderer::SetDepthStencilState(ID3D11DepthStencilState* depthStencilState)
 	m_DR->GetDeviceContext()->OMSetDepthStencilState(depthStencilState, 0);
 }
 
+void Renderer::SetViewport(D3D11_VIEWPORT viewport)
+{
+	m_DR->GetDeviceContext()->RSSetViewports(1, &viewport);
+}
+
+void Renderer::SetRenderTargets(ID3D11RenderTargetView* rtv, ID3D11DepthStencilView* dsv)
+{
+	m_DR->GetDeviceContext()->OMSetRenderTargets(1, &rtv, dsv);
+}
+
 void Renderer::BindShaderResources(enum BindTargets bindTarget, ID3D11ShaderResourceView** SRVs, uint32_t numSRVs)
 {
 	assert(numSRVs <= R_MAX_SRV_NUM && "numSRVs is above limit!");
@@ -141,4 +151,19 @@ void Renderer::Present()
 		OutputDebugStringA("ERROR: Failed to present\n");
 		ExitProcess(EXIT_FAILURE);
 	}
+}
+
+void Renderer::ClearRenderTargetView(ID3D11RenderTargetView* rtv, const float* color)
+{
+	m_DR->GetDeviceContext()->ClearRenderTargetView(rtv, color);
+}
+
+void Renderer::ClearDepthStencilView(ID3D11DepthStencilView* dsv, uint32_t mask, float depth, uint8_t stencil)
+{
+	m_DR->GetDeviceContext()->ClearDepthStencilView(dsv, mask, depth, stencil);
+}
+
+void Renderer::GenerateMips(ID3D11ShaderResourceView* srv)
+{
+	m_DR->GetDeviceContext()->GenerateMips(srv);
 }
