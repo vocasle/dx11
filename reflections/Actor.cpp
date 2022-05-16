@@ -124,6 +124,8 @@ void Actor::LoadMesh(Mesh* mesh)
 		assert(m_Vertices.size() + 1 <= mesh->Faces.size());
 		m_Vertices.emplace_back(vert);
 	}
+
+	GenerateTangents();
 }
 
 void Actor::GenerateTangents()
