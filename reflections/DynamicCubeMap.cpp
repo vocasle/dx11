@@ -5,7 +5,8 @@
 
 using namespace Microsoft::WRL;
 
-DynamicCubeMap::DynamicCubeMap()
+DynamicCubeMap::DynamicCubeMap():
+	m_cubeMapViewport{}
 {
 }
 
