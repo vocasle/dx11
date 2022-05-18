@@ -299,6 +299,7 @@ void Game::Render()
 	{
 		m_Renderer.SetViewport(m_dynamicCubeMap.GetViewport());
 		FindActorByName("Cube")->SetIsVisible(false);
+		static bool isPrinted = false;
 		for (int i = 0; i < 6; ++i)
 		{
 			// Clear cube map face and depth buffer.
@@ -316,12 +317,20 @@ void Game::Render()
 			m_PerFrameData.cameraPosW = m_dynamicCubeMap.GetCamera(i).GetPos();
 			m_PerFrameData.view = m_dynamicCubeMap.GetCamera(i).GetViewMat();
 			m_PerFrameData.proj = m_dynamicCubeMap.GetCamera(i).GetProjMat();
+			if (!isPrinted)
+			{
+				UtilsDebugPrint("[%d] cam pos: %s\n", i, m_PerFrameData.cameraPosW.ToString().c_str());
+				UtilsDebugPrint("[%d] view: %s\n", i, m_PerFrameData.view.ToString().c_str());
+				UtilsDebugPrint("[%d] proj: %s\n", i, m_PerFrameData.proj.ToString().c_str());
+			}
+
 			GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 
 			// Draw the scene with the exception of the
 			// center sphere, to this cube map face.
 			DrawScene();
 		}
+		isPrinted = true;
 
 		// reset viewport
 		m_Renderer.SetViewport(m_DR->GetViewport());
@@ -336,6 +345,7 @@ void Game::Render()
 		m_PerFrameData.view = m_Camera.GetViewMat();
 		m_PerFrameData.proj = m_Camera.GetProjMat();
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
+		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_dynamicCubeMap.GetSRV(), 6);
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 	}
 	DrawScene();
@@ -461,6 +471,7 @@ void Game::CreateActors()
 		{4.0f, 0.0f, -4.0f},
 		{-4.0f, 0.0f, 4.0f},
 		{0.0, 1.0f, 2.5f},
+		{0.0, 1.0f, -2.5f},
 	};
 
 	const Material material = {
@@ -487,6 +498,30 @@ void Game::CreateActors()
 		actor.SetIsVisible(visibility[i]);
 
 		m_Actors.emplace_back(actor);
+	}
+
+	// generate 4 more cubes
+	{
+		const int texIdx = 1;
+		for (size_t i = 0; i < 4; ++i)
+		{
+			Actor actor = Actor();
+			actor.LoadModel(models[0].c_str());
+			actor.CreateIndexBuffer(m_DR->GetDevice());
+			actor.CreateVertexBuffer(m_DR->GetDevice());
+			actor.Scale(0.5f);
+			actor.Rotate(rotations[i].X, rotations[i].Y, rotations[i].Z);
+			actor.Translate(offsets[i + 1]);
+			actor.LoadTexture(diffuseTextures[texIdx].c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
+			actor.LoadTexture(specularTextures[texIdx].c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
+			actor.LoadTexture(glossTextures[texIdx].c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
+			actor.LoadTexture(normalTextures[texIdx].c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
+			actor.SetMaterial(&material);
+			actor.SetName(UtilsFormatStr("Cube%d", i).c_str());
+			actor.SetIsVisible(true);
+
+			m_Actors.emplace_back(actor);
+		}
 	}
 
 	{
@@ -533,7 +568,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		});
 
 	m_dynamicCubeMap.Init(device);
-
+	m_dynamicCubeMap.BuildCubeFaceCamera({ 0.0f, 0.0f, 0.0f });
 	// init actors
 	CreateActors();
 	m_CubeMap.CreateCube(*FindActorByName("Cube"), device);
