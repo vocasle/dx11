@@ -5,7 +5,7 @@
 
 #include "DeviceResources.h"
 
-#define R_MAX_SRV_NUM 6
+#define R_MAX_SRV_NUM 7
 #define R_MAX_CB_NUM 3
 #define R_MAX_SAMPLERS 2
 
