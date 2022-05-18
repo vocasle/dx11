@@ -31,7 +31,7 @@ float4 main(VSOut In) : SV_TARGET
 
 	const float4 emissive = ZERO_VEC4;
 	const float4 emissiveSampled = ZERO_VEC4;
-	const float4 fragmentColor = BlinnPhong(
+	float4 fragmentColor = BlinnPhong(
 		emissive,
 		emissiveSampled,
 		material.Diffuse,
@@ -45,6 +45,13 @@ float4 main(VSOut In) : SV_TARGET
 		shadows,
 		1
 	);
+
+	// calculate reflections
+	float3 incident = -viewDir;
+	float3 reflVector = reflect(incident, normal);
+	float4 reflColor = envTexture.Sample(defaultSampler, reflVector);
+
+	fragmentColor += reflColor;
 
 	return fragmentColor;
 }
