@@ -7,9 +7,9 @@ float4 main(VSOut In) : SV_TARGET
 	const float4 diffuseSampled = diffuseTexture.Sample(defaultSampler, In.TexCoords);
 	const float4 specularSampled = specularTexture.Sample(defaultSampler, In.TexCoords);
 	const float4 glossSampled = glossTexture.Sample(defaultSampler, In.TexCoords);
-	const float3 normalSampled = normalTexture.Sample(defaultSampler, In.TexCoords);
-	float3 normal = 2.0f * normalSampled - 1.0f; // Uncompress each component from [0,1] to [-1,1].
-	normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW), normalize(In.TangentW));
+	const float3 normalSampled = normalTexture.Sample(defaultSampler, In.TexCoords).xyz;
+	float3 normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW), normalize(In.TangentW));
+	normal = normalize(normal);
 	
 	const float3 viewDir = normalize(cameraPosW - In.PosW);
 
@@ -37,9 +37,9 @@ float4 main(VSOut In) : SV_TARGET
 		material.Diffuse,
 		diffuseSampled,
 		AMBIENT,
-		material.Specular,
+		specularSampled,
 		glossSampled,
-		128.0f,
+		material.Specular.a,
 		normal,
 		intensities,
 		shadows,
@@ -51,7 +51,7 @@ float4 main(VSOut In) : SV_TARGET
 	float3 reflVector = reflect(incident, normal);
 	float4 reflColor = envTexture.Sample(defaultSampler, reflVector);
 
-	fragmentColor += reflColor;
+	fragmentColor += reflColor * material.Reflection;
 
 	return fragmentColor;
 }

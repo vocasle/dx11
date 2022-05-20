@@ -70,6 +70,7 @@ private:
 	void CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps);
 	Actor* FindActorByName(const std::string& name);
 	void DrawScene();
+	void DrawSky();
 
 #if WITH_IMGUI
 	void UpdateImgui(); 

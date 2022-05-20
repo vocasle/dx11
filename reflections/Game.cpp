@@ -105,6 +105,24 @@ void Game::DrawScene()
 	}
 }
 
+void Game::DrawSky()
+{
+	m_DR->PIXBeginEvent(L"Draw sky");
+	m_Renderer.SetRasterizerState(m_CubeMap.GetRasterizerState());
+	m_Renderer.SetDepthStencilState(m_CubeMap.GetDepthStencilState());
+	m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
+	m_Renderer.BindVertexShader(m_SkyVS.Get());
+	m_Renderer.BindPixelShader(m_SkyPS.Get());
+	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_CubeMap.GetCubeMap(), 0);
+	m_Renderer.SetSamplerState(m_CubeMap.GetCubeMapSampler(), 0);
+	m_Renderer.SetVertexBuffer(m_CubeMap.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Sky), 0);
+	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
+	m_Renderer.SetIndexBuffer(m_CubeMap.GetIndexBuffer(), 0);
+	m_Renderer.DrawIndexed(m_CubeMap.GetNumIndices(), 0, 0);
+	m_DR->PIXEndEvent();
+}
+
 #if WITH_IMGUI
 void Game::UpdateImgui()
 {
@@ -194,7 +212,7 @@ void Game::InitPerSceneConstants()
 	m_PerSceneData.spotLights[0] = spotLight;
 }
 
-Game::Game():
+Game::Game() :
 	m_Camera{ {0.0f, 0.0f, -5.0f} }
 {
 	m_DR = std::make_unique<DeviceResources>();
@@ -217,7 +235,7 @@ void Game::Clear()
 	ID3D11RenderTargetView* rtv = m_DR->GetRenderTargetView();
 	ID3D11DepthStencilView* dsv = m_DR->GetDepthStencilView();
 
-	static const float CLEAR_COLOR[4] = {0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f};
+	static const float CLEAR_COLOR[4] = { 0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f };
 
 	ctx->Flush();
 
@@ -231,7 +249,7 @@ void Game::Update()
 {
 	m_Camera.UpdatePos(m_Timer.DeltaMillis);
 	m_Camera.ProcessMouse(m_Timer.DeltaMillis);
-	
+
 	m_PerFrameData.view = m_Camera.GetViewMat();
 	m_PerFrameData.proj = m_Camera.GetProjMat();
 	m_PerFrameData.cameraPosW = m_Camera.GetPos();
@@ -239,6 +257,15 @@ void Game::Update()
 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 
 	BuildShadowTransform();
+
+	Actor* animated = FindActorByName("Animated");
+	static float totalTime = 0.0f;
+	totalTime += static_cast<float>(m_Timer.DeltaMillis) / (1000.0f * 3);
+	const float radius = 2.0f;
+	Vec3D translated = { cosf(totalTime) * radius, 1.0f, sinf(totalTime) * radius };
+	animated->Translate(translated);
+	const auto w = animated->GetWorld();
+	UtilsDebugPrint("animated.World=%s\n", w.ToString().c_str());
 
 #if WITH_IMGUI
 	// update directional light
@@ -297,13 +324,15 @@ void Game::Render()
 
 	m_DR->PIXBeginEvent(L"Dynamic Cube Map pass");
 	{
+		m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
+		m_Renderer.SetDepthStencilState(nullptr);
 		m_Renderer.SetViewport(m_dynamicCubeMap.GetViewport());
-		FindActorByName("Cube")->SetIsVisible(false);
+		FindActorByName("Sphere")->SetIsVisible(false);
 		static bool isPrinted = false;
 		for (int i = 0; i < 6; ++i)
 		{
 			// Clear cube map face and depth buffer.
-			static const float SILVER_COLOR[4] = {192.0f,192.0f,192.0f, 1.0f};
+			static const float SILVER_COLOR[4] = { 192.0f,192.0f,192.0f, 1.0f };
 			m_Renderer.ClearRenderTargetView(
 				m_dynamicCubeMap.GetRTV(i),
 				SILVER_COLOR);
@@ -329,13 +358,16 @@ void Game::Render()
 			// Draw the scene with the exception of the
 			// center sphere, to this cube map face.
 			DrawScene();
+			DrawSky();
 		}
 		isPrinted = true;
 
 		// reset viewport
 		m_Renderer.SetViewport(m_DR->GetViewport());
 		m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
-		FindActorByName("Cube")->SetIsVisible(true);
+		FindActorByName("Sphere")->SetIsVisible(true);
+		m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
+		m_Renderer.SetDepthStencilState(nullptr);
 	}
 	m_DR->PIXEndEvent();
 
@@ -376,21 +408,7 @@ void Game::Render()
 	m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 5);
 
 	// draw sky
-	m_DR->PIXBeginEvent(L"Draw sky");
-	m_Renderer.SetRasterizerState(m_CubeMap.GetRasterizerState());
-	m_Renderer.SetDepthStencilState(m_CubeMap.GetDepthStencilState());
-	m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
-	m_Renderer.BindVertexShader(m_SkyVS.Get());
-	m_Renderer.BindPixelShader(m_SkyPS.Get());
-	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_CubeMap.GetCubeMap(), 0);
-	m_Renderer.SetSamplerState(m_CubeMap.GetCubeMapSampler(), 0);
-	m_Renderer.SetVertexBuffer(m_CubeMap.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Sky), 0);
-	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
-	m_Renderer.SetIndexBuffer(m_CubeMap.GetIndexBuffer(), 0);
-	m_Renderer.DrawIndexed(m_CubeMap.GetNumIndices(), 0, 0);
-
-	m_DR->PIXEndEvent();
+	DrawSky();
 
 #if WITH_IMGUI
 	ImGui::Render();
@@ -409,121 +427,89 @@ void Game::Tick()
 
 void Game::CreateActors()
 {
-	const std::string names[] = {
-		"Cube",
-		"Sphere"
-	};
-
-	const bool visibility[] = {
-		true,
-		false
-	};
-
-	const std::string models[] = {
-		//UtilsFormatStr("%s/meshes/podium.obj", ASSETS_ROOT),
-		UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT),
-		UtilsFormatStr("%s/meshes/sphere.obj", ASSETS_ROOT),
-	};
-
-	const std::string diffuseTextures[] = {
-		UtilsFormatStr("%s/textures/drywall_diffuse.jpg", ASSETS_ROOT),
-		UtilsFormatStr("%s/textures/bricks_diffuse.jpg", ASSETS_ROOT),
-		UtilsFormatStr("%s/textures/cliff_diffuse.jpg", ASSETS_ROOT),
-		UtilsFormatStr("%s/textures/marble_diffuse.jpg", ASSETS_ROOT),
-	};
-
-	const std::string specularTextures[] = {
-		UtilsFormatStr("%s/textures/drywall_reflection.jpg", ASSETS_ROOT),
-		UtilsFormatStr("%s/textures/bricks_reflection.jpg", ASSETS_ROOT),
-		UtilsFormatStr("%s/textures/cliff_reflection.jpg", ASSETS_ROOT),
-		UtilsFormatStr("%s/textures/marble_reflection.jpg", ASSETS_ROOT),
-	};
-
-	const std::string normalTextures[] = {
-		UtilsFormatStr("%s/textures/drywall_normal.png", ASSETS_ROOT),
-		UtilsFormatStr("%s/textures/bricks_normal.png", ASSETS_ROOT),
-		UtilsFormatStr("%s/textures/cliff_normal.jpg", ASSETS_ROOT),
-		UtilsFormatStr("%s/textures/marble_normal.png", ASSETS_ROOT),
-	};
-
-	const std::string glossTextures[] = {
-		UtilsFormatStr("%s/textures/drywall_gloss.jpg", ASSETS_ROOT),
-		UtilsFormatStr("%s/textures/bricks_gloss.jpg", ASSETS_ROOT),
-		UtilsFormatStr("%s/textures/cliff_gloss.jpg", ASSETS_ROOT),
-		UtilsFormatStr("%s/textures/marble_gloss.jpg", ASSETS_ROOT),
-	};
-
-	const float scales[] = {
-		1.0f,
-		1.0f,
-		1.0f,
-		0.008f,
-	};
-
-	const Vec3D rotations[] = {
-		{0.0f, 0.0f, 0.0f},
-		{0.0f, 0.0f, 0.0f},
-		{0.0f, 0.0f, 0.0f},
-		{0.0f, MathToRadians(180.0f), 0.0f},
-	};
-	const Vec3D offsets[] = {
-		{0.0f, 0.0f, 0.0f},
-		{4.0f, 0.0f, -4.0f},
-		{-4.0f, 0.0f, 4.0f},
-		{0.0, 1.0f, 2.5f},
-		{0.0, 1.0f, -2.5f},
-	};
-
-	const Material material = {
-		{0.24725f, 0.1995f, 0.0745f, 1.0f},
-		{0.75164f, 0.60648f, 0.22648f, 1.0f},
-		{0.628281f, 0.555802f, 0.366065f, 0.4f}
-	};
-
-	for (size_t i = 0; i < _countof(models); ++i)
+	// load sphere
 	{
-		Actor actor = Actor();
-		actor.LoadModel(models[i].c_str());
+		Actor actor = Actor(MGCreateSphere(1.0f, 20, 20).get());
+		actor.Translate({ 0.0f, 1.0f, 0.0f });
 		actor.CreateIndexBuffer(m_DR->GetDevice());
 		actor.CreateVertexBuffer(m_DR->GetDevice());
-		actor.Scale(scales[i]);
-		actor.Rotate(rotations[i].X, rotations[i].Y, rotations[i].Z);
-		actor.Translate(offsets[i]);
-		actor.LoadTexture(diffuseTextures[i].c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.LoadTexture(specularTextures[i].c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.LoadTexture(glossTextures[i].c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.LoadTexture(normalTextures[i].c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		actor.LoadTexture(UtilsFormatStr("%s/textures/metall_sheet_diffuse.jpg", ASSETS_ROOT).c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		actor.LoadTexture(UtilsFormatStr("%s/textures/metall_sheet_specular.jpg", ASSETS_ROOT).c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		actor.LoadTexture(UtilsFormatStr("%s/textures/metall_sheet_gloss.jpg", ASSETS_ROOT).c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		actor.LoadTexture(UtilsFormatStr("%s/textures/metall_sheet_normal.jpg", ASSETS_ROOT).c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		Material material(
+			{ 0.23125f,0.23125f,0.23125f,1.0f },
+			{ 0.2775f,0.2775f,0.2775f,1.0f },
+			{ 0.773911f,0.773911f,0.773911f,89.6f },
+			{ 0.5f,0.5f,0.5f,1.0f }
+		);
 		actor.SetMaterial(&material);
-		actor.SetName(names[i]);
-		actor.SetIsVisible(visibility[i]);
+		actor.SetName("Sphere");
+		actor.SetIsVisible(true);
+
+		m_Actors.emplace_back(actor);
+
+		Actor animated = actor;
+		material.Reflection = { 0.0f, 0.0f, 0.0f, 1.0f };
+		animated.SetMaterial(&material);
+		animated.Scale(0.5f);
+		animated.Translate({ 2.5f, 1.0f, 0.0f });
+		animated.SetName("Animated");
+		m_Actors.emplace_back(animated);
+	}
+
+	// load cylinder
+	{
+		const Vec3D positions[] = {
+			{-4.0f, 0.0f, 4.0f},
+			{-4.0f, 0.0f, 0.0f},
+			{-4.0f, 0.0f, -4.0f},
+			{4.0f, 0.0f, 4.0f},
+			{4.0f, 0.0f, 0.0f},
+			{4.0f, 0.0f, -4.0f},
+		};
+
+		Actor actor = Actor();
+		actor.LoadModel(UtilsFormatStr("%s/meshes/cylinder.obj", ASSETS_ROOT).c_str());
+		actor.CreateIndexBuffer(m_DR->GetDevice());
+		actor.CreateVertexBuffer(m_DR->GetDevice());
+		Material material(
+			{ 0.23125f,0.23125f,0.23125f,1.0f },
+			{ 0.2775f,0.2775f,0.2775f,1.0f },
+			{ 0.773911f,0.773911f,0.773911f,89.6f },
+			{ 0.0f, 0.0f, 0.0f,1.0f }
+		);
+		actor.SetMaterial(&material);
+		actor.LoadTexture(UtilsFormatStr("%s/textures/marble_diffuseOriginal.jpg", ASSETS_ROOT).c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		actor.LoadTexture(UtilsFormatStr("%s/textures/marble_normal.jpg", ASSETS_ROOT).c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		actor.LoadTexture(UtilsFormatStr("%s/textures/marble_smoothness.jpg", ASSETS_ROOT).c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		actor.LoadTexture(UtilsFormatStr("%s/textures/marble_metallic.jpg", ASSETS_ROOT).c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		actor.SetIsVisible(true);
+
+		// make 5 more cylinders
+		for (uint32_t i = 0; i < 6; ++i)
+		{
+			Actor a = actor;
+			a.Scale(0.5f, 1.0f, 0.5f);
+			a.Translate(positions[i]);
+			a.SetName(UtilsFormatStr("Cylinder%d", i));
+			m_Actors.emplace_back(a);
+		}
+	}
+
+	// load cube
+	{
+		Actor actor = Actor();
+		actor.LoadModel(UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT).c_str());
+		actor.CreateIndexBuffer(m_DR->GetDevice());
+		actor.CreateVertexBuffer(m_DR->GetDevice());
+		actor.SetName("Cube");
+		actor.SetIsVisible(false);
 
 		m_Actors.emplace_back(actor);
 	}
 
-	// generate 4 more cubes
-	{
-		const int texIdx = 1;
-		for (size_t i = 0; i < 4; ++i)
-		{
-			Actor actor = Actor();
-			actor.LoadModel(models[0].c_str());
-			actor.CreateIndexBuffer(m_DR->GetDevice());
-			actor.CreateVertexBuffer(m_DR->GetDevice());
-			actor.Scale(0.5f);
-			actor.Rotate(rotations[i].X, rotations[i].Y, rotations[i].Z);
-			actor.Translate(offsets[i + 1]);
-			actor.LoadTexture(diffuseTextures[texIdx].c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
-			actor.LoadTexture(specularTextures[texIdx].c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
-			actor.LoadTexture(glossTextures[texIdx].c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
-			actor.LoadTexture(normalTextures[texIdx].c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
-			actor.SetMaterial(&material);
-			actor.SetName(UtilsFormatStr("Cube%d", i).c_str());
-			actor.SetIsVisible(true);
-
-			m_Actors.emplace_back(actor);
-		}
-	}
-
+	// load plane
 	{
 		const Vec3D origin = { 0.0f, 0.0f, 0.0f };
 		std::unique_ptr<Mesh> mesh = MGGeneratePlane(&origin, 10.0f, 10.0f);
@@ -532,11 +518,18 @@ void Game::CreateActors()
 		plane.CreateVertexBuffer(m_DR->GetDevice());
 		const Vec3D offset = { 0.0f, -1.0f, 0.0f };
 		plane.Translate(offset);
+
+		plane.LoadTexture(UtilsFormatStr("%s/textures/wood_floor_diffuseOriginal.jpg", ASSETS_ROOT).c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture(UtilsFormatStr("%s/textures/wood_floor_normal.jpg", ASSETS_ROOT).c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture(UtilsFormatStr("%s/textures/wood_floor_smoothness.jpg", ASSETS_ROOT).c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture(UtilsFormatStr("%s/textures/wood_floor_metallic.jpg", ASSETS_ROOT).c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		
-		plane.LoadTexture(UtilsFormatStr("%s/textures/marble_diffuse.jpg", ASSETS_ROOT).c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		plane.LoadTexture(UtilsFormatStr("%s/textures/marble_normal.png", ASSETS_ROOT).c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		plane.LoadTexture(UtilsFormatStr("%s/textures/marble_gloss.jpg", ASSETS_ROOT).c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		plane.LoadTexture(UtilsFormatStr("%s/textures/marble_reflection.jpg", ASSETS_ROOT).c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		const Material material = {
+			{0.24725f, 0.1995f, 0.0745f, 1.0f},
+			{0.75164f, 0.60648f, 0.22648f, 1.0f},
+			{0.628281f, 0.555802f, 0.366065f, 32.0f},
+			{0.0f, 0.0f, 0.0f, 0.0f}
+		};
 		plane.SetMaterial(&material);
 		plane.SetIsVisible(true);
 		plane.SetName("Plane");
@@ -565,7 +558,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		UtilsFormatStr("%s/textures/bottom.jpg", ASSETS_ROOT).c_str(),
 		UtilsFormatStr("%s/textures/front.jpg", ASSETS_ROOT).c_str(),
 		UtilsFormatStr("%s/textures/back.jpg", ASSETS_ROOT).c_str(),
-		});
+	});
 
 	m_dynamicCubeMap.Init(device);
 	m_dynamicCubeMap.BuildCubeFaceCamera({ 0.0f, 0.0f, 0.0f });
