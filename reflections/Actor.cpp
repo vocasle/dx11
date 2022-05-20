@@ -245,6 +245,7 @@ void Actor::CreateIndexBuffer(ID3D11Device* device)
 void Actor::Translate(const Vec3D offset)
 {
 	const Mat4X4 offsetMat = MathMat4X4TranslateFromVec3D(&offset);
+	m_World.V[3] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	m_World = MathMat4X4MultMat4X4ByMat4X4(&m_World,
 		&offsetMat);
 }
@@ -260,6 +261,13 @@ void Actor::Rotate(const float pitch, const float yaw, const float roll)
 void Actor::Scale(const float s)
 {
 	const Vec3D scale = { s, s, s };
+	const Mat4X4 scaleMat = MathMat4X4ScaleFromVec3D(&scale);
+	m_World = MathMat4X4MultMat4X4ByMat4X4(&m_World, &scaleMat);
+}
+
+void Actor::Scale(const float x, const float y, const float z)
+{
+	const Vec3D scale = { x, y, z };
 	const Mat4X4 scaleMat = MathMat4X4ScaleFromVec3D(&scale);
 	m_World = MathMat4X4MultMat4X4ByMat4X4(&m_World, &scaleMat);
 }

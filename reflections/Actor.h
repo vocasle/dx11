@@ -46,6 +46,7 @@ public:
 	void Translate(const Vec3D offset);
 	void Rotate(const float pitch, const float yaw, const float roll);
 	void Scale(const float s);
+	void Scale(const float x, const float y, const float z);
 
 	void LoadTexture(const char* filename,
 		enum TextureType type,
