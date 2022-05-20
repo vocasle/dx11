@@ -1,7 +1,9 @@
 #include "MeshGenerator.h"
 #include "Actor.h"
+#include "Math.h"
 
 #include <cassert>
+#include <corecrt_math_defines.h>
 
 std::unique_ptr<Mesh> MGGeneratePlane(const Vec3D* origin, const float width, const float height)
 {
@@ -30,4 +32,73 @@ std::unique_ptr<Mesh> MGGeneratePlane(const Vec3D* origin, const float width, co
     mesh->Faces.emplace_back(0, 0, 0);
 
     return mesh;
+}
+
+std::unique_ptr<Mesh> MGCreateSphere(float radius, unsigned int rings, unsigned int sectors)
+{
+	float const R = 1.0f / (float)(rings - 1);
+    float const S = 1.0f / (float)(sectors - 1);
+    int r, s;
+
+    std::vector<Vec3D> vertices;
+    std::vector<Vec3D> normals;
+    std::vector<Vec2D> texcoords;
+    std::vector<Face> indices;
+
+    vertices.resize(rings * sectors * 3);
+    normals.resize(rings * sectors * 3);
+    texcoords.resize(rings * sectors * 2);
+    std::vector<Vec3D>::iterator v = vertices.begin();
+    std::vector<Vec3D>::iterator n = normals.begin();
+    std::vector<Vec2D>::iterator t = texcoords.begin();
+    for (r = 0; r < rings; r++)
+    {
+        for (s = 0; s < sectors; s++)
+        {
+            float const y = sin(-M_PI_2 + M_PI * r * R);
+            float const x = cos(2 * M_PI * s * S) * sin(M_PI * r * R);
+            float const z = sin(2 * M_PI * s * S) * sin(M_PI * r * R);
+
+            t->X = s * S;
+            t->Y = r * R;
+            ++t;
+
+            v->X = x * radius;
+            v->Y = y * radius;
+            v->Z = z * radius;
+            ++v;
+
+            n->X = x;
+            n->Y = y;
+            n->Z = z;
+            ++n;
+        }
+    }
+
+    indices.resize(rings * sectors * 6);
+    std::vector<Face>::iterator i = indices.begin();
+    for (r = 0; r < rings; r++)
+    {
+        for (s = 0; s < sectors; s++)
+        {
+            // 0 1 2
+            *i++ = { (r + 1) * sectors + (s + 1), (r + 1) * sectors + (s + 1), (r + 1) * sectors + (s + 1) }; // 2
+            *i++ = { r * sectors + (s + 1), r * sectors + (s + 1), r * sectors + (s + 1) }; // 1
+            *i++ = { r * sectors + s, r * sectors + s, r * sectors + s }; // 0
+            
+            // 0 2 3
+            *i++ = { (r + 1) * sectors + s, (r + 1) * sectors + s, (r + 1) * sectors + s }; // 3
+            *i++ = { (r + 1) * sectors + (s + 1), (r + 1) * sectors + (s + 1), (r + 1) * sectors + (s + 1) }; // 2
+            *i++ = { r * sectors + s, r * sectors + s, r * sectors + s }; // 0
+        }
+    }
+
+    std::unique_ptr<Mesh> meshData = std::make_unique<Mesh>();
+    meshData->Faces = indices;
+    meshData->Normals = normals;
+    meshData->Positions = vertices;
+    meshData->TexCoords = texcoords;
+    meshData->Name = "Sphere";
+
+	return meshData;
 }
