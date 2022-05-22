@@ -22,6 +22,13 @@ public:
 		stbi_image_free(m_bytes);
 	}
 
+	bool IsValid() const { return m_bytes != nullptr; }
+
+	uint32_t GetWidth() const { return static_cast<uint32_t>(m_width); }
+	uint32_t GetHeight() const { return static_cast<uint32_t>(m_height); }
+	uint32_t GetChannels() const { return static_cast<uint32_t>(m_channels); }
+	uint8_t* GetBytes() const { return m_bytes; }
+
 private:
 	uint8_t* m_bytes;
 	int m_width;
