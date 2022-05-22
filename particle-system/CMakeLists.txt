@@ -18,6 +18,7 @@ set(source_files
 	objloader.cpp
 	stb_image.cpp
 	DynamicCubeMap.cpp
+	ParticleSystem.cpp
 	)
 
 set(header_files
@@ -43,22 +44,26 @@ set(header_files
 	stb_image.h
 	targetver.h
 	DynamicCubeMap.h
+	ParticleSystem.h
 	)
 
 set(pixel_shader_files
 	LightPS.hlsl
 	PhongPS.hlsl
 	PixelShader.hlsl
-	SkyPS.hlsl)
+	SkyPS.hlsl
+	ParticlePS.hlsl)
 
 set(vertex_shader_files
 	SkyVS.hlsl
-	VertexShader.hlsl)
+	VertexShader.hlsl
+	ParticleVS.hlsl)
 
 set(shader_header_files
 	Sky.hlsli
 	LightingHelper.hlsli
-	Common.hlsli)
+	Common.hlsli
+	Particle.hlsli)
 
 add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_shader_files} ${vertex_shader_files} ${shader_header_files})
 
