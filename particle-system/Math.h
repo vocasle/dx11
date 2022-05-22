@@ -28,6 +28,12 @@ struct Vec3D
 	float Z;
 };
 
+#ifdef __cplusplus
+Vec3D operator+(const Vec3D& lhs, const Vec3D& rhs);
+Vec3D operator*(const Vec3D& lhs, const float s);
+Vec3D operator*(const float s, const Vec3D& rhs);
+#endif
+
 struct Vec4D
 {
 	Vec4D() : X{0}, Y{0}, Z{0}, W{0} {}
