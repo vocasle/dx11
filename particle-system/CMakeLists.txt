@@ -45,6 +45,7 @@ set(header_files
 	targetver.h
 	DynamicCubeMap.h
 	ParticleSystem.h
+	Image.h
 	)
 
 set(pixel_shader_files
