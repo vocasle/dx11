@@ -328,14 +328,13 @@ void Game::Render()
 		m_Renderer.SetDepthStencilState(nullptr);
 		m_Renderer.SetViewport(m_dynamicCubeMap.GetViewport());
 		FindActorByName("Sphere")->SetIsVisible(false);
-		static bool isPrinted = false;
 		for (int i = 0; i < 6; ++i)
 		{
 			// Clear cube map face and depth buffer.
-			static const float SILVER_COLOR[4] = { 192.0f,192.0f,192.0f, 1.0f };
+			static const float BLACK_COLOR[4] = { 0.0f,0.0f,0.0f, 1.0f };
 			m_Renderer.ClearRenderTargetView(
 				m_dynamicCubeMap.GetRTV(i),
-				SILVER_COLOR);
+				BLACK_COLOR);
 			m_Renderer.ClearDepthStencilView(
 				m_dynamicCubeMap.GetDSV(),
 				D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -346,21 +345,15 @@ void Game::Render()
 			m_PerFrameData.cameraPosW = m_dynamicCubeMap.GetCamera(i).GetPos();
 			m_PerFrameData.view = m_dynamicCubeMap.GetCamera(i).GetViewMat();
 			m_PerFrameData.proj = m_dynamicCubeMap.GetCamera(i).GetProjMat();
-			if (!isPrinted)
-			{
-				UtilsDebugPrint("[%d] cam pos: %s\n", i, m_PerFrameData.cameraPosW.ToString().c_str());
-				UtilsDebugPrint("[%d] view: %s\n", i, m_PerFrameData.view.ToString().c_str());
-				UtilsDebugPrint("[%d] proj: %s\n", i, m_PerFrameData.proj.ToString().c_str());
-			}
-
 			GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 
 			// Draw the scene with the exception of the
 			// center sphere, to this cube map face.
 			DrawScene();
 			DrawSky();
+
+			m_Renderer.SetDepthStencilState(nullptr);
 		}
-		isPrinted = true;
 
 		// reset viewport
 		m_Renderer.SetViewport(m_DR->GetViewport());
