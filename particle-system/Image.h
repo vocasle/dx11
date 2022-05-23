@@ -29,11 +29,12 @@ public:
 	uint32_t GetChannels() const { return static_cast<uint32_t>(m_channels); }
 	uint8_t* GetBytes() const { return m_bytes; }
 
+	static const int DESIRED_CHANNELS = 4; // for RGBA
+
 private:
 	uint8_t* m_bytes;
 	int m_width;
 	int m_height;
 	int m_channels;
 
-	static const int DESIRED_CHANNELS = 4; // for RGBA
 };
