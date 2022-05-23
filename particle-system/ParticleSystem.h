@@ -28,13 +28,15 @@ private:
 		Vec3D m_initPos;
 		Vec3D m_pos;
 		float m_lifespan;
+		Vertex m_vertices[4];
+		uint32_t m_indices[6];
 	};
 
 public:
-	ParticleSystem();
+	ParticleSystem(const std::string& name);
 	~ParticleSystem();
 
-	void Init(ID3D11Device* device, const std::string& texFilePath);
+	void Init(ID3D11Device* device, ID3D11DeviceContext* context, const std::string& texFilePath);
 	void Reset();
 	void Destroy();
 	void Tick(const float deltaTime);
@@ -49,9 +51,10 @@ public:
 	ID3D11Buffer* GetIndexBuffer() const { return m_indexBuffer.Get(); }
 	size_t GetNumIndices() const { return m_particles.size() * 6; }
 	size_t GetStrideSize() const { return sizeof(Particle); }
+	std::string GetName() const { return m_name; }
 
 private:
-	void CreateTexture(ID3D11Device* device, const std::string& filepath);
+	void CreateTexture(ID3D11Device* device, ID3D11DeviceContext* context, const std::string& filepath);
 	void CreateBlendState(ID3D11Device* device);
 	void CreateDepthStencilState(ID3D11Device* device);
 	void CreateVertexBuffer(ID3D11Device* device);
@@ -72,6 +75,7 @@ private:
 	std::string m_name;
 	std::vector<Particle> m_particles;
 	std::vector<Vertex> m_vertices;
+	std::vector<uint32_t> m_indices;
 
 	Vec3D m_origin;
 
