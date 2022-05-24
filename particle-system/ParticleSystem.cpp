@@ -19,6 +19,7 @@ void ParticleSystem::Init(ID3D11Device* device, ID3D11DeviceContext* context, co
 	CreateVertexBuffer(device);
 	CreateIndexBuffer(device);
 	CreateSamplerState(device);
+	CreateEmitter();
 }
 
 void ParticleSystem::Reset()
@@ -31,6 +32,11 @@ void ParticleSystem::Destroy()
 
 void ParticleSystem::Tick(const float deltaTime)
 {
+	for (Emitter& e : m_emitters)
+	{
+		e.Tick(deltaTime);
+	}
+
 	for (Particle& p : m_particles)
 	{
 		p.Tick(deltaTime);
@@ -50,6 +56,11 @@ void ParticleSystem::SetDepthStencilState(ID3D11DepthStencilState* depthStencilS
 void ParticleSystem::SetOrigin(const Vec3D& origin)
 {
 	m_origin = origin;
+}
+
+void ParticleSystem::SetCamera(const Camera& camera)
+{
+	m_camera = &camera;
 }
 
 ParticleSystem::Particle::Particle(const Vec3D& acceleration, 
@@ -149,4 +160,72 @@ void ParticleSystem::CreateSamplerState(ID3D11Device* device)
 {
 	CD3D11_SAMPLER_DESC desc = CD3D11_SAMPLER_DESC{ CD3D11_DEFAULT{} };
 	HR(device->CreateSamplerState(&desc, m_sampler.ReleaseAndGetAddressOf()))
+}
+
+void ParticleSystem::CreateEmitter()
+{
+	Emitter emitter(5, m_origin, { 0.0f, 0.0f, 0.0f }, { 0.0f, -9.8f, 0.0f });
+	m_emitters.push_back(emitter);
+}
+
+void ParticleSystem::Emitter::Tick(const float deltaTime)
+{
+	m_lifespan += deltaTime;
+
+	for (int i = 0; i < m_particlesPerTick && m_particlesPerTick + m_particles->size() < MAX_PARTICLES; ++i)
+	{
+		m_particles->push_back(EmitParticle(i));
+	}
+
+	for (int i = 0; i < m_particles->size(); ++i)
+	{
+		Particle& p = m_particles->at(i);
+		if (!p.IsAlive())
+		{
+			p = EmitParticle(i);
+		}
+	}
+}
+
+ParticleSystem::Emitter::Emitter(int particlesPerTick, const Vec3D& pos, const Vec3D& initVelocity, const Vec3D& accel)
+	: m_lifespan{0.0f},
+	m_particlesPerTick(particlesPerTick),
+	m_pos(pos),
+	m_initVelocity(initVelocity),
+	m_acceleration(accel),
+	m_particles{nullptr}
+{
+}
+
+void ParticleSystem::Emitter::SetParticles(std::vector<Particle>* particles)
+{
+	m_particles = particles;
+}
+
+void ParticleSystem::Emitter::SetCamera(Camera* camera)
+{
+	m_camera = camera;
+}
+
+ParticleSystem::Particle ParticleSystem::Emitter::EmitParticle(int seed)
+{
+	Particle particle(m_acceleration, m_initVelocity, m_pos, 5.0f);
+	int width = 5;
+	int height = 5;
+
+	Vec3D R = m_camera->GetRight();
+	MathVec3DNormalize(&R);
+	Vec3D U = m_camera->GetUp();
+	MathVec3DNormalize(&U);
+	const Vec3D P = m_pos;
+
+	Vec3D X = (width / 2.0f) * R;
+	Vec3D Y = (height / 2.0f) * U;
+	const Vec3D Q1 = P + X + Y;
+	const Vec3D Q4 = P - X + Y; // q4
+	const Vec3D Q3 = P - X - Y; // q3
+	const Vec3D Q2 = P + X - Y; // q2
+
+
+	return particle;
 }

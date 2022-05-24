@@ -5,6 +5,7 @@
 #include <string>
 
 #include "Math.h"
+#include "Camera.h"
 
 class ParticleSystem
 {
@@ -15,6 +16,7 @@ private:
 		float Lifespan;
 	};
 
+	class Emitter;
 	class Particle
 	{
 	public:
@@ -30,6 +32,29 @@ private:
 		float m_lifespan;
 		Vertex m_vertices[4];
 		uint32_t m_indices[6];
+
+		friend class Emitter;
+	};
+
+	class Emitter
+	{
+	public:
+		void Tick(const float deltaTime);
+		Emitter(int particlesPerTick, const Vec3D& pos, const Vec3D& initVelocity, const Vec3D& accel);
+		void SetParticles(std::vector<Particle>* particles);
+		void SetCamera(Camera* camera);
+		
+	private:
+		Particle EmitParticle(int seed);
+
+		float m_lifespan;
+		int m_particlesPerTick;
+		Vec3D m_pos;
+		Vec3D m_initVelocity;
+		Vec3D m_acceleration;
+
+		std::vector<Particle>* m_particles;
+		const Camera* m_camera;
 	};
 
 public:
@@ -44,6 +69,7 @@ public:
 	void SetBlendState(ID3D11BlendState* blendState);
 	void SetDepthStencilState(ID3D11DepthStencilState* depthStencilState);
 	void SetOrigin(const Vec3D& origin);
+	void SetCamera(const Camera& camera);
 
 	ID3D11BlendState* GetBlendState() const { return m_blendState.Get(); }
 	ID3D11DepthStencilState* GetDepthStencilState() const { return m_depthStencilState.Get(); }
@@ -74,10 +100,12 @@ private:
 
 	std::string m_name;
 	std::vector<Particle> m_particles;
+	std::vector<Emitter> m_emitters;
 	std::vector<Vertex> m_vertices;
 	std::vector<uint32_t> m_indices;
 
 	Vec3D m_origin;
+	const Camera* m_camera;
 
 	static const int MAX_LIFESPAN = 5;
 	static const int MAX_PARTICLES = 10;
