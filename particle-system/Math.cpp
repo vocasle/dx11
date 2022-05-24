@@ -964,10 +964,17 @@ Vec3D operator+(const Vec3D& lhs, const Vec3D& rhs)
 {
 	return { lhs.X + rhs.X, lhs.Y + rhs.Y, lhs.Z + rhs.Z };
 }
+
+Vec3D operator-(const Vec3D& lhs, const Vec3D& rhs)
+{
+	return { lhs.X - rhs.X, lhs.Y - rhs.Y, lhs.Z - rhs.Z };
+}
+
 Vec3D operator*(const Vec3D& lhs, const float s)
 {
 	return { lhs.X * s, lhs.Y * s, lhs.Z * s };
 }
+
 Vec3D operator*(const float s, const Vec3D& rhs)
 {
 	return rhs * s;

@@ -30,6 +30,7 @@ struct Vec3D
 
 #ifdef __cplusplus
 Vec3D operator+(const Vec3D& lhs, const Vec3D& rhs);
+Vec3D operator-(const Vec3D& lhs, const Vec3D& rhs);
 Vec3D operator*(const Vec3D& lhs, const float s);
 Vec3D operator*(const float s, const Vec3D& rhs);
 #endif
