@@ -18,6 +18,8 @@ public:
 	void ProcessMouse(double deltaMillis);
 	Vec3D GetPos() const { return m_Pos; }
 	Vec3D GetAt() const { return m_At; }
+	Vec3D GetUp() const { return m_Up; }
+	Vec3D GetRight() const { return m_Right; }
 	void SetViewDimensions(uint32_t width, uint32_t height);
 	void SetZNear(const float zNear);
 	void SetZFar(const float zFar);
