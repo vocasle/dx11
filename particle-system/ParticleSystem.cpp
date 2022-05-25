@@ -41,6 +41,8 @@ void ParticleSystem::Tick(const float deltaTime)
 	{
 		p.Tick(deltaTime);
 	}
+
+	UpdateVertices();
 }
 
 void ParticleSystem::SetBlendState(ID3D11BlendState* blendState)
@@ -148,7 +150,16 @@ void ParticleSystem::CreateDepthStencilState(ID3D11Device* device)
 
 void ParticleSystem::CreateVertexBuffer(ID3D11Device* device)
 {
-	UtilsCreateVertexBuffer(device, &m_vertices[0], m_vertices.size(), sizeof(Vertex), m_vertexBuffer.ReleaseAndGetAddressOf());
+	D3D11_SUBRESOURCE_DATA subresourceData = {};
+	subresourceData.pSysMem = &m_vertices[0];
+
+	D3D11_BUFFER_DESC bufferDesc = {};
+	bufferDesc.ByteWidth = sizeof(Vertex) * m_vertices.size();
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.StructureByteStride = sizeof(Vertex);
+	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+
+	HR(device->CreateBuffer(&bufferDesc, &subresourceData, m_vertexBuffer.ReleaseAndGetAddressOf()))
 }
 
 void ParticleSystem::CreateIndexBuffer(ID3D11Device* device)
@@ -166,6 +177,34 @@ void ParticleSystem::CreateEmitter()
 {
 	Emitter emitter(5, m_origin, { 0.0f, 0.0f, 0.0f }, { 0.0f, -9.8f, 0.0f });
 	m_emitters.push_back(emitter);
+}
+
+void ParticleSystem::UpdateVertices()
+{
+	m_vertices.clear();
+	m_indices.clear();
+	size_t indexOffset = 0;
+	for (const Particle& p : m_particles)
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			m_vertices.push_back(p.m_vertices[i]);
+		}
+
+		for (int i = 0; i < 6; ++i)
+		{
+			m_indices.push_back(p.m_indices[i] + indexOffset);
+		}
+		indexOffset += 6;
+	}
+}
+
+void ParticleSystem::UpdateVertexBuffer(ID3D11DeviceContext* context)
+{
+	D3D11_MAPPED_SUBRESOURCE mappedResource = {};
+	context->Map(m_vertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &m_vertices[0], m_vertices.size());
+	context->Unmap(m_vertexBuffer.Get(), 0);
 }
 
 void ParticleSystem::Emitter::Tick(const float deltaTime)
@@ -226,6 +265,21 @@ ParticleSystem::Particle ParticleSystem::Emitter::EmitParticle(int seed)
 	const Vec3D Q3 = P - X - Y; // q3
 	const Vec3D Q2 = P + X - Y; // q2
 
+	particle.m_vertices[0].Position = Q1;
+	particle.m_vertices[1].Position = Q2;
+	particle.m_vertices[2].Position = Q3;
+	particle.m_vertices[3].Position = Q4;
+	particle.m_vertices[0].Lifespan = 0.0f;
+	particle.m_vertices[1].Lifespan = 0.0f;
+	particle.m_vertices[2].Lifespan = 0.0f;
+	particle.m_vertices[3].Lifespan = 0.0f;
+
+	particle.m_indices[0] = 0;
+	particle.m_indices[1] = 1;
+	particle.m_indices[2] = 2;
+	particle.m_indices[3] = 2;
+	particle.m_indices[4] = 3;
+	particle.m_indices[5] = 0;
 
 	return particle;
 }

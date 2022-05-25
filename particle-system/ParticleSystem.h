@@ -34,6 +34,7 @@ private:
 		uint32_t m_indices[6];
 
 		friend class Emitter;
+		friend class ParticleSystem;
 	};
 
 	class Emitter
@@ -65,6 +66,7 @@ public:
 	void Reset();
 	void Destroy();
 	void Tick(const float deltaTime);
+	void UpdateVertexBuffer(ID3D11DeviceContext* context);
 
 	void SetBlendState(ID3D11BlendState* blendState);
 	void SetDepthStencilState(ID3D11DepthStencilState* depthStencilState);
@@ -87,6 +89,7 @@ private:
 	void CreateIndexBuffer(ID3D11Device* device);
 	void CreateSamplerState(ID3D11Device* device);
 	void CreateEmitter();
+	void UpdateVertices();
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11BlendState> m_blendState;
