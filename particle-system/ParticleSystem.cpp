@@ -32,9 +32,12 @@ void ParticleSystem::Init(ID3D11Device* device, ID3D11DeviceContext* context, co
 
 void ParticleSystem::Tick(const float deltaTime)
 {
-	if (m_particles.size() < MAX_PARTICLES)
+	static float elapsedTime = 0.0f;
+	elapsedTime += deltaTime;
+	if (m_particles.size() < MAX_PARTICLES && elapsedTime > 1.0f)
 	{
-		//EmitParticle();
+		EmitParticle();
+		elapsedTime = 0.0f;
 	}
 
 	for (Particle& p : m_particles)
@@ -120,7 +123,7 @@ void ParticleSystem::CreateVertexBuffer(ID3D11Device* device)
 	subresourceData.pSysMem = &m_vertices[0];
 
 	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(Particle::Vertex) * m_vertices.size();
+	bufferDesc.ByteWidth = sizeof(Particle::Vertex) * MAX_PARTICLES * 4;
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bufferDesc.StructureByteStride = sizeof(Particle::Vertex);
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -135,7 +138,7 @@ void ParticleSystem::CreateIndexBuffer(ID3D11Device* device)
 	subresourceData.pSysMem = &m_indices[0];
 
 	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(uint32_t) * m_indices.size();
+	bufferDesc.ByteWidth = sizeof(uint32_t) * MAX_PARTICLES * 6;
 	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bufferDesc.StructureByteStride = 0;
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -165,7 +168,7 @@ void ParticleSystem::UpdateVertices()
 		{
 			m_indices.push_back(p.GetIndices()[i] + indexOffset);
 		}
-		indexOffset += 6;
+		indexOffset += 4;
 	}
 }
 
@@ -184,7 +187,7 @@ void ParticleSystem::EmitParticle()
 	Particle p = { ParticleType::Particle, m_emitter.GetAccel(), m_emitter.GetInitVel(), m_emitter.GetInitPos(), 0.0f };
 	p.CreateQuad(5, 5, m_camera->GetUp(), m_camera->GetRight());
 	m_particles.push_back(p);
-	m_vertices.insert(m_vertices.end(), p.GetVertices().begin(), p.GetVertices().end());
+	m_vertices.insert(m_vertices.end(), p.GetVertices().begin(), p.GetVertices().end());	
 	m_indices.insert(m_indices.end(), p.GetIndices().begin(), p.GetIndices().end());
 }
 
