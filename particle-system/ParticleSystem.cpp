@@ -89,6 +89,10 @@ void ParticleSystem::CreateBlendState(ID3D11Device* device)
 	desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
 	desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
 	desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	desc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+	desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+	desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 
 	HR(device->CreateBlendState(&desc, m_blendState.ReleaseAndGetAddressOf()))
 }
@@ -96,6 +100,8 @@ void ParticleSystem::CreateBlendState(ID3D11Device* device)
 void ParticleSystem::CreateDepthStencilState(ID3D11Device* device)
 {
 	CD3D11_DEPTH_STENCIL_DESC desc = CD3D11_DEPTH_STENCIL_DESC{ CD3D11_DEFAULT{} };
+	desc.DepthEnable = false;
+	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 
 	HR(device->CreateDepthStencilState(&desc, m_depthStencilState.ReleaseAndGetAddressOf()))
 }
@@ -131,6 +137,9 @@ void ParticleSystem::CreateIndexBuffer(ID3D11Device* device)
 void ParticleSystem::CreateSamplerState(ID3D11Device* device)
 {
 	CD3D11_SAMPLER_DESC desc = CD3D11_SAMPLER_DESC{ CD3D11_DEFAULT{} };
+	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	HR(device->CreateSamplerState(&desc, m_sampler.ReleaseAndGetAddressOf()))
 }
 
@@ -248,10 +257,14 @@ void Particle::CreateQuad(int width, int height, const Vec3D& up, const Vec3D& r
 	const Vec3D Q3 = P - X - Y; // q3
 	const Vec3D Q2 = P + X - Y; // q2
 
-	m_vertices[0].Position = Q1;
-	m_vertices[1].Position = Q2;
-	m_vertices[2].Position = Q3;
-	m_vertices[3].Position = Q4;
+	m_vertices[0].Position = Q1; // top right
+	m_vertices[1].Position = Q2; // bottom right
+	m_vertices[2].Position = Q3; // bottom left
+	m_vertices[3].Position = Q4; // top left
+	m_vertices[0].TexCoords = {0.0f, 1.0f};
+	m_vertices[1].TexCoords = {1.0f, 1.0f};
+	m_vertices[2].TexCoords = {0.0f, 1.0f};
+	m_vertices[3].TexCoords = {0.0f, 0.0f};
 	m_vertices[0].Lifespan = m_lifespan;
 	m_vertices[1].Lifespan = m_lifespan;
 	m_vertices[2].Lifespan = m_lifespan;
