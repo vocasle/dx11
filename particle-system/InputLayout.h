@@ -10,7 +10,7 @@ public:
 	{
 		Default = 56,
 		Sky = 12,
-		Particle = 16
+		Particle = 24
 	};
 public:
 	InputLayout();
