@@ -37,11 +37,14 @@ void ParticleSystem::Init(ID3D11Device* device, ID3D11DeviceContext* context, co
 void ParticleSystem::Tick(const float deltaTime)
 {
 	static float elapsedTime = 0.0f;
-	elapsedTime += deltaTime;
-	if (m_particles.size() < MAX_PARTICLES && elapsedTime > 0.1f)
+	//elapsedTime += deltaTime;
+	if (m_particles.size() + 10 < MAX_PARTICLES /*&& elapsedTime > 0.1f*/)
 	{
-		EmitParticle();
-		elapsedTime = 0.0f;
+		for (int i = 0; i < 10; ++i)
+		{
+			EmitParticle();
+		}
+		//elapsedTime = 0.0f;
 	}
 
 	for (Particle& p : m_particles)
@@ -58,6 +61,19 @@ void ParticleSystem::Tick(const float deltaTime)
 	}
 
 	UpdateVertices();
+}
+
+size_t ParticleSystem::GetNumAliveParticles() const
+{
+	size_t num = 0;
+	for (const Particle& p : m_particles)
+	{
+		if (p.IsAlive())
+		{
+			++num;
+		}
+	}
+	return num;
 }
 
 void ParticleSystem::CreateTexture(ID3D11Device* device, ID3D11DeviceContext* context, const std::string& filepath)
@@ -189,14 +205,13 @@ void ParticleSystem::CreateEmitter()
 void ParticleSystem::EmitParticle()
 {
 	Vec3D accel = m_emitter.GetAccel();
-	accel.Y /*+= MathRandom(-1.0f, 1.0f)*/ = -2.0f;
 	Vec3D initVel = m_emitter.GetInitVel();
-	//initVel.X += MathRandom(-1.0f, 1.0f);
-	initVel.Y += MathRandom(3.0f, 4.0f);
-	//initVel.Z += MathRandom(-1.0f, 1.0f);
+	initVel.X += MathRandom(-10.0f, 10.0f);
+	initVel.Y += MathRandom(25.0f, 50.0f);
+	initVel.Z += MathRandom(-10.0f, 10.0f);
 	Vec3D initPos = m_emitter.GetInitPos();
-	initPos.X += MathRandom(-1.0f, 1.0f);
-	initPos.Z += MathRandom(-1.0f, 1.0f);
+	//initPos.X += MathRandom(-1.0f, 1.0f);
+	//initPos.Z += MathRandom(-1.0f, 1.0f);
 	Particle p = { ParticleType::Particle, accel, initVel, initPos, 0.0f };
 	p.CreateQuad(PARTICLE_SIZE, PARTICLE_SIZE, m_camera->GetUp(), m_camera->GetRight());
 	m_particles.push_back(p);

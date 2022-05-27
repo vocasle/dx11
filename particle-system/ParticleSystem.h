@@ -54,8 +54,8 @@ private:
 class ParticleSystem
 {
 public:
-	static const int MAX_LIFESPAN = 1;
-	static const int MAX_PARTICLES = 200;
+	static const int MAX_LIFESPAN = 10;
+	static const int MAX_PARTICLES = 10000;
 	static const int PARTICLE_SIZE = 1;
 
 public:
@@ -74,6 +74,8 @@ public:
 	std::string GetName() const { return m_name; }
 	ID3D11ShaderResourceView* GetSRV() const { return m_diffuseTexture.Get(); }
 	ID3D11SamplerState* GetSamplerState() const { return m_sampler.Get(); }
+
+	size_t GetNumAliveParticles() const;
 
 private:
 	void CreateTexture(ID3D11Device* device, ID3D11DeviceContext* context, const std::string& filepath);
