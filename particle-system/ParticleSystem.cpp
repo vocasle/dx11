@@ -32,10 +32,10 @@ void ParticleSystem::Init(ID3D11Device* device, ID3D11DeviceContext* context, co
 
 void ParticleSystem::Tick(const float deltaTime)
 {
-	//for (Emitter& e : m_emitters)
-	//{
-	//	e.Tick(deltaTime);
-	//}
+	if (m_particles.size() < MAX_PARTICLES)
+	{
+		//EmitParticle();
+	}
 
 	for (Particle& p : m_particles)
 	{
