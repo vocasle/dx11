@@ -7,7 +7,7 @@ InputLayout::InputLayout()
 
 void InputLayout::CreateDefaultLayout(ID3D11Device* device, unsigned char* bytes, size_t bufferSize)
 {
-	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[] = {
+	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[5] = {
 			{
 				"POSITION",
 				0,
@@ -59,7 +59,7 @@ void InputLayout::CreateDefaultLayout(ID3D11Device* device, unsigned char* bytes
 
 void InputLayout::CreateSkyLayout(ID3D11Device* device, unsigned char* bytes, size_t bufferSize)
 {
-	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[] = {
+	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[1] = {
 			{
 				"POSITION",
 				0,
@@ -73,7 +73,32 @@ void InputLayout::CreateSkyLayout(ID3D11Device* device, unsigned char* bytes, si
 	HR(device->CreateInputLayout(inputElementDesc, 1, bytes, bufferSize, m_skyLayout.ReleaseAndGetAddressOf()))
 }
 
-size_t InputLayout::GetVertexSize(VertexType vertexType) const
+void InputLayout::CreateParticleLayout(ID3D11Device* device, unsigned char* bytes, size_t bufferSize)
+{
+	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[2] = {
+		{
+			"POSITION",
+			0,
+			DXGI_FORMAT_R32G32B32_FLOAT,
+			0,
+			0,
+			D3D11_INPUT_PER_VERTEX_DATA,
+			0
+		},
+		{
+			"LIFESPAN",
+			0,
+			DXGI_FORMAT_R32_FLOAT,
+			0,
+			12,
+			D3D11_INPUT_PER_VERTEX_DATA,
+			0
+		}
+	};
+	HR(device->CreateInputLayout(inputElementDesc, 2, bytes, bufferSize, m_particleLayout.ReleaseAndGetAddressOf()))
+}
+
+size_t InputLayout::GetVertexSize(VertexType vertexType)
 {
 	return static_cast<size_t>(vertexType);
 }
