@@ -20,6 +20,7 @@ public:
 	struct Vertex
 	{
 		Vec3D Position;
+		Vec2D TexCoords;
 		float Lifespan;
 	};
 
