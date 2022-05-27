@@ -262,6 +262,9 @@ void Game::Update()
 	m_particleSystem.Tick(static_cast<float>(m_Timer.DeltaMillis / 1000));
 	m_particleSystem.UpdateVertexBuffer(m_DR->GetDeviceContext());
 
+	SetWindowText(m_DR->GetWindow(), 
+		UtilsFormatStr("particle-system -- Total particles: %d", m_particleSystem.GetNumAliveParticles()).c_str());
+
 #if WITH_IMGUI
 	// update directional light
 	static float elapsedTime = 0.0f;
@@ -413,7 +416,7 @@ void Game::Render()
 	m_DR->PIXEndEvent();
 
 	// draw sky
-	DrawSky();
+	//DrawSky();
 
 #if WITH_IMGUI
 	ImGui::Render();
@@ -549,7 +552,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_Renderer.SetDeviceResources(m_DR.get());
 
 	m_particleSystem.Init(device, m_DR->GetDeviceContext(), 
-		UtilsFormatStr("%s/textures/flare0.png", ASSETS_ROOT).c_str());
+		UtilsFormatStr("%s/textures/fire_02.png", ASSETS_ROOT).c_str());
 
 #if WITH_IMGUI
 	ImGui::CreateContext();
