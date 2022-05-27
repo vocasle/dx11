@@ -3,83 +3,68 @@
 
 #include <vector>
 #include <string>
+#include <array>
 
 #include "Math.h"
 #include "Camera.h"
 
-class ParticleSystem
+enum class ParticleType
 {
-private:
+	Particle,
+	Emitter
+};
+
+class Particle
+{
+public:
 	struct Vertex
 	{
 		Vec3D Position;
 		float Lifespan;
 	};
 
-	class Emitter;
-	class Particle
-	{
-	public:
-		Particle(const Vec3D& acceleration, const Vec3D& initVelocity, const Vec3D& initPos, const float lifespan);
-		void Tick(const float deltaTime);
-		bool IsAlive() const;
-
-	private:
-		Vec3D m_acceleration;
-		Vec3D m_initVelocity;
-		Vec3D m_initPos;
-		Vec3D m_pos;
-		float m_lifespan;
-		Vertex m_vertices[4];
-		uint32_t m_indices[6];
-
-		friend class Emitter;
-		friend class ParticleSystem;
-	};
-
-	class Emitter
-	{
-	public:
-		void Tick(const float deltaTime);
-		Emitter(int particlesPerTick, const Vec3D& pos, const Vec3D& initVelocity, const Vec3D& accel);
-		void SetParticles(std::vector<Particle>* particles);
-		void SetCamera(Camera* camera);
-		
-	private:
-		Particle EmitParticle(int seed);
-
-		float m_lifespan;
-		int m_particlesPerTick;
-		Vec3D m_pos;
-		Vec3D m_initVelocity;
-		Vec3D m_acceleration;
-
-		std::vector<Particle>* m_particles;
-		const Camera* m_camera;
-	};
-
 public:
-	ParticleSystem(const std::string& name);
+	Particle(ParticleType type, const Vec3D& accel, const Vec3D& initVel, const Vec3D& initPos, const float lifespan);
+	void CreateQuad(int width, int height, const Vec3D& up, const Vec3D& right);
+	const Vec3D& GetAccel() const { return m_accel; }
+	const Vec3D& GetInitVel() const { return m_initVel; }
+	const Vec3D& GetInitPos() const { return m_initPos; }
+	const Vec3D& GetPos() const { return m_pos; }
+	float GetLifespan() const { return m_lifespan; }
+	ParticleType GetParticleType() const { return m_type; }
+	const std::array<Vertex, 4>& GetVertices() const { return m_vertices; }
+	const std::array<uint32_t, 6>& GetIndices() const { return m_indices; }
+
+private:
+	Vec3D m_accel;
+	Vec3D m_initVel;
+	Vec3D m_initPos;
+	Vec3D m_pos;
+	float m_lifespan;
+	ParticleType m_type;
+	std::array<Vertex, 4> m_vertices;
+	std::array<uint32_t, 6> m_indices;
+};
+
+
+class ParticleSystem
+{
+public:
+	ParticleSystem(const std::string& name, const Vec3D& origin, const Camera& camera);
 	~ParticleSystem();
 
 	void Init(ID3D11Device* device, ID3D11DeviceContext* context, const std::string& texFilePath);
-	void Reset();
-	void Destroy();
 	void Tick(const float deltaTime);
 	void UpdateVertexBuffer(ID3D11DeviceContext* context);
-
-	void SetBlendState(ID3D11BlendState* blendState);
-	void SetDepthStencilState(ID3D11DepthStencilState* depthStencilState);
-	void SetOrigin(const Vec3D& origin);
-	void SetCamera(const Camera& camera);
 
 	ID3D11BlendState* GetBlendState() const { return m_blendState.Get(); }
 	ID3D11DepthStencilState* GetDepthStencilState() const { return m_depthStencilState.Get(); }
 	ID3D11Buffer* GetVertexBuffer() const { return m_vertexBuffer.Get(); }
 	ID3D11Buffer* GetIndexBuffer() const { return m_indexBuffer.Get(); }
-	size_t GetNumIndices() const { return m_particles.size() * 6; }
-	size_t GetStrideSize() const { return sizeof(Particle); }
+	size_t GetNumIndices() const { return m_indices.size(); }
 	std::string GetName() const { return m_name; }
+	ID3D11ShaderResourceView* GetSRV() const { return m_diffuseTexture.Get(); }
+	ID3D11SamplerState* GetSamplerState() const { return m_sampler.Get(); }
 
 private:
 	void CreateTexture(ID3D11Device* device, ID3D11DeviceContext* context, const std::string& filepath);
@@ -88,8 +73,9 @@ private:
 	void CreateVertexBuffer(ID3D11Device* device);
 	void CreateIndexBuffer(ID3D11Device* device);
 	void CreateSamplerState(ID3D11Device* device);
-	void CreateEmitter();
 	void UpdateVertices();
+	void CreateEmitter();
+	void EmitParticle();
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11BlendState> m_blendState;
@@ -103,13 +89,13 @@ private:
 
 	std::string m_name;
 	std::vector<Particle> m_particles;
-	std::vector<Emitter> m_emitters;
-	std::vector<Vertex> m_vertices;
+	std::vector<Particle::Vertex> m_vertices;
 	std::vector<uint32_t> m_indices;
+	Particle m_emitter;
 
 	Vec3D m_origin;
 	const Camera* m_camera;
 
-	static const int MAX_LIFESPAN = 5;
+	static const int MAX_LIFESPAN = 5000;
 	static const int MAX_PARTICLES = 10;
 };

@@ -1,9 +1,17 @@
 #include "ParticleSystem.h"
 #include "Image.h"
+#include "InputLayout.h"
+
+#include <cassert>
 
 using namespace Microsoft::WRL;
 
-ParticleSystem::ParticleSystem(const std::string& name): m_name{name}
+
+ParticleSystem::ParticleSystem(const std::string& name, const Vec3D& origin, const Camera& camera)
+	: m_name{name},
+	m_origin{origin},
+	m_camera{&camera},
+	m_emitter{ ParticleType::Emitter, {}, {}, {}, 0.0f }
 {
 }
 
@@ -16,81 +24,25 @@ void ParticleSystem::Init(ID3D11Device* device, ID3D11DeviceContext* context, co
 	CreateTexture(device, context, texFilePath);
 	CreateBlendState(device);
 	CreateDepthStencilState(device);
-	CreateVertexBuffer(device);
-	CreateIndexBuffer(device);
 	CreateSamplerState(device);
 	CreateEmitter();
-}
-
-void ParticleSystem::Reset()
-{
-}
-
-void ParticleSystem::Destroy()
-{
+	CreateVertexBuffer(device);
+	CreateIndexBuffer(device);
 }
 
 void ParticleSystem::Tick(const float deltaTime)
 {
-	for (Emitter& e : m_emitters)
-	{
-		e.Tick(deltaTime);
-	}
+	//for (Emitter& e : m_emitters)
+	//{
+	//	e.Tick(deltaTime);
+	//}
 
-	for (Particle& p : m_particles)
-	{
-		p.Tick(deltaTime);
-	}
+	//for (Particle& p : m_particles)
+	//{
+	//	p.Tick(deltaTime);
+	//}
 
-	UpdateVertices();
-}
-
-void ParticleSystem::SetBlendState(ID3D11BlendState* blendState)
-{
-	m_blendState = blendState;
-}
-
-void ParticleSystem::SetDepthStencilState(ID3D11DepthStencilState* depthStencilState)
-{
-	m_depthStencilState = depthStencilState;
-}
-
-void ParticleSystem::SetOrigin(const Vec3D& origin)
-{
-	m_origin = origin;
-}
-
-void ParticleSystem::SetCamera(const Camera& camera)
-{
-	m_camera = &camera;
-}
-
-ParticleSystem::Particle::Particle(const Vec3D& acceleration, 
-	const Vec3D& initVelocity, 
-	const Vec3D& initPos, 
-	const float lifespan):
-	m_acceleration{acceleration},
-	m_initVelocity{initVelocity},
-	m_initPos{initPos},
-	m_pos{},
-	m_lifespan{lifespan}
-{
-}
-
-void ParticleSystem::Particle::Tick(const float deltaTime)
-{
-	// p(t) = 1/2 t*t * a + t * v0 + p0
-	// a - acceleration
-	// v0 - init velocity
-	// p0 - init position
-	// t - total time in seconds
-	m_lifespan += deltaTime;
-	m_pos = (0.5f * m_lifespan * m_lifespan) * m_acceleration + m_lifespan * m_initVelocity + m_initPos;
-}
-
-bool ParticleSystem::Particle::IsAlive() const
-{
-	return m_lifespan <= static_cast<float>(MAX_LIFESPAN);
+	//UpdateVertices();
 }
 
 void ParticleSystem::CreateTexture(ID3D11Device* device, ID3D11DeviceContext* context, const std::string& filepath)
@@ -154,17 +106,26 @@ void ParticleSystem::CreateVertexBuffer(ID3D11Device* device)
 	subresourceData.pSysMem = &m_vertices[0];
 
 	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(Vertex) * m_vertices.size();
+	bufferDesc.ByteWidth = sizeof(Particle::Vertex) * m_vertices.size();
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.StructureByteStride = sizeof(Vertex);
-	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	bufferDesc.StructureByteStride = sizeof(Particle::Vertex);
+	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 
 	HR(device->CreateBuffer(&bufferDesc, &subresourceData, m_vertexBuffer.ReleaseAndGetAddressOf()))
 }
 
 void ParticleSystem::CreateIndexBuffer(ID3D11Device* device)
 {
-	UtilsCreateIndexBuffer(device, &m_indices[0], m_indices.size(), m_indexBuffer.ReleaseAndGetAddressOf());
+	D3D11_SUBRESOURCE_DATA subresourceData = {};
+	subresourceData.pSysMem = &m_indices[0];
+
+	D3D11_BUFFER_DESC bufferDesc = {};
+	bufferDesc.ByteWidth = sizeof(uint32_t) * m_indices.size();
+	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	bufferDesc.StructureByteStride = 0;
+	bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+
+	HR(device->CreateBuffer(&bufferDesc, &subresourceData, m_indexBuffer.ReleaseAndGetAddressOf()))
 }
 
 void ParticleSystem::CreateSamplerState(ID3D11Device* device)
@@ -173,113 +134,133 @@ void ParticleSystem::CreateSamplerState(ID3D11Device* device)
 	HR(device->CreateSamplerState(&desc, m_sampler.ReleaseAndGetAddressOf()))
 }
 
-void ParticleSystem::CreateEmitter()
-{
-	Emitter emitter(5, m_origin, { 0.0f, 0.0f, 0.0f }, { 0.0f, -9.8f, 0.0f });
-	m_emitters.push_back(emitter);
-}
-
 void ParticleSystem::UpdateVertices()
 {
-	m_vertices.clear();
-	m_indices.clear();
-	size_t indexOffset = 0;
-	for (const Particle& p : m_particles)
-	{
-		for (int i = 0; i < 4; ++i)
-		{
-			m_vertices.push_back(p.m_vertices[i]);
-		}
+	//m_vertices.clear();
+	//m_indices.clear();
+	//size_t indexOffset = 0;
+	//for (const Particle& p : m_particles)
+	//{
+	//	for (int i = 0; i < 4; ++i)
+	//	{
+	//		m_vertices.push_back(p.m_vertices[i]);
+	//	}
 
-		for (int i = 0; i < 6; ++i)
-		{
-			m_indices.push_back(p.m_indices[i] + indexOffset);
-		}
-		indexOffset += 6;
-	}
+	//	for (int i = 0; i < 6; ++i)
+	//	{
+	//		m_indices.push_back(p.m_indices[i] + indexOffset);
+	//	}
+	//	indexOffset += 6;
+	//}
 }
+
+void ParticleSystem::CreateEmitter()
+{
+	const Vec3D accel = { 0.0f, -9.8f, 0.0f };
+	const Vec3D initVel = {};
+	const Vec3D origin = {};
+	Particle p = {ParticleType::Emitter, accel, initVel, origin, 0.0f};
+	m_emitter = p;
+	EmitParticle();
+
+
+}
+
+void ParticleSystem::EmitParticle()
+{
+	Particle p = { ParticleType::Particle, m_emitter.GetAccel(), m_emitter.GetInitVel(), m_emitter.GetInitPos(), MAX_LIFESPAN };
+	p.CreateQuad(5, 5, m_camera->GetUp(), m_camera->GetRight());
+	m_particles.push_back(p);
+	m_vertices.insert(m_vertices.end(), p.GetVertices().begin(), p.GetVertices().end());
+	m_indices.insert(m_indices.end(), p.GetIndices().begin(), p.GetIndices().end());
+}
+
+//void ParticleSystem::Particle::CreateQuad()
+//{
+//	Vec3D R = m_camera->GetRight();
+//	MathVec3DNormalize(&R);
+//	Vec3D U = m_camera->GetUp();
+//	MathVec3DNormalize(&U);
+//	const Vec3D P = m_pos;
+//
+//	Vec3D X = (m_width / 2.0f) * R;
+//	Vec3D Y = (m_width / 2.0f) * U;
+//	const Vec3D Q1 = P + X + Y;
+//	const Vec3D Q4 = P - X + Y; // q4
+//	const Vec3D Q3 = P - X - Y; // q3
+//	const Vec3D Q2 = P + X - Y; // q2
+//
+//	m_vertices[0].Position = Q1;
+//	m_vertices[1].Position = Q2;
+//	m_vertices[2].Position = Q3;
+//	m_vertices[3].Position = Q4;
+//	m_vertices[0].Lifespan = m_lifespan;
+//	m_vertices[1].Lifespan = m_lifespan;
+//	m_vertices[2].Lifespan = m_lifespan;
+//	m_vertices[3].Lifespan = m_lifespan;
+//
+//	m_indices[0] = 0;
+//	m_indices[1] = 1;
+//	m_indices[2] = 2;
+//	m_indices[3] = 2;
+//	m_indices[4] = 3;
+//	m_indices[5] = 0;
+//}
 
 void ParticleSystem::UpdateVertexBuffer(ID3D11DeviceContext* context)
 {
-	D3D11_MAPPED_SUBRESOURCE mappedResource = {};
-	context->Map(m_vertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	memcpy(mappedResource.pData, &m_vertices[0], m_vertices.size());
-	context->Unmap(m_vertexBuffer.Get(), 0);
-}
-
-void ParticleSystem::Emitter::Tick(const float deltaTime)
-{
-	m_lifespan += deltaTime;
-
-	for (int i = 0; i < m_particlesPerTick && m_particlesPerTick + m_particles->size() < MAX_PARTICLES; ++i)
 	{
-		m_particles->push_back(EmitParticle(i));
+		D3D11_MAPPED_SUBRESOURCE mappedResource = {};
+		context->Map(m_vertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &m_vertices[0], m_vertices.size());
+		context->Unmap(m_vertexBuffer.Get(), 0);
 	}
-
-	for (int i = 0; i < m_particles->size(); ++i)
 	{
-		Particle& p = m_particles->at(i);
-		if (!p.IsAlive())
-		{
-			p = EmitParticle(i);
-		}
+		D3D11_MAPPED_SUBRESOURCE mappedResource = {};
+		context->Map(m_indexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &m_indices[0], m_indices.size());
+		context->Unmap(m_indexBuffer.Get(), 0);
 	}
 }
 
-ParticleSystem::Emitter::Emitter(int particlesPerTick, const Vec3D& pos, const Vec3D& initVelocity, const Vec3D& accel)
-	: m_lifespan{0.0f},
-	m_particlesPerTick(particlesPerTick),
-	m_pos(pos),
-	m_initVelocity(initVelocity),
-	m_acceleration(accel),
-	m_particles{nullptr}
+Particle::Particle(ParticleType type, const Vec3D& accel, const Vec3D& initVel, const Vec3D& initPos, const float lifespan):
+	m_accel{accel},
+	m_initVel{initVel},
+	m_initPos{initPos},
+	m_pos{},
+	m_lifespan{lifespan},
+	m_type{type}
 {
 }
 
-void ParticleSystem::Emitter::SetParticles(std::vector<Particle>* particles)
+void Particle::CreateQuad(int width, int height, const Vec3D& up, const Vec3D& right)
 {
-	m_particles = particles;
-}
-
-void ParticleSystem::Emitter::SetCamera(Camera* camera)
-{
-	m_camera = camera;
-}
-
-ParticleSystem::Particle ParticleSystem::Emitter::EmitParticle(int seed)
-{
-	Particle particle(m_acceleration, m_initVelocity, m_pos, 5.0f);
-	int width = 5;
-	int height = 5;
-
-	Vec3D R = m_camera->GetRight();
+	Vec3D R = right;
 	MathVec3DNormalize(&R);
-	Vec3D U = m_camera->GetUp();
+	Vec3D U = up;
 	MathVec3DNormalize(&U);
 	const Vec3D P = m_pos;
 
 	Vec3D X = (width / 2.0f) * R;
-	Vec3D Y = (height / 2.0f) * U;
+	Vec3D Y = (width / 2.0f) * U;
 	const Vec3D Q1 = P + X + Y;
 	const Vec3D Q4 = P - X + Y; // q4
 	const Vec3D Q3 = P - X - Y; // q3
 	const Vec3D Q2 = P + X - Y; // q2
 
-	particle.m_vertices[0].Position = Q1;
-	particle.m_vertices[1].Position = Q2;
-	particle.m_vertices[2].Position = Q3;
-	particle.m_vertices[3].Position = Q4;
-	particle.m_vertices[0].Lifespan = 0.0f;
-	particle.m_vertices[1].Lifespan = 0.0f;
-	particle.m_vertices[2].Lifespan = 0.0f;
-	particle.m_vertices[3].Lifespan = 0.0f;
+	m_vertices[0].Position = Q1;
+	m_vertices[1].Position = Q2;
+	m_vertices[2].Position = Q3;
+	m_vertices[3].Position = Q4;
+	m_vertices[0].Lifespan = m_lifespan;
+	m_vertices[1].Lifespan = m_lifespan;
+	m_vertices[2].Lifespan = m_lifespan;
+	m_vertices[3].Lifespan = m_lifespan;
 
-	particle.m_indices[0] = 0;
-	particle.m_indices[1] = 1;
-	particle.m_indices[2] = 2;
-	particle.m_indices[3] = 2;
-	particle.m_indices[4] = 3;
-	particle.m_indices[5] = 0;
-
-	return particle;
+	m_indices[0] = 0;
+	m_indices[1] = 1;
+	m_indices[2] = 2;
+	m_indices[3] = 2;
+	m_indices[4] = 3;
+	m_indices[5] = 0;
 }
