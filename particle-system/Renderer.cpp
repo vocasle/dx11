@@ -72,6 +72,12 @@ void Renderer::SetRenderTargets(ID3D11RenderTargetView* rtv, ID3D11DepthStencilV
 	m_DR->GetDeviceContext()->OMSetRenderTargets(1, &rtv, dsv);
 }
 
+void Renderer::SetBlendState(ID3D11BlendState* blendState)
+{
+	unsigned int sampleMask = 0xffffffff;
+	m_DR->GetDeviceContext()->OMSetBlendState(blendState, nullptr, sampleMask);
+}
+
 void Renderer::BindShaderResources(enum BindTargets bindTarget, ID3D11ShaderResourceView** SRVs, uint32_t numSRVs)
 {
 	assert(numSRVs <= R_MAX_SRV_NUM && "numSRVs is above limit!");
