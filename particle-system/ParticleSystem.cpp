@@ -38,12 +38,9 @@ void ParticleSystem::Tick(const float deltaTime)
 {
 	static float elapsedTime = 0.0f;
 	//elapsedTime += deltaTime;
-	if (m_particles.size() + 10 < MAX_PARTICLES /*&& elapsedTime > 0.1f*/)
+	if (m_particles.size()< MAX_PARTICLES /*&& elapsedTime > 0.1f*/)
 	{
-		for (int i = 0; i < 10; ++i)
-		{
-			EmitParticle();
-		}
+		EmitParticle();
 		//elapsedTime = 0.0f;
 	}
 
