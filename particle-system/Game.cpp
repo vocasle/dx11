@@ -84,7 +84,7 @@ void Game::DrawScene()
 	for (size_t i = 0; i < m_Actors.size(); ++i)
 	{
 		const Actor& actor = m_Actors[i];
-		if (actor.IsVisible())
+		if (actor.IsVisible() && actor.GetName() == "Plane")
 		{
 			m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
 			m_PerObjectData.world = actor.GetWorld();
@@ -213,7 +213,8 @@ void Game::InitPerSceneConstants()
 }
 
 Game::Game() :
-	m_Camera{ {0.0f, 0.0f, -5.0f} }
+	m_Camera{ {0.0f, 0.0f, -5.0f} },
+	m_particleSystem{ "Fire", {0.0f, 0.0f, 0.0f}, m_Camera }
 {
 	m_DR = std::make_unique<DeviceResources>();
 	m_sceneBounds.Center = { 0.0f, 0.0f, 0.0f };
@@ -258,14 +259,8 @@ void Game::Update()
 
 	BuildShadowTransform();
 
-	Actor* animated = FindActorByName("Animated");
-	static float totalTime = 0.0f;
-	totalTime += static_cast<float>(m_Timer.DeltaMillis) / (1000.0f * 3);
-	const float radius = 2.0f;
-	Vec3D translated = { cosf(totalTime) * radius, 1.0f, sinf(totalTime) * radius };
-	animated->Translate(translated);
-	const auto w = animated->GetWorld();
-	UtilsDebugPrint("animated.World=%s\n", w.ToString().c_str());
+	//m_particleSystem.Tick(static_cast<float>(m_Timer.DeltaMillis / 1000));
+	//m_particleSystem.UpdateVertexBuffer(m_DR->GetDeviceContext());
 
 #if WITH_IMGUI
 	// update directional light
@@ -317,52 +312,53 @@ void Game::Render()
 #endif
 
 	m_Renderer.Clear();
+	m_Renderer.SetBlendState(nullptr);
 	m_Renderer.SetDepthStencilState(nullptr);
 	m_Renderer.SetPrimitiveTopology(R_DEFAULT_PRIMTIVE_TOPOLOGY);
 	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 
-	m_DR->PIXBeginEvent(L"Dynamic Cube Map pass");
-	{
-		m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
-		m_Renderer.SetDepthStencilState(nullptr);
-		m_Renderer.SetViewport(m_dynamicCubeMap.GetViewport());
-		FindActorByName("Sphere")->SetIsVisible(false);
-		for (int i = 0; i < 6; ++i)
-		{
-			// Clear cube map face and depth buffer.
-			static const float BLACK_COLOR[4] = { 0.0f,0.0f,0.0f, 1.0f };
-			m_Renderer.ClearRenderTargetView(
-				m_dynamicCubeMap.GetRTV(i),
-				BLACK_COLOR);
-			m_Renderer.ClearDepthStencilView(
-				m_dynamicCubeMap.GetDSV(),
-				D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-			// Bind cube map face as render target.
-			//m_Renderer.
-			m_Renderer.SetRenderTargets(m_dynamicCubeMap.GetRTV(i), m_dynamicCubeMap.GetDSV());
+	//m_DR->PIXBeginEvent(L"Dynamic Cube Map pass");
+	//{
+	//	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
+	//	m_Renderer.SetDepthStencilState(nullptr);
+	//	m_Renderer.SetViewport(m_dynamicCubeMap.GetViewport());
+	//	FindActorByName("Sphere")->SetIsVisible(false);
+	//	for (int i = 0; i < 6; ++i)
+	//	{
+	//		// Clear cube map face and depth buffer.
+	//		static const float BLACK_COLOR[4] = { 0.0f,0.0f,0.0f, 1.0f };
+	//		m_Renderer.ClearRenderTargetView(
+	//			m_dynamicCubeMap.GetRTV(i),
+	//			BLACK_COLOR);
+	//		m_Renderer.ClearDepthStencilView(
+	//			m_dynamicCubeMap.GetDSV(),
+	//			D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	//		// Bind cube map face as render target.
+	//		//m_Renderer.
+	//		m_Renderer.SetRenderTargets(m_dynamicCubeMap.GetRTV(i), m_dynamicCubeMap.GetDSV());
 
-			m_PerFrameData.cameraPosW = m_dynamicCubeMap.GetCamera(i).GetPos();
-			m_PerFrameData.view = m_dynamicCubeMap.GetCamera(i).GetViewMat();
-			m_PerFrameData.proj = m_dynamicCubeMap.GetCamera(i).GetProjMat();
-			GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+	//		m_PerFrameData.cameraPosW = m_dynamicCubeMap.GetCamera(i).GetPos();
+	//		m_PerFrameData.view = m_dynamicCubeMap.GetCamera(i).GetViewMat();
+	//		m_PerFrameData.proj = m_dynamicCubeMap.GetCamera(i).GetProjMat();
+	//		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 
-			// Draw the scene with the exception of the
-			// center sphere, to this cube map face.
-			DrawScene();
-			DrawSky();
+	//		// Draw the scene with the exception of the
+	//		// center sphere, to this cube map face.
+	//		DrawScene();
+	//		DrawSky();
 
-			m_Renderer.SetDepthStencilState(nullptr);
-		}
+	//		m_Renderer.SetDepthStencilState(nullptr);
+	//	}
 
-		// reset viewport
-		m_Renderer.SetViewport(m_DR->GetViewport());
-		m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
-		FindActorByName("Sphere")->SetIsVisible(true);
-		m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
-		m_Renderer.SetDepthStencilState(nullptr);
-	}
-	m_DR->PIXEndEvent();
+	//	// reset viewport
+	//	m_Renderer.SetViewport(m_DR->GetViewport());
+	//	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
+	//	FindActorByName("Sphere")->SetIsVisible(true);
+	//	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
+	//	m_Renderer.SetDepthStencilState(nullptr);
+	//}
+	//m_DR->PIXEndEvent();
 
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
@@ -372,8 +368,8 @@ void Game::Render()
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
 		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_dynamicCubeMap.GetSRV(), 6);
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+		DrawScene();
 	}
-	DrawScene();
 	m_DR->PIXEndEvent();
 	m_DR->PIXBeginEvent(L"Draw lights");
 	// Light properties
@@ -399,6 +395,22 @@ void Game::Render()
 	// After this this clear code could be placed to Renderer::Clear
 	ID3D11ShaderResourceView* nullSRVs[5] = { nullptr, nullptr, nullptr, nullptr, nullptr, };
 	m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 5);
+
+	m_DR->PIXBeginEvent(L"Draw particles");
+	{
+		m_Renderer.SetBlendState(m_particleSystem.GetBlendState());
+		m_Renderer.SetDepthStencilState(m_particleSystem.GetDepthStencilState());
+		m_Renderer.SetVertexBuffer(m_particleSystem.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Particle), 0);
+		m_Renderer.SetIndexBuffer(m_particleSystem.GetIndexBuffer(), 0);
+		m_Renderer.SetInputLayout(m_InputLayout.GetParticleLayout());
+		m_Renderer.BindVertexShader(m_particleVS.Get());
+		m_Renderer.BindPixelShader(m_particlePS.Get());
+		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 0);
+		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_particleSystem.GetSRV(), 0);
+		m_Renderer.SetSamplerState(m_particleSystem.GetSamplerState(), 0);
+		m_Renderer.DrawIndexed(m_particleSystem.GetNumIndices(), 0, 0);
+	}
+	m_DR->PIXEndEvent();
 
 	// draw sky
 	DrawSky();
@@ -441,54 +453,9 @@ void Game::CreateActors()
 		actor.SetIsVisible(true);
 
 		m_Actors.emplace_back(actor);
-
-		Actor animated = actor;
-		material.Reflection = { 0.0f, 0.0f, 0.0f, 1.0f };
-		animated.SetMaterial(&material);
-		animated.Scale(0.5f);
-		animated.Translate({ 2.5f, 1.0f, 0.0f });
-		animated.SetName("Animated");
-		m_Actors.emplace_back(animated);
 	}
 
-	// load cylinder
-	{
-		const Vec3D positions[] = {
-			{-4.0f, 0.0f, 4.0f},
-			{-4.0f, 0.0f, 0.0f},
-			{-4.0f, 0.0f, -4.0f},
-			{4.0f, 0.0f, 4.0f},
-			{4.0f, 0.0f, 0.0f},
-			{4.0f, 0.0f, -4.0f},
-		};
-
-		Actor actor = Actor();
-		actor.LoadModel(UtilsFormatStr("%s/meshes/cylinder.obj", ASSETS_ROOT).c_str());
-		actor.CreateIndexBuffer(m_DR->GetDevice());
-		actor.CreateVertexBuffer(m_DR->GetDevice());
-		Material material(
-			{ 0.23125f,0.23125f,0.23125f,1.0f },
-			{ 0.2775f,0.2775f,0.2775f,1.0f },
-			{ 0.773911f,0.773911f,0.773911f,89.6f },
-			{ 0.0f, 0.0f, 0.0f,1.0f }
-		);
-		actor.SetMaterial(&material);
-		actor.LoadTexture(UtilsFormatStr("%s/textures/marble_diffuseOriginal.jpg", ASSETS_ROOT).c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.LoadTexture(UtilsFormatStr("%s/textures/marble_normal.jpg", ASSETS_ROOT).c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.LoadTexture(UtilsFormatStr("%s/textures/marble_smoothness.jpg", ASSETS_ROOT).c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.LoadTexture(UtilsFormatStr("%s/textures/marble_metallic.jpg", ASSETS_ROOT).c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.SetIsVisible(true);
-
-		// make 5 more cylinders
-		for (uint32_t i = 0; i < 6; ++i)
-		{
-			Actor a = actor;
-			a.Scale(0.5f, 1.0f, 0.5f);
-			a.Translate(positions[i]);
-			a.SetName(UtilsFormatStr("Cylinder%d", i));
-			m_Actors.emplace_back(a);
-		}
-	}
+	
 
 	// load cube
 	{
@@ -564,10 +531,13 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	CreatePixelShader("PhongPS.cso", device, m_PhongPS.ReleaseAndGetAddressOf());
 	CreatePixelShader("LightPS.cso", device, m_LightPS.ReleaseAndGetAddressOf());
 	CreatePixelShader("SkyPS.cso", device, m_SkyPS.ReleaseAndGetAddressOf());
+	CreatePixelShader("ParticlePS.cso", device, m_particlePS.ReleaseAndGetAddressOf());
 	auto bytes = CreateVertexShader("VertexShader.cso", device, m_VS.ReleaseAndGetAddressOf());
 	m_InputLayout.CreateDefaultLayout(device, &bytes[0], bytes.size());
 	bytes = CreateVertexShader("SkyVS.cso", device, m_SkyVS.ReleaseAndGetAddressOf());
 	m_InputLayout.CreateSkyLayout(device, &bytes[0], bytes.size());
+	bytes = CreateVertexShader("ParticleVS.cso", device, m_particleVS.ReleaseAndGetAddressOf());
+	m_InputLayout.CreateParticleLayout(device, &bytes[0], bytes.size());
 
 	GameCreateConstantBuffer(device, sizeof(PerSceneConstants), &m_PerSceneCB);
 	GameCreateConstantBuffer(device, sizeof(PerObjectConstants), &m_PerObjectCB);
@@ -577,6 +547,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	CreateDefaultSampler();
 
 	m_Renderer.SetDeviceResources(m_DR.get());
+
+	m_particleSystem.Init(device, m_DR->GetDeviceContext(), UtilsFormatStr("%s/textures/flare0.png", ASSETS_ROOT).c_str());
 
 #if WITH_IMGUI
 	ImGui::CreateContext();

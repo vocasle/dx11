@@ -14,6 +14,7 @@
 #include "CubeMap.h"
 #include "InputLayout.h"
 #include "DynamicCubeMap.h"
+#include "ParticleSystem.h"
 
 #include <vector>
 #include <memory>
@@ -102,6 +103,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_LightPS;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_SkyVS;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_SkyPS;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_particleVS;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_particlePS;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_DefaultSampler;
 	Timer m_Timer;
 	Camera m_Camera;
@@ -119,4 +122,5 @@ private:
 	CubeMap m_CubeMap;
 	InputLayout m_InputLayout;
 	DynamicCubeMap m_dynamicCubeMap;
+	ParticleSystem m_particleSystem;
 };
