@@ -9,10 +9,14 @@ using namespace Microsoft::WRL;
 
 ParticleSystem::ParticleSystem(const std::string& name, const Vec3D& origin, const Camera& camera)
 	: m_name{name},
+	m_vertices{},
+	m_indices{},
 	m_origin{origin},
 	m_camera{&camera},
 	m_emitter{ ParticleType::Emitter, {}, {}, {}, 0.0f }
 {
+	m_vertices.reserve(MAX_PARTICLES * 4);
+	m_indices.reserve(MAX_PARTICLES * 6);
 }
 
 ParticleSystem::~ParticleSystem()
@@ -34,7 +38,7 @@ void ParticleSystem::Tick(const float deltaTime)
 {
 	static float elapsedTime = 0.0f;
 	elapsedTime += deltaTime;
-	if (m_particles.size() < MAX_PARTICLES && elapsedTime > 0.2f)
+	if (m_particles.size() < MAX_PARTICLES && elapsedTime > 0.1f)
 	{
 		EmitParticle();
 		elapsedTime = 0.0f;
@@ -100,10 +104,10 @@ void ParticleSystem::CreateBlendState(ID3D11Device* device)
 	desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
 	desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
 	desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	desc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
-	desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
-	desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	//desc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+	//desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+	//desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	//desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 
 	HR(device->CreateBlendState(&desc, m_blendState.ReleaseAndGetAddressOf()))
 }
@@ -185,12 +189,15 @@ void ParticleSystem::CreateEmitter()
 void ParticleSystem::EmitParticle()
 {
 	Vec3D accel = m_emitter.GetAccel();
-	accel.Y += MathRandom(-1.0f, 1.0f);
+	accel.Y /*+= MathRandom(-1.0f, 1.0f)*/ = -2.0f;
 	Vec3D initVel = m_emitter.GetInitVel();
-	initVel.X += MathRandom(-1.0f, 1.0f);
-	initVel.Y += MathRandom(1.0f, 9.8f);
-	initVel.Z += MathRandom(-1.0f, 1.0f);
-	Particle p = { ParticleType::Particle, accel, initVel, m_emitter.GetInitPos(), 0.0f };
+	//initVel.X += MathRandom(-1.0f, 1.0f);
+	initVel.Y += MathRandom(3.0f, 4.0f);
+	//initVel.Z += MathRandom(-1.0f, 1.0f);
+	Vec3D initPos = m_emitter.GetInitPos();
+	initPos.X += MathRandom(-1.0f, 1.0f);
+	initPos.Z += MathRandom(-1.0f, 1.0f);
+	Particle p = { ParticleType::Particle, accel, initVel, initPos, 0.0f };
 	p.CreateQuad(PARTICLE_SIZE, PARTICLE_SIZE, m_camera->GetUp(), m_camera->GetRight());
 	m_particles.push_back(p);
 	m_vertices.insert(m_vertices.end(), p.GetVertices().begin(), p.GetVertices().end());	
@@ -242,7 +249,7 @@ void Particle::CreateQuad(int width, int height, const Vec3D& up, const Vec3D& r
 	m_vertices[1].Position = Q2; // bottom right
 	m_vertices[2].Position = Q3; // bottom left
 	m_vertices[3].Position = Q4; // top left
-	m_vertices[0].TexCoords = {0.0f, 1.0f};
+	m_vertices[0].TexCoords = {1.0f, 0.0f};
 	m_vertices[1].TexCoords = {1.0f, 1.0f};
 	m_vertices[2].TexCoords = {0.0f, 1.0f};
 	m_vertices[3].TexCoords = {0.0f, 0.0f};
