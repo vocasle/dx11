@@ -55,7 +55,8 @@ class ParticleSystem
 {
 public:
 	static const int MAX_LIFESPAN = 5;
-	static const int MAX_PARTICLES = 10;
+	static const int MAX_PARTICLES = 100;
+	static const int PARTICLE_SIZE = 1;
 
 public:
 	ParticleSystem(const std::string& name, const Vec3D& origin, const Camera& camera);

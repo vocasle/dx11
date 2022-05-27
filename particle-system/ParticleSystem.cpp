@@ -34,7 +34,7 @@ void ParticleSystem::Tick(const float deltaTime)
 {
 	static float elapsedTime = 0.0f;
 	elapsedTime += deltaTime;
-	if (m_particles.size() < MAX_PARTICLES && elapsedTime > 1.0f)
+	if (m_particles.size() < MAX_PARTICLES && elapsedTime > 0.2f)
 	{
 		EmitParticle();
 		elapsedTime = 0.0f;
@@ -45,7 +45,7 @@ void ParticleSystem::Tick(const float deltaTime)
 		if (p.IsAlive())
 		{
 			p.Tick(deltaTime);
-			p.CreateQuad(5.0f, 5.0f, m_camera->GetUp(), m_camera->GetRight());
+			p.CreateQuad(PARTICLE_SIZE, PARTICLE_SIZE, m_camera->GetUp(), m_camera->GetRight());
 		}
 		else
 		{
@@ -184,8 +184,14 @@ void ParticleSystem::CreateEmitter()
 
 void ParticleSystem::EmitParticle()
 {
-	Particle p = { ParticleType::Particle, m_emitter.GetAccel(), m_emitter.GetInitVel(), m_emitter.GetInitPos(), 0.0f };
-	p.CreateQuad(5, 5, m_camera->GetUp(), m_camera->GetRight());
+	Vec3D accel = m_emitter.GetAccel();
+	accel.Y += MathRandom(-1.0f, 1.0f);
+	Vec3D initVel = m_emitter.GetInitVel();
+	initVel.X += MathRandom(-1.0f, 1.0f);
+	initVel.Y += MathRandom(1.0f, 9.8f);
+	initVel.Z += MathRandom(-1.0f, 1.0f);
+	Particle p = { ParticleType::Particle, accel, initVel, m_emitter.GetInitPos(), 0.0f };
+	p.CreateQuad(PARTICLE_SIZE, PARTICLE_SIZE, m_camera->GetUp(), m_camera->GetRight());
 	m_particles.push_back(p);
 	m_vertices.insert(m_vertices.end(), p.GetVertices().begin(), p.GetVertices().end());	
 	m_indices.insert(m_indices.end(), p.GetIndices().begin(), p.GetIndices().end());
