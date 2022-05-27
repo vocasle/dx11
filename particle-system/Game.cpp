@@ -259,8 +259,8 @@ void Game::Update()
 
 	BuildShadowTransform();
 
-	//m_particleSystem.Tick(static_cast<float>(m_Timer.DeltaMillis / 1000));
-	//m_particleSystem.UpdateVertexBuffer(m_DR->GetDeviceContext());
+	m_particleSystem.Tick(static_cast<float>(m_Timer.DeltaMillis / 1000));
+	m_particleSystem.UpdateVertexBuffer(m_DR->GetDeviceContext());
 
 #if WITH_IMGUI
 	// update directional light
@@ -548,7 +548,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 
 	m_Renderer.SetDeviceResources(m_DR.get());
 
-	m_particleSystem.Init(device, m_DR->GetDeviceContext(), UtilsFormatStr("%s/textures/flare0.png", ASSETS_ROOT).c_str());
+	m_particleSystem.Init(device, m_DR->GetDeviceContext(), 
+		UtilsFormatStr("%s/textures/flare0.png", ASSETS_ROOT).c_str());
 
 #if WITH_IMGUI
 	ImGui::CreateContext();

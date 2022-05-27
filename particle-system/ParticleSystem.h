@@ -35,6 +35,9 @@ public:
 	ParticleType GetParticleType() const { return m_type; }
 	const std::array<Vertex, 4>& GetVertices() const { return m_vertices; }
 	const std::array<uint32_t, 6>& GetIndices() const { return m_indices; }
+	void Tick(const float deltaTime);
+	bool IsAlive() const;
+	void Reset();
 
 private:
 	Vec3D m_accel;
@@ -50,6 +53,10 @@ private:
 
 class ParticleSystem
 {
+public:
+	static const int MAX_LIFESPAN = 5;
+	static const int MAX_PARTICLES = 10;
+
 public:
 	ParticleSystem(const std::string& name, const Vec3D& origin, const Camera& camera);
 	~ParticleSystem();
@@ -96,7 +103,4 @@ private:
 
 	Vec3D m_origin;
 	const Camera* m_camera;
-
-	static const int MAX_LIFESPAN = 5000;
-	static const int MAX_PARTICLES = 10;
 };
