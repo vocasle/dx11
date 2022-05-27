@@ -34,6 +34,8 @@ public:
 	ID3D11RasterizerState* GetRasterizerState() const { return m_RasterizerState.Get(); }
 	const D3D11_VIEWPORT& GetViewport() const { return m_ScreenViewport; }
 	IDXGISwapChain* GetSwapChain() const { return m_SwapChain.Get(); }
+	HWND GetWindow() const { return m_hWnd; }
+
 	void PIXBeginEvent(_In_z_ const wchar_t* name)
 	{
 		m_d3dAnnotation->BeginEvent(name);
