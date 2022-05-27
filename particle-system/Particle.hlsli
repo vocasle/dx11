@@ -1,7 +1,6 @@
 struct PSIn
 {
 	float4 PosH : SV_POSITION;
-	float3 PosW : POSITION;
 	float2 TexCoords : TEXCOORDS;
 	float Lifespan : LIFESPAN;
 };
