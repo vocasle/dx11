@@ -1,4 +1,4 @@
-#include "Math.h"
+#include "NE_Math.h"
 
 #include <math.h>
 #include <assert.h>
