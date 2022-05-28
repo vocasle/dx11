@@ -54,8 +54,8 @@ private:
 class ParticleSystem
 {
 public:
-	static const int MAX_LIFESPAN = 10;
-	static const int MAX_PARTICLES = 1000;
+	static const int MAX_LIFESPAN = 1;
+	static const int MAX_PARTICLES = 70;
 	static const int PARTICLE_SIZE = 1;
 
 public:

@@ -552,7 +552,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_Renderer.SetDeviceResources(m_DR.get());
 
 	m_particleSystem.Init(device, m_DR->GetDeviceContext(), 
-		UtilsFormatStr("%s/textures/fire_02.png", ASSETS_ROOT).c_str());
+		UtilsFormatStr("%s/textures/flare0.png", ASSETS_ROOT).c_str());
 
 #if WITH_IMGUI
 	ImGui::CreateContext();
