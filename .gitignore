@@ -4,3 +4,6 @@ x64/
 /packages/directxtk_desktop_win10.2022.3.24.2
 /build
 /imgui.ini
+/.cache
+compile_commands.json
+
