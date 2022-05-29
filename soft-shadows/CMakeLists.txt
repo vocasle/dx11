@@ -14,7 +14,6 @@ set(source_files
 	ShadowMap.cpp
 	Utils.cpp
 	dx11.cpp
-	objloader.cpp
 	stb_image.cpp
 	DynamicCubeMap.cpp
 	ParticleSystem.cpp
@@ -38,7 +37,6 @@ set(header_files
 	Utils.h
 	dx11.h
 	framework.h
-	objloader.h
 	stb_image.h
 	targetver.h
 	DynamicCubeMap.h
@@ -66,13 +64,14 @@ set(shader_header_files
 
 add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_shader_files} ${vertex_shader_files} ${shader_header_files})
 
-target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math)
+target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math objloader)
 
 target_compile_definitions(${current_target} PUBLIC 
-	ASSETS_ROOT="${assets_root}"
 	NOMINMAX=1
-	WITH_IMGUI=1
-	SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/Debug") # temporary hack, will fail on other build configurations
+	WITH_IMGUI=1)
+
+configure_file(SoftShadowsConfig.h.in SoftShadowsConfig.h)
+target_include_directories(${current_target} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_TYPE Pixel)
 set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_ENTRYPOINT main)

@@ -1,3 +1,4 @@
+#include "SoftShadowsConfig.h"
 #include "Game.h"
 #include "Utils.h"
 #include "NE_Math.h"
@@ -441,10 +442,6 @@ void Game::CreateActors()
 		actor.Translate({ 0.0f, 1.0f, 0.0f });
 		actor.CreateIndexBuffer(m_DR->GetDevice());
 		actor.CreateVertexBuffer(m_DR->GetDevice());
-		actor.LoadTexture(UtilsFormatStr("%s/textures/metall_sheet_diffuse.jpg", ASSETS_ROOT).c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.LoadTexture(UtilsFormatStr("%s/textures/metall_sheet_specular.jpg", ASSETS_ROOT).c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.LoadTexture(UtilsFormatStr("%s/textures/metall_sheet_gloss.jpg", ASSETS_ROOT).c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		actor.LoadTexture(UtilsFormatStr("%s/textures/metall_sheet_normal.jpg", ASSETS_ROOT).c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		Material material(
 			{ 0.23125f,0.23125f,0.23125f,1.0f },
 			{ 0.2775f,0.2775f,0.2775f,1.0f },
@@ -454,7 +451,6 @@ void Game::CreateActors()
 		actor.SetMaterial(&material);
 		actor.SetName("Sphere");
 		actor.SetIsVisible(true);
-
 		m_Actors.emplace_back(actor);
 	}
 
@@ -468,7 +464,6 @@ void Game::CreateActors()
 		actor.CreateVertexBuffer(m_DR->GetDevice());
 		actor.SetName("Cube");
 		actor.SetIsVisible(false);
-
 		m_Actors.emplace_back(actor);
 	}
 
