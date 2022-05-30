@@ -8,6 +8,8 @@ float4 main(VSOut In) : SV_TARGET
 	const float4 specularSampled = specularTexture.Sample(defaultSampler, In.TexCoords);
 	const float4 glossSampled = glossTexture.Sample(defaultSampler, In.TexCoords);
 	const float3 normalSampled = normalTexture.Sample(defaultSampler, In.TexCoords).xyz;
+	const float2 shadowUV = In.ShadowPosH.xy;
+	const float4 shadowSampled = shadowTexture.Sample(defaultSampler, shadowUV);
 	float3 normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW), normalize(In.TangentW));
 	normal = normalize(normal);
 	
@@ -52,6 +54,11 @@ float4 main(VSOut In) : SV_TARGET
 	float4 reflColor = envTexture.Sample(defaultSampler, reflVector);
 
 	fragmentColor += reflColor * material.Reflection;
+
+	if (shadowSampled.x < In.ShadowPosH.z)
+	{
+		fragmentColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	}
 
 	return fragmentColor;
 }
