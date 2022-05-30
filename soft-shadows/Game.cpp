@@ -530,6 +530,7 @@ void Game::BuildShadowTransform()
 	Vec3D lightPos = m_PerSceneData.dirLight.Position;
 	Vec3D targetPos = { 0.0f, 0.0f, 0.0f };
 	Vec3D up = { 0.0f, 1.0f, 0.0f };
+	const float radius = MathVec3DLength(lightPos);
 
 	Mat4X4 view = MathMat4X4ViewAt(&lightPos, &targetPos, &up);
 
@@ -538,12 +539,12 @@ void Game::BuildShadowTransform()
 	Vec4D sphereCenterLS = MathMat4X4MultVec4DByMat4X4(&targetPos4 , &view);
 
 	// Ortho frustum in light space encloses scene.
-	float l = sphereCenterLS.X - m_sceneBounds.Radius;
-	float b = sphereCenterLS.Y - m_sceneBounds.Radius;
-	float n = sphereCenterLS.Z - m_sceneBounds.Radius;
-	float r = sphereCenterLS.X + m_sceneBounds.Radius;
-	float t = sphereCenterLS.Y + m_sceneBounds.Radius;
-	float f = sphereCenterLS.Z + m_sceneBounds.Radius;
+	float l = sphereCenterLS.X - radius;
+	float b = sphereCenterLS.Y - radius;
+	float n = sphereCenterLS.Z - radius;
+	float r = sphereCenterLS.X + radius;
+	float t = sphereCenterLS.Y + radius;
+	float f = sphereCenterLS.Z + radius;
 	Mat4X4 proj = MathMat4X4OrthographicOffCenter(l, r, b, t, n, f);
 
 	// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
