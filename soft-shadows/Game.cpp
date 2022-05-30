@@ -68,13 +68,8 @@ Actor* Game::FindActorByName(const std::string& name)
 // TODO: Update this to get list of actors to draw
 void Game::DrawScene()
 {
-	m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
-
-	m_Renderer.BindPixelShader(m_PhongPS.Get());
-	m_Renderer.BindVertexShader(m_VS.Get());
-
+	
 	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_ShadowMap.GetDepthMapSRV(), 4);
-	m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
 
 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
 	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
@@ -85,7 +80,7 @@ void Game::DrawScene()
 	for (size_t i = 0; i < m_Actors.size(); ++i)
 	{
 		const Actor& actor = m_Actors[i];
-		if (actor.IsVisible() && actor.GetName() == "Plane")
+		if (actor.IsVisible())
 		{
 			m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
 			m_PerObjectData.world = actor.GetWorld();
@@ -129,15 +124,12 @@ void Game::UpdateImgui()
 {
 	// Any application code here
 	ImGui::Checkbox("Rotate dir light", &m_ImguiState.RotateDirLight);
-	ImGui::Checkbox("Animate first point light", &m_ImguiState.AnimatePointLight);
-	ImGui::Checkbox("Capture spotlight", &m_ImguiState.ToggleSpotlight);
 	static float zNear = 0.5f;
 	ImGui::SliderFloat("Z near", &zNear, 0.1f, 10.0f, "%f", 1.0f);
 	static float zFar = 200.0f;
 	ImGui::SliderFloat("Z far", &zFar, 10.0f, 1000.0f, "%f", 1.0f);
 	m_Camera.SetZFar(zFar);
 	m_Camera.SetZNear(zNear);
-	ImGui::SliderFloat("Bounding sphere radius", &m_sceneBounds.Radius, 10.0f, 500.0f, "%f", 1.0f);
 }
 #endif
 
@@ -258,45 +250,37 @@ void Game::Update()
 
 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 
-	BuildShadowTransform();
 
-	m_particleSystem.Tick(static_cast<float>(m_Timer.DeltaMillis / 1000));
-	m_particleSystem.UpdateVertexBuffer(m_DR->GetDeviceContext());
+//	m_particleSystem.Tick(static_cast<float>(m_Timer.DeltaMillis / 1000));
+//	m_particleSystem.UpdateVertexBuffer(m_DR->GetDeviceContext());
 
-	SetWindowText(m_DR->GetWindow(), 
-		UtilsFormatStr("particle-system -- Total particles: %d", m_particleSystem.GetNumAliveParticles()).c_str());
+	static float elapsedTime = 0.0f;
+	const float deltaSeconds = static_cast<float>(m_Timer.DeltaMillis / 1000.0);
+	elapsedTime += deltaSeconds;
+
+	if (elapsedTime >= 1.0f)
+	{
+		SetWindowText(m_DR->GetWindow(), 
+			UtilsFormatStr("soft-shadows -- FPS: %d, frame: %f s", 
+				static_cast<int>(elapsedTime / deltaSeconds),
+				deltaSeconds).c_str());
+		elapsedTime = 0.0f;
+	}
 
 #if WITH_IMGUI
+	static float totalTime = 0.0f;
+	totalTime += deltaSeconds;
 	// update directional light
-	static float elapsedTime = 0.0f;
-	elapsedTime += (float)m_Timer.DeltaMillis / (1000.0f * 2.0f);
 	if (m_ImguiState.RotateDirLight)
 	{
-		m_PerSceneData.dirLight.Position.X = m_PerSceneData.dirLight.Radius * sinf(elapsedTime);
-		m_PerSceneData.dirLight.Position.Z = m_PerSceneData.dirLight.Radius * cosf(elapsedTime);
+		m_PerSceneData.dirLight.Position.X = m_PerSceneData.dirLight.Radius * sinf(totalTime);
+		m_PerSceneData.dirLight.Position.Z = m_PerSceneData.dirLight.Radius * cosf(totalTime);
 
 		const Vec3D at = m_Camera.GetAt();
 		const Vec3D pos = m_Camera.GetPos();
 
 		m_PerSceneData.spotLights[0].Position = pos;
 		m_PerSceneData.spotLights[0].Direction = at;
-	}
-
-	if (m_ImguiState.AnimatePointLight)
-	{
-		static const float radius = 3.0f;
-		m_PerSceneData.pointLights[0].Position.X = sinf(elapsedTime) * radius;
-		m_PerSceneData.pointLights[0].Position.Z = cosf(elapsedTime) * radius;
-		const float color = cosf(elapsedTime) * cosf(elapsedTime);
-
-		m_PerSceneData.pointLights[0].Diffuse.R = color;
-		m_PerSceneData.pointLights[0].Diffuse.G = 1.0f - color;
-	}
-
-	if (m_ImguiState.ToggleSpotlight)
-	{
-		m_PerSceneData.spotLights[0].Direction = m_Camera.GetAt();
-		m_PerSceneData.spotLights[0].Position = m_Camera.GetPos();
 	}
 
 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
@@ -322,47 +306,18 @@ void Game::Render()
 	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 
-	//m_DR->PIXBeginEvent(L"Dynamic Cube Map pass");
-	//{
-	//	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
-	//	m_Renderer.SetDepthStencilState(nullptr);
-	//	m_Renderer.SetViewport(m_dynamicCubeMap.GetViewport());
-	//	FindActorByName("Sphere")->SetIsVisible(false);
-	//	for (int i = 0; i < 6; ++i)
-	//	{
-	//		// Clear cube map face and depth buffer.
-	//		static const float BLACK_COLOR[4] = { 0.0f,0.0f,0.0f, 1.0f };
-	//		m_Renderer.ClearRenderTargetView(
-	//			m_dynamicCubeMap.GetRTV(i),
-	//			BLACK_COLOR);
-	//		m_Renderer.ClearDepthStencilView(
-	//			m_dynamicCubeMap.GetDSV(),
-	//			D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	//		// Bind cube map face as render target.
-	//		//m_Renderer.
-	//		m_Renderer.SetRenderTargets(m_dynamicCubeMap.GetRTV(i), m_dynamicCubeMap.GetDSV());
-
-	//		m_PerFrameData.cameraPosW = m_dynamicCubeMap.GetCamera(i).GetPos();
-	//		m_PerFrameData.view = m_dynamicCubeMap.GetCamera(i).GetViewMat();
-	//		m_PerFrameData.proj = m_dynamicCubeMap.GetCamera(i).GetProjMat();
-	//		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
-
-	//		// Draw the scene with the exception of the
-	//		// center sphere, to this cube map face.
-	//		DrawScene();
-	//		DrawSky();
-
-	//		m_Renderer.SetDepthStencilState(nullptr);
-	//	}
-
-	//	// reset viewport
-	//	m_Renderer.SetViewport(m_DR->GetViewport());
-	//	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
-	//	FindActorByName("Sphere")->SetIsVisible(true);
-	//	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
-	//	m_Renderer.SetDepthStencilState(nullptr);
-	//}
-	//m_DR->PIXEndEvent();
+	m_DR->PIXBeginEvent(L"Shadow pass");
+	{
+		m_ShadowMap.Bind(m_DR->GetDeviceContext());
+		BuildShadowTransform();
+		m_Renderer.BindPixelShader(nullptr);
+		m_Renderer.BindVertexShader(m_VS.Get());
+		m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
+		m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
+		DrawScene();
+		m_ShadowMap.Unbind(m_DR->GetDeviceContext());
+	}
+	m_DR->PIXEndEvent();
 
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
@@ -372,6 +327,11 @@ void Game::Render()
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
 		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_dynamicCubeMap.GetSRV(), 6);
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+		m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
+		m_Renderer.BindPixelShader(m_PhongPS.Get());
+		m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
+		m_Renderer.BindVertexShader(m_VS.Get());
+
 		DrawScene();
 	}
 	m_DR->PIXEndEvent();
@@ -400,24 +360,24 @@ void Game::Render()
 	ID3D11ShaderResourceView* nullSRVs[5] = { nullptr, nullptr, nullptr, nullptr, nullptr, };
 	m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 5);
 
-	m_DR->PIXBeginEvent(L"Draw particles");
-	{
-		m_Renderer.SetBlendState(m_particleSystem.GetBlendState());
-		m_Renderer.SetDepthStencilState(m_particleSystem.GetDepthStencilState());
-		m_Renderer.SetVertexBuffer(m_particleSystem.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Particle), 0);
-		m_Renderer.SetIndexBuffer(m_particleSystem.GetIndexBuffer(), 0);
-		m_Renderer.SetInputLayout(m_InputLayout.GetParticleLayout());
-		m_Renderer.BindVertexShader(m_particleVS.Get());
-		m_Renderer.BindPixelShader(m_particlePS.Get());
-		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 0);
-		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_particleSystem.GetSRV(), 0);
-		m_Renderer.SetSamplerState(m_particleSystem.GetSamplerState(), 0);
-		m_Renderer.DrawIndexed(m_particleSystem.GetNumIndices(), 0, 0);
-	}
-	m_DR->PIXEndEvent();
+//	m_DR->PIXBeginEvent(L"Draw particles");
+//	{
+//		m_Renderer.SetBlendState(m_particleSystem.GetBlendState());
+//		m_Renderer.SetDepthStencilState(m_particleSystem.GetDepthStencilState());
+//		m_Renderer.SetVertexBuffer(m_particleSystem.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Particle), 0);
+//		m_Renderer.SetIndexBuffer(m_particleSystem.GetIndexBuffer(), 0);
+//		m_Renderer.SetInputLayout(m_InputLayout.GetParticleLayout());
+//		m_Renderer.BindVertexShader(m_particleVS.Get());
+//		m_Renderer.BindPixelShader(m_particlePS.Get());
+//		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 0);
+//		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_particleSystem.GetSRV(), 0);
+//		m_Renderer.SetSamplerState(m_particleSystem.GetSamplerState(), 0);
+//		m_Renderer.DrawIndexed(m_particleSystem.GetNumIndices(), 0, 0);
+//	}
+//	m_DR->PIXEndEvent();
 
 	// draw sky
-	//DrawSky();
+	DrawSky();
 
 #if WITH_IMGUI
 	ImGui::Render();
@@ -450,7 +410,7 @@ void Game::CreateActors()
 		);
 		actor.SetMaterial(&material);
 		actor.SetName("Sphere");
-		actor.SetIsVisible(true);
+		actor.SetIsVisible(false);
 		m_Actors.emplace_back(actor);
 	}
 
@@ -463,7 +423,7 @@ void Game::CreateActors()
 		actor.CreateIndexBuffer(m_DR->GetDevice());
 		actor.CreateVertexBuffer(m_DR->GetDevice());
 		actor.SetName("Cube");
-		actor.SetIsVisible(false);
+		actor.SetIsVisible(true);
 		m_Actors.emplace_back(actor);
 	}
 
@@ -566,40 +526,39 @@ void Game::GetDefaultSize(uint32_t* width, uint32_t* height)
 
 void Game::BuildShadowTransform()
 {
-	//// Only the first "main" light casts a shadow.
-	//Vec3D lightDir = m_PerSceneData.dirLight.Position;
-	//Vec3D lightPos = MathVec3DModulateByScalar(&lightDir, m_sceneBounds.Radius);
-	//Vec3D targetPos = { 0.0f, 0.0f, 0.0f };
-	//Vec3D up = { 0.0f, 1.0f, 0.0f };
+	// Only the first "main" light casts a shadow.
+	Vec3D lightPos = m_PerSceneData.dirLight.Position;
+	Vec3D targetPos = { 0.0f, 0.0f, 0.0f };
+	Vec3D up = { 0.0f, 1.0f, 0.0f };
 
-	//Mat4X4 view = MathMat4X4ViewAt(&lightPos, &targetPos, &up);
+	Mat4X4 view = MathMat4X4ViewAt(&lightPos, &targetPos, &up);
 
-	//// Transform bounding sphere to light space.
-	//Vec4D targetPos4 = { targetPos.X, targetPos.Y, targetPos.Z, 1.0f };
-	//Vec4D sphereCenterLS = MathMat4X4MultVec4DByMat4X4(&targetPos4 , &view);
+	// Transform bounding sphere to light space.
+	Vec4D targetPos4 = { targetPos.X, targetPos.Y, targetPos.Z, 1.0f };
+	Vec4D sphereCenterLS = MathMat4X4MultVec4DByMat4X4(&targetPos4 , &view);
 
-	//// Ortho frustum in light space encloses scene.
-	//float l = sphereCenterLS.X - m_sceneBounds.Radius;
-	//float b = sphereCenterLS.Y - m_sceneBounds.Radius;
-	//float n = sphereCenterLS.Z - m_sceneBounds.Radius;
-	//float r = sphereCenterLS.X + m_sceneBounds.Radius;
-	//float t = sphereCenterLS.Y + m_sceneBounds.Radius;
-	//float f = sphereCenterLS.Z + m_sceneBounds.Radius;
-	//Mat4X4 proj = MathMat4X4OrthographicOffCenter(l, r, b, t, n, f);
+	// Ortho frustum in light space encloses scene.
+	float l = sphereCenterLS.X - m_sceneBounds.Radius;
+	float b = sphereCenterLS.Y - m_sceneBounds.Radius;
+	float n = sphereCenterLS.Z - m_sceneBounds.Radius;
+	float r = sphereCenterLS.X + m_sceneBounds.Radius;
+	float t = sphereCenterLS.Y + m_sceneBounds.Radius;
+	float f = sphereCenterLS.Z + m_sceneBounds.Radius;
+	Mat4X4 proj = MathMat4X4OrthographicOffCenter(l, r, b, t, n, f);
 
-	//// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
-	//Mat4X4 T(
-	//	0.5f, 0.0f, 0.0f, 0.0f,
-	//	0.0f, -0.5f, 0.0f, 0.0f,
-	//	0.0f, 0.0f, 1.0f, 0.0f,
-	//	0.5f, 0.5f, 0.0f, 1.0f);
+	// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
+	Mat4X4 T(
+		0.5f, 0.0f, 0.0f, 0.0f,
+		0.0f, -0.5f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f);
 
-	//Mat4X4 shadowTransform = view * proj * T;
+	Mat4X4 shadowTransform = view * proj * T;
 
-	//m_PerFrameData.shadowTransform = shadowTransform;
-	//m_PerFrameData.cameraPosW = lightPos;
-	//m_PerFrameData.proj = proj;
-	//m_PerFrameData.view = view;
+	m_PerFrameData.shadowTransform = shadowTransform;
+	m_PerFrameData.cameraPosW = lightPos;
+	m_PerFrameData.proj = proj;
+	m_PerFrameData.view = view;
 
-	//GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 }
