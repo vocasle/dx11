@@ -31,6 +31,12 @@ float4 main(VSOut In) : SV_TARGET
 	//const float diff = dot(normalize(normal), normalize(dirLight.Position));
 	//return float4(diff, diff, diff, 1.0f);
 
+	if (shadowSampled.x < In.ShadowPosH.z)
+	{
+		shadows[0] = 0.0f;
+	}
+
+
 	const float4 emissive = ZERO_VEC4;
 	const float4 emissiveSampled = ZERO_VEC4;
 	float4 fragmentColor = BlinnPhong(
@@ -54,11 +60,6 @@ float4 main(VSOut In) : SV_TARGET
 	float4 reflColor = envTexture.Sample(defaultSampler, reflVector);
 
 	fragmentColor += reflColor * material.Reflection;
-
-	if (shadowSampled.x < In.ShadowPosH.z)
-	{
-		fragmentColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
-	}
 
 	return fragmentColor;
 }
