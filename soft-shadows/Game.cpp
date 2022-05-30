@@ -422,6 +422,28 @@ void Game::CreateActors()
 		actor.LoadModel(UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT).c_str());
 		actor.CreateIndexBuffer(m_DR->GetDevice());
 		actor.CreateVertexBuffer(m_DR->GetDevice());
+		actor.LoadTexture(
+				UtilsFormatStr("%s/textures/bricks_diffuse.jpg", ASSETS_ROOT).c_str(),
+				TextureType::Diffuse, 
+				m_DR->GetDevice(),
+				m_DR->GetDeviceContext());
+		actor.LoadTexture(
+				UtilsFormatStr("%s/textures/bricks_normal.png", ASSETS_ROOT).c_str(),
+				TextureType::Normal, 
+				m_DR->GetDevice(),
+				m_DR->GetDeviceContext());
+		actor.LoadTexture(
+				UtilsFormatStr("%s/textures/bricks_gloss.jpg", ASSETS_ROOT).c_str(),
+				TextureType::Gloss, 
+				m_DR->GetDevice(),
+				m_DR->GetDeviceContext());
+
+		actor.LoadTexture(
+				UtilsFormatStr("%s/textures/bricks_reflection.jpg", ASSETS_ROOT).c_str(),
+				TextureType::Specular, 
+				m_DR->GetDevice(),
+				m_DR->GetDeviceContext());
+
 		actor.SetName("Cube");
 		actor.SetIsVisible(true);
 		m_Actors.emplace_back(actor);
