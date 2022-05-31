@@ -1,6 +1,6 @@
 #include "Common.hlsli"
 
-static const float4 AMBIENT = float4(0.1f, 0.1f, 0.1f, 1.0f);
+static const float4 AMBIENT = float4(0.4f, 0.4f, 0.4f, 1.0f);
 
 float4 main(VSOut In) : SV_TARGET
 {
@@ -11,6 +11,7 @@ float4 main(VSOut In) : SV_TARGET
 	const float2 shadowUV = In.ShadowPosH.xy;
 	const float4 shadowSampled = shadowTexture.Sample(defaultSampler, shadowUV);
 	float3 normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW), normalize(In.TangentW));
+
 	normal = normalize(normal);
 	
 	const float3 viewDir = normalize(cameraPosW - In.PosW);
@@ -39,7 +40,7 @@ float4 main(VSOut In) : SV_TARGET
 
 	const float4 emissive = ZERO_VEC4;
 	const float4 emissiveSampled = ZERO_VEC4;
-	float4 fragmentColor = BlinnPhong(
+	Color fragmentColor = BlinnPhong(
 		emissive,
 		emissiveSampled,
 		material.Diffuse,
@@ -59,7 +60,7 @@ float4 main(VSOut In) : SV_TARGET
 	float3 reflVector = reflect(incident, normal);
 	float4 reflColor = envTexture.Sample(defaultSampler, reflVector);
 
-	fragmentColor += reflColor * material.Reflection;
+	//fragmentColor += reflColor * material.Reflection;
 
-	return fragmentColor;
+	return fragmentColor.Emissive + fragmentColor.Diffuse + fragmentColor.Specular;
 }
