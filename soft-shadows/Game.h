@@ -72,9 +72,10 @@ private:
 	Actor* FindActorByName(const std::string& name);
 	void DrawScene();
 	void DrawSky();
+	void DrawActor(const Actor& actor);
 
 #if WITH_IMGUI
-	void UpdateImgui(); 
+	void UpdateImgui();
 
 	struct ImguiState
 	{

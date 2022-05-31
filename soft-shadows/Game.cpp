@@ -11,6 +11,23 @@
 #include <backends/imgui_impl_win32.h>
 #endif
 
+namespace
+{
+	static const Vec3D cubePositions[] =
+	{
+		{0.0f, 0.0f, 0.0f},
+		{1.0f, 1.0f, 1.0f},
+		{-1.0f, 0.0f, -1.0f},
+	};
+
+	static const Vec3D cubeRotations[] =
+	{
+		{0.0f, 0.0f, 0.0f},
+		{45.0f, 0.0f, 45.0f},
+		{15.0f, 15.0f, 15.0f},
+	};
+};
+
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
 	size_t bufferSize,
 	void* data,
@@ -80,24 +97,7 @@ void Game::DrawScene()
 	for (size_t i = 0; i < m_Actors.size(); ++i)
 	{
 		const Actor& actor = m_Actors[i];
-		if (actor.IsVisible())
-		{
-			m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
-			m_PerObjectData.world = actor.GetWorld();
-			m_PerObjectData.material = actor.GetMaterial();
-			m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
-			GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-				sizeof(PerObjectConstants),
-				&m_PerObjectData,
-				m_PerObjectCB.Get());
-			m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-			m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
-
-			m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
-			m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
-
-			m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
-		}
+		DrawActor(actor);
 	}
 }
 
@@ -565,4 +565,27 @@ void Game::BuildShadowTransform()
 	m_PerFrameData.view = view;
 
 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+}
+
+
+void Game::DrawActor(const Actor& actor)
+{
+	if (actor.IsVisible())
+	{
+		m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
+		m_PerObjectData.material = actor.GetMaterial();
+		m_PerObjectData.world = actor.GetWorld();
+		m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
+		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+			sizeof(PerObjectConstants),
+			&m_PerObjectData,
+			m_PerObjectCB.Get());
+		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+
+		m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
+		m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
+
+		m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
+	}
 }
