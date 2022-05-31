@@ -363,3 +363,12 @@ void Actor::SetTexture(ID3D11ShaderResourceView* srv, TextureType type)
 			break;
 	}
 }
+
+
+void Actor::SetTextures(ID3D11ShaderResourceView* srv[4])
+{
+	m_DiffuseTexture = srv[0];
+	m_SpecularTexture = srv[1];
+	m_GlossTexture = srv[2];
+	m_NormalTexture = srv[3];
+}

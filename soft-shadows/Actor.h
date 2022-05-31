@@ -55,6 +55,7 @@ public:
 
 	void SetMaterial(const Material* material);
 	void SetTexture(ID3D11ShaderResourceView* srv, TextureType type);
+	void SetTextures(ID3D11ShaderResourceView* srv[4]);
 
 	Mat4X4 GetWorld() const { return m_World; }
 	Material GetMaterial() const { return m_Material; }
