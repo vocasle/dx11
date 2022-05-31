@@ -345,3 +345,21 @@ void Actor::SetMaterial(const Material* material)
 {
 	m_Material = *material;
 }
+
+void Actor::SetTexture(ID3D11ShaderResourceView* srv, TextureType type)
+{
+	switch (type) {
+		case TextureType::Diffuse:
+			m_DiffuseTexture = srv;
+			break;
+		case TextureType::Gloss:
+			m_GlossTexture = srv;
+			break;
+		case TextureType::Normal:
+			m_NormalTexture = srv;
+			break;
+		case TextureType::Specular:
+			m_SpecularTexture = srv;
+			break;
+	}
+}
