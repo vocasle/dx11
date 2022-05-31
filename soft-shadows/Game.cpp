@@ -68,7 +68,7 @@ Actor* Game::FindActorByName(const std::string& name)
 // TODO: Update this to get list of actors to draw
 void Game::DrawScene()
 {
-	
+
 	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_ShadowMap.GetDepthMapSRV(), 4);
 
 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
@@ -260,8 +260,8 @@ void Game::Update()
 
 	if (elapsedTime >= 1.0f)
 	{
-		SetWindowText(m_DR->GetWindow(), 
-			UtilsFormatStr("soft-shadows -- FPS: %d, frame: %f s", 
+		SetWindowText(m_DR->GetWindow(),
+			UtilsFormatStr("soft-shadows -- FPS: %d, frame: %f s",
 				static_cast<int>(elapsedTime / deltaSeconds),
 				deltaSeconds).c_str());
 		elapsedTime = 0.0f;
@@ -414,7 +414,12 @@ void Game::CreateActors()
 		m_Actors.emplace_back(actor);
 	}
 
-	
+	const Material material = {
+			{0.24725f, 0.1995f, 0.0745f, 1.0f},
+			{0.75164f, 0.60648f, 0.22648f, 1.0f},
+			{0.628281f, 0.555802f, 0.366065f, 32.0f},
+			{0.0f, 0.0f, 0.0f, 0.0f}
+		};
 
 	// load cube
 	{
@@ -422,30 +427,9 @@ void Game::CreateActors()
 		actor.LoadModel(UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT).c_str());
 		actor.CreateIndexBuffer(m_DR->GetDevice());
 		actor.CreateVertexBuffer(m_DR->GetDevice());
-		actor.LoadTexture(
-				UtilsFormatStr("%s/textures/bricks_diffuse.jpg", ASSETS_ROOT).c_str(),
-				TextureType::Diffuse, 
-				m_DR->GetDevice(),
-				m_DR->GetDeviceContext());
-		actor.LoadTexture(
-				UtilsFormatStr("%s/textures/bricks_normal.png", ASSETS_ROOT).c_str(),
-				TextureType::Normal, 
-				m_DR->GetDevice(),
-				m_DR->GetDeviceContext());
-		actor.LoadTexture(
-				UtilsFormatStr("%s/textures/bricks_gloss.jpg", ASSETS_ROOT).c_str(),
-				TextureType::Gloss, 
-				m_DR->GetDevice(),
-				m_DR->GetDeviceContext());
-
-		actor.LoadTexture(
-				UtilsFormatStr("%s/textures/bricks_reflection.jpg", ASSETS_ROOT).c_str(),
-				TextureType::Specular, 
-				m_DR->GetDevice(),
-				m_DR->GetDeviceContext());
-
 		actor.SetName("Cube");
 		actor.SetIsVisible(true);
+		actor.SetMaterial(&material);
 		m_Actors.emplace_back(actor);
 	}
 
@@ -463,18 +447,15 @@ void Game::CreateActors()
 		plane.LoadTexture(UtilsFormatStr("%s/textures/wood_floor_normal.jpg", ASSETS_ROOT).c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		plane.LoadTexture(UtilsFormatStr("%s/textures/wood_floor_smoothness.jpg", ASSETS_ROOT).c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		plane.LoadTexture(UtilsFormatStr("%s/textures/wood_floor_metallic.jpg", ASSETS_ROOT).c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		
-		const Material material = {
-			{0.24725f, 0.1995f, 0.0745f, 1.0f},
-			{0.75164f, 0.60648f, 0.22648f, 1.0f},
-			{0.628281f, 0.555802f, 0.366065f, 32.0f},
-			{0.0f, 0.0f, 0.0f, 0.0f}
-		};
 		plane.SetMaterial(&material);
 		plane.SetIsVisible(true);
 		plane.SetName("Plane");
 		m_Actors.emplace_back(plane);
 	}
+
+	Actor* p = FindActorByName("Plane");
+	Actor* c = FindActorByName("Cube");
+	c->SetTextures(p->GetShaderResources());
 }
 
 void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
@@ -528,7 +509,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 
 	m_Renderer.SetDeviceResources(m_DR.get());
 
-	m_particleSystem.Init(device, m_DR->GetDeviceContext(), 
+	m_particleSystem.Init(device, m_DR->GetDeviceContext(),
 		UtilsFormatStr("%s/textures/flare0.png", ASSETS_ROOT).c_str());
 
 #if WITH_IMGUI
