@@ -51,6 +51,13 @@ struct LightIntensity
     float3 diffuse;
 };
 
+struct Color
+{
+	float4 Emissive;
+	float4 Diffuse;
+	float4 Specular;
+};
+
 LightIntensity DirectionalLightIntensity(DirectionalLight light, float3 normal, float3 viewDir)
 {
     LightIntensity intensity;
@@ -105,19 +112,20 @@ LightIntensity SpotLightIntensity(SpotLight light, float3 normal, float3 surfPoi
 // G - sampled color from gloss map
 // Hi - halfway vector of i-th light source, i.e. H = Li + V / ||Li + V||, where V is unit direction vector to viewer from surface point
 // m - specular exponent
-float4 BlinnPhong(float4 E, 
-    float4 M, 
-    float4 D, 
-    float4 T, 
-    float4 A, 
-    float4 S, 
-    float4 G, 
-    float m, 
-    float3 N, 
+Color BlinnPhong(float4 E,
+    float4 M,
+    float4 D,
+    float4 T,
+    float4 A,
+    float4 S,
+    float4 G,
+    float m,
+    float3 N,
     LightIntensity intensities[MAX_LIGHTS],
     float shadows[MAX_LIGHTS],
     uint numLights)
 {
+    Color outCol;
     float4 sum = ZERO_VEC4;
     const float4 EM = E * M;
     const float4 DT = D * T;
@@ -130,7 +138,11 @@ float4 BlinnPhong(float4 E,
         const float3 lightDiffuse = intensities[i].diffuse;
         sum += float4(Ci, 1.0f) * (shadows[i] * DT * float4(lightDiffuse, 1.0f) * max(dot(N, Li), 0.0f) + SG * pow(max(dot(N, Hi), 0.0f), m));
     }
-    return EM + DT * A + sum;
+    outCol.Emissive = EM;
+    outCol.Diffuse = DT * A;
+    outCol.Specular = sum;
+    //return EM + DT * A + sum;
+    return outCol;
 }
 
 static const float SMAP_SIZE = 2048.0f;
