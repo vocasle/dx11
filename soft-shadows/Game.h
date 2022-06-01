@@ -76,16 +76,6 @@ private:
 
 #if WITH_IMGUI
 	void UpdateImgui();
-
-	struct ImguiState
-	{
-		ImguiState() : RotateDirLight{ false }, AnimatePointLight{ false }, ToggleSpotlight{ false }{}
-		bool RotateDirLight;
-		bool AnimatePointLight;
-		bool ToggleSpotlight;
-	};
-
-	ImguiState m_ImguiState;
 #endif
 
 	struct BoundingSphere

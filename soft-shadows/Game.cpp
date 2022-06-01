@@ -13,19 +13,27 @@
 
 namespace
 {
-	static const Vec3D cubePositions[] =
+	static Vec3D cubePositions[] =
 	{
 		{0.0f, 0.0f, 0.0f},
 		{1.0f, 1.0f, 1.0f},
 		{-1.0f, 0.0f, -1.0f},
 	};
 
-	static const Vec3D cubeRotations[] =
+	static Vec3D cubeRotations[] =
 	{
 		{0.0f, 0.0f, 0.0f},
-		{45.0f, 0.0f, 45.0f},
-		{15.0f, 15.0f, 15.0f},
+		{MathToRadians(45.0f), 0.0f, MathToRadians(45.0f)},
+		{MathToRadians(15.0f), MathToRadians(15.0f), MathToRadians(15.0f)},
 	};
+
+	static float cubeScales[] = {
+		1.0f,
+		1.0f,
+		1.0f,
+	};
+
+	bool rotateDirLight = false;
 };
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -96,8 +104,24 @@ void Game::DrawScene()
 
 	for (size_t i = 0; i < m_Actors.size(); ++i)
 	{
-		const Actor& actor = m_Actors[i];
-		DrawActor(actor);
+		Actor& actor = m_Actors[i];
+		if (actor.GetName() == "Cube")
+		{
+			for (int i = 0; i < 3; ++i)
+			{
+				actor.Scale(cubeScales[i]);
+				actor.Translate(cubePositions[i]);
+				const float pitch = cubeRotations[i].X;
+				const float yaw = cubeRotations[i].Y;
+				const float roll = cubeRotations[i].Z;
+				actor.Rotate(pitch, yaw, roll);
+				DrawActor(actor);
+			}
+		}
+		else
+		{
+			DrawActor(actor);
+		}
 	}
 }
 
@@ -123,13 +147,28 @@ void Game::DrawSky()
 void Game::UpdateImgui()
 {
 	// Any application code here
-	ImGui::Checkbox("Rotate dir light", &m_ImguiState.RotateDirLight);
+	ImGui::Checkbox("Rotate dir light", &rotateDirLight);
 	static float zNear = 0.5f;
 	ImGui::SliderFloat("Z near", &zNear, 0.1f, 10.0f, "%f", 1.0f);
 	static float zFar = 200.0f;
 	ImGui::SliderFloat("Z far", &zFar, 10.0f, 1000.0f, "%f", 1.0f);
 	m_Camera.SetZFar(zFar);
 	m_Camera.SetZNear(zNear);
+	ImGui::BeginGroup();
+	ImGui::SliderFloat("Cube 0 scale", cubeScales, 0.1f, 2.0f, "%f", 1.0f);
+	ImGui::SliderFloat("Cube 1 scale", &cubeScales[1], 0.1f, 2.0f, "%f", 1.0f);
+	ImGui::SliderFloat("Cube 2 scale", &cubeScales[2], 0.1f, 2.0f, "%f", 1.0f);
+	ImGui::SliderFloat("Cube 0 Pos.X", &cubePositions[0].X, -10.0f, 10.0f, "%f", 1.0f);
+	ImGui::SliderFloat("Cube 0 Pos.Y", &cubePositions[0].Y, -10.0f, 10.0f, "%f", 1.0f);
+	ImGui::SliderFloat("Cube 0 Pos.Z", &cubePositions[0].Z, -10.0f, 10.0f, "%f", 1.0f);
+	ImGui::SliderFloat("Cube 1 Pos.X", &cubePositions[1].X, -10.0f, 10.0f, "%f", 1.0f);
+	ImGui::SliderFloat("Cube 1 Pos.Y", &cubePositions[1].Y, -10.0f, 10.0f, "%f", 1.0f);
+	ImGui::SliderFloat("Cube 1 Pos.Z", &cubePositions[1].Z, -10.0f, 10.0f, "%f", 1.0f);
+	ImGui::SliderFloat("Cube 2 Pos.X", &cubePositions[2].X, -10.0f, 10.0f, "%f", 1.0f);
+	ImGui::SliderFloat("Cube 2 Pos.Y", &cubePositions[2].Y, -10.0f, 10.0f, "%f", 1.0f);
+	ImGui::SliderFloat("Cube 2 Pos.Z", &cubePositions[2].Z, -10.0f, 10.0f, "%f", 1.0f);
+	ImGui::SliderAngle("Cube 0 Pitch", &cubeRotations[0].X);
+	ImGui::EndGroup();
 }
 #endif
 
@@ -189,7 +228,7 @@ void Game::InitPerSceneConstants()
 	dirLight.Ambient = ColorFromRGBA(0.1f, 0.1f, 0.1f, 1.0f);
 	dirLight.Diffuse = ColorFromRGBA(0.5f, 0.5f, 0.5f, 1.0f);
 	dirLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-	dirLight.Position = MathVec3DFromXYZ(10.0f, 10.0f, 10.0f);
+	dirLight.Position = MathVec3DFromXYZ(5.0f, 5.0f, 5.0f);
 	dirLight.Radius = MathVec3DLength(dirLight.Position);
 	m_PerSceneData.dirLight = dirLight;
 
@@ -271,7 +310,7 @@ void Game::Update()
 	static float totalTime = 0.0f;
 	totalTime += deltaSeconds;
 	// update directional light
-	if (m_ImguiState.RotateDirLight)
+	if (rotateDirLight)
 	{
 		m_PerSceneData.dirLight.Position.X = m_PerSceneData.dirLight.Radius * sinf(totalTime);
 		m_PerSceneData.dirLight.Position.Z = m_PerSceneData.dirLight.Radius * cosf(totalTime);
@@ -470,7 +509,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	Mouse::Get().SetWindowDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
 	ID3D11Device* device = m_DR->GetDevice();
 
-	m_ShadowMap.InitResources(device, 2048, 2048);
+	m_ShadowMap.InitResources(device, 1024, 1024);
 	m_Camera.SetViewDimensions(m_DR->GetBackBufferWidth(), m_DR->GetBackBufferHeight());
 	m_CubeMap.LoadCubeMap(device, {
 		UtilsFormatStr("%s/textures/right.jpg", ASSETS_ROOT).c_str(),
