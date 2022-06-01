@@ -8,7 +8,9 @@ Actor::Actor():
 	m_VertexBuffer{nullptr},
 	m_Vertices{},
 	m_Indices{},
-	m_World{MathMat4X4Identity()},
+	m_Rotation{MathMat4X4Identity()},
+	m_Scale{MathMat4X4Identity()},
+	m_Translation{MathMat4X4Identity()},
 	m_DiffuseTexture{nullptr},
 	m_SpecularTexture{nullptr},
 	m_GlossTexture{nullptr},
@@ -25,7 +27,9 @@ Actor::Actor(const Actor& actor)
 	m_VertexBuffer = actor.m_VertexBuffer;
 	m_Vertices = actor.m_Vertices;
 	m_Indices = actor.m_Indices;
-	m_World = actor.m_World;
+	m_Rotation = actor.m_Rotation;
+	m_Scale = actor.m_Scale;
+	m_Translation = actor.m_Translation;
 	m_DiffuseTexture = actor.m_DiffuseTexture;
 	m_SpecularTexture = actor.m_SpecularTexture;
 	m_GlossTexture = actor.m_GlossTexture;
@@ -88,7 +92,9 @@ void Actor::SetName(const std::string& name)
 
 void Actor::Swap(Actor& actor)
 {
-	std::swap(m_World, actor.m_World);
+	std::swap(m_Rotation, actor.m_Rotation);
+	std::swap(m_Scale, actor.m_Scale);
+	std::swap(m_Translation, actor.m_Translation);
 	std::swap(m_Vertices, actor.m_Vertices);
 	std::swap(m_Indices, actor.m_Indices);
 	std::swap(m_Material, actor.m_Material);
@@ -181,7 +187,7 @@ void Actor::GenerateTangents()
 		m_Vertices[a].Bitangent = MathVec3DCross(&m_Vertices[a].Normal, &m_Vertices[a].Tangent);
 		MathVec3DModulateByScalar(&m_Vertices[a].Bitangent, (MathVec3DDot(&tmp, &tan2[a]) < 0.0F) ? -1.0F : 1.0F);
 	}
-	
+
 }
 
 void Actor::LoadModel(const char* filename)
@@ -244,32 +250,25 @@ void Actor::CreateIndexBuffer(ID3D11Device* device)
 
 void Actor::Translate(const Vec3D offset)
 {
-	const Mat4X4 offsetMat = MathMat4X4TranslateFromVec3D(&offset);
-	m_World.V[3] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	m_World = MathMat4X4MultMat4X4ByMat4X4(&m_World,
-		&offsetMat);
+	m_Translation = MathMat4X4TranslateFromVec3D(&offset);
 }
 
 void Actor::Rotate(const float pitch, const float yaw, const float roll)
 {
 	const Vec3D angles = { pitch, yaw, roll };
-	const Mat4X4 rotMat = MathMat4X4RotateFromVec3D(&angles);
-	m_World = MathMat4X4MultMat4X4ByMat4X4(&m_World,
-		&rotMat);
+	m_Rotation = MathMat4X4RotateFromVec3D(&angles);
 }
 
 void Actor::Scale(const float s)
 {
 	const Vec3D scale = { s, s, s };
-	const Mat4X4 scaleMat = MathMat4X4ScaleFromVec3D(&scale);
-	m_World = MathMat4X4MultMat4X4ByMat4X4(&m_World, &scaleMat);
+	m_Scale = MathMat4X4ScaleFromVec3D(&scale);
 }
 
 void Actor::Scale(const float x, const float y, const float z)
 {
 	const Vec3D scale = { x, y, z };
-	const Mat4X4 scaleMat = MathMat4X4ScaleFromVec3D(&scale);
-	m_World = MathMat4X4MultMat4X4ByMat4X4(&m_World, &scaleMat);
+	m_Scale = MathMat4X4ScaleFromVec3D(&scale);
 }
 
 void Actor::LoadTexture(const char* filename,
@@ -314,7 +313,7 @@ void Actor::LoadTexture(const char* filename,
 		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MostDetailedMip = 0;
 		srvDesc.Texture2D.MipLevels = -1;
-		
+
 		switch (type)
 		{
 		case TextureType::Diffuse:
@@ -371,4 +370,12 @@ void Actor::SetTextures(ID3D11ShaderResourceView* srv[4])
 	m_SpecularTexture = srv[1];
 	m_GlossTexture = srv[2];
 	m_NormalTexture = srv[3];
+}
+
+
+Mat4X4 Actor::GetWorld() const
+{
+	Mat4X4 world = MathMat4X4MultMat4X4ByMat4X4(&m_Scale, &m_Rotation);
+	world = MathMat4X4MultMat4X4ByMat4X4(&world, &m_Translation);
+	return world;
 }

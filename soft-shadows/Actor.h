@@ -57,7 +57,7 @@ public:
 	void SetTexture(ID3D11ShaderResourceView* srv, TextureType type);
 	void SetTextures(ID3D11ShaderResourceView* srv[4]);
 
-	Mat4X4 GetWorld() const { return m_World; }
+	Mat4X4 GetWorld() const;
 	Material GetMaterial() const { return m_Material; }
 	ID3D11Buffer* GetIndexBuffer() const { return m_IndexBuffer.Get(); }
 	ID3D11Buffer* GetVertexBuffer() const { return m_VertexBuffer.Get(); }
@@ -79,7 +79,9 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_VertexBuffer;
 	std::vector<Vertex> m_Vertices;
 	std::vector<uint32_t> m_Indices;
-	Mat4X4 m_World;
+	Mat4X4 m_Rotation;
+	Mat4X4 m_Scale;
+	Mat4X4 m_Translation;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_DiffuseTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_SpecularTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_GlossTexture;
