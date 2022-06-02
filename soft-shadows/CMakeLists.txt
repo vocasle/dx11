@@ -52,6 +52,7 @@ set(pixel_shader_files
 	ParticlePS.hlsl)
 
 set(vertex_shader_files
+	ShadowVS.hlsl
 	SkyVS.hlsl
 	VertexShader.hlsl
 	ParticleVS.hlsl)
@@ -66,7 +67,7 @@ add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_s
 
 target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math objloader)
 
-target_compile_definitions(${current_target} PUBLIC 
+target_compile_definitions(${current_target} PUBLIC
 	NOMINMAX=1
 	WITH_IMGUI=1)
 
