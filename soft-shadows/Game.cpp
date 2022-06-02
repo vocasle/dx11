@@ -28,9 +28,9 @@ namespace
 	};
 
 	static float cubeScales[] = {
-		1.0f,
-		1.0f,
-		1.0f,
+		0.5f,
+		0.5f,
+		0.5f,
 	};
 
 	bool rotateDirLight = false;
@@ -93,9 +93,6 @@ Actor* Game::FindActorByName(const std::string& name)
 // TODO: Update this to get list of actors to draw
 void Game::DrawScene()
 {
-
-	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_ShadowMap.GetDepthMapSRV(), 4);
-
 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
 	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
 
@@ -154,21 +151,40 @@ void Game::UpdateImgui()
 	ImGui::SliderFloat("Z far", &zFar, 10.0f, 1000.0f, "%f", 1.0f);
 	m_Camera.SetZFar(zFar);
 	m_Camera.SetZNear(zNear);
-	ImGui::BeginGroup();
-	ImGui::SliderFloat("Cube 0 scale", cubeScales, 0.1f, 2.0f, "%f", 1.0f);
-	ImGui::SliderFloat("Cube 1 scale", &cubeScales[1], 0.1f, 2.0f, "%f", 1.0f);
-	ImGui::SliderFloat("Cube 2 scale", &cubeScales[2], 0.1f, 2.0f, "%f", 1.0f);
-	ImGui::SliderFloat("Cube 0 Pos.X", &cubePositions[0].X, -10.0f, 10.0f, "%f", 1.0f);
-	ImGui::SliderFloat("Cube 0 Pos.Y", &cubePositions[0].Y, -10.0f, 10.0f, "%f", 1.0f);
-	ImGui::SliderFloat("Cube 0 Pos.Z", &cubePositions[0].Z, -10.0f, 10.0f, "%f", 1.0f);
-	ImGui::SliderFloat("Cube 1 Pos.X", &cubePositions[1].X, -10.0f, 10.0f, "%f", 1.0f);
-	ImGui::SliderFloat("Cube 1 Pos.Y", &cubePositions[1].Y, -10.0f, 10.0f, "%f", 1.0f);
-	ImGui::SliderFloat("Cube 1 Pos.Z", &cubePositions[1].Z, -10.0f, 10.0f, "%f", 1.0f);
-	ImGui::SliderFloat("Cube 2 Pos.X", &cubePositions[2].X, -10.0f, 10.0f, "%f", 1.0f);
-	ImGui::SliderFloat("Cube 2 Pos.Y", &cubePositions[2].Y, -10.0f, 10.0f, "%f", 1.0f);
-	ImGui::SliderFloat("Cube 2 Pos.Z", &cubePositions[2].Z, -10.0f, 10.0f, "%f", 1.0f);
-	ImGui::SliderAngle("Cube 0 Pitch", &cubeRotations[0].X);
-	ImGui::EndGroup();
+
+	if (ImGui::CollapsingHeader("Cube 0"))
+	{
+		ImGui::SliderFloat("Cube 0 scale", cubeScales, 0.1f, 2.0f, "%f", 1.0f);
+		ImGui::SliderFloat("Cube 0 Pos.X", &cubePositions[0].X, -10.0f, 10.0f, "%f", 1.0f);
+		ImGui::SliderFloat("Cube 0 Pos.Y", &cubePositions[0].Y, -10.0f, 10.0f, "%f", 1.0f);
+		ImGui::SliderFloat("Cube 0 Pos.Z", &cubePositions[0].Z, -10.0f, 10.0f, "%f", 1.0f);
+		ImGui::SliderAngle("Cube 0 Pitch", &cubeRotations[0].X);
+		ImGui::SliderAngle("Cube 0 Yaw", &cubeRotations[0].Y);
+		ImGui::SliderAngle("Cube 0 Roll", &cubeRotations[0].Z);
+	}
+
+	if (ImGui::CollapsingHeader("Cube 1"))
+	{
+		ImGui::SliderFloat("Cube 1 scale", &cubeScales[1], 0.1f, 2.0f, "%f", 1.0f);
+
+		ImGui::SliderFloat("Cube 1 Pos.X", &cubePositions[1].X, -10.0f, 10.0f, "%f", 1.0f);
+		ImGui::SliderFloat("Cube 1 Pos.Y", &cubePositions[1].Y, -10.0f, 10.0f, "%f", 1.0f);
+		ImGui::SliderFloat("Cube 1 Pos.Z", &cubePositions[1].Z, -10.0f, 10.0f, "%f", 1.0f);
+		ImGui::SliderAngle("Cube 1 Pitch", &cubeRotations[1].X);
+		ImGui::SliderAngle("Cube 1 Yaw", &cubeRotations[1].Y);
+		ImGui::SliderAngle("Cube 1 Roll", &cubeRotations[1].Z);
+	}
+
+	if (ImGui::CollapsingHeader("Cube 2"))
+	{
+		ImGui::SliderFloat("Cube 2 scale", &cubeScales[2], 0.1f, 2.0f, "%f", 1.0f);
+		ImGui::SliderFloat("Cube 2 Pos.X", &cubePositions[2].X, -10.0f, 10.0f, "%f", 1.0f);
+		ImGui::SliderFloat("Cube 2 Pos.Y", &cubePositions[2].Y, -10.0f, 10.0f, "%f", 1.0f);
+		ImGui::SliderFloat("Cube 2 Pos.Z", &cubePositions[2].Z, -10.0f, 10.0f, "%f", 1.0f);
+		ImGui::SliderAngle("Cube 2 Pitch", &cubeRotations[2].X);
+		ImGui::SliderAngle("Cube 2 Yaw", &cubeRotations[2].Y);
+		ImGui::SliderAngle("Cube 2 Roll", &cubeRotations[2].Z);
+	}
 }
 #endif
 
@@ -350,8 +366,8 @@ void Game::Render()
 		m_ShadowMap.Bind(m_DR->GetDeviceContext());
 		BuildShadowTransform();
 		m_Renderer.BindPixelShader(nullptr);
-		m_Renderer.BindVertexShader(m_VS.Get());
-		m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
+		m_Renderer.BindVertexShader(m_shadowVS.Get());
+		m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
 		m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
 		DrawScene();
 		m_ShadowMap.Unbind(m_DR->GetDeviceContext());
@@ -361,6 +377,8 @@ void Game::Render()
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
 	{
+		m_Renderer.Clear();
+		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_ShadowMap.GetDepthMapSRV(), 4);
 		m_PerFrameData.view = m_Camera.GetViewMat();
 		m_PerFrameData.proj = m_Camera.GetProjMat();
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
@@ -396,24 +414,8 @@ void Game::Render()
 	m_DR->PIXEndEvent();
 	// TODO: Need to have a reflection mechanism to query amount of SRV that is possible to bind to PS
 	// After this this clear code could be placed to Renderer::Clear
-	ID3D11ShaderResourceView* nullSRVs[5] = { nullptr, nullptr, nullptr, nullptr, nullptr, };
-	m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 5);
-
-//	m_DR->PIXBeginEvent(L"Draw particles");
-//	{
-//		m_Renderer.SetBlendState(m_particleSystem.GetBlendState());
-//		m_Renderer.SetDepthStencilState(m_particleSystem.GetDepthStencilState());
-//		m_Renderer.SetVertexBuffer(m_particleSystem.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Particle), 0);
-//		m_Renderer.SetIndexBuffer(m_particleSystem.GetIndexBuffer(), 0);
-//		m_Renderer.SetInputLayout(m_InputLayout.GetParticleLayout());
-//		m_Renderer.BindVertexShader(m_particleVS.Get());
-//		m_Renderer.BindPixelShader(m_particlePS.Get());
-//		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 0);
-//		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_particleSystem.GetSRV(), 0);
-//		m_Renderer.SetSamplerState(m_particleSystem.GetSamplerState(), 0);
-//		m_Renderer.DrawIndexed(m_particleSystem.GetNumIndices(), 0, 0);
-//	}
-//	m_DR->PIXEndEvent();
+	ID3D11ShaderResourceView* nullSRVs[7] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 7);
 
 	// draw sky
 	DrawSky();
@@ -538,6 +540,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_InputLayout.CreateSkyLayout(device, &bytes[0], bytes.size());
 	bytes = CreateVertexShader("ParticleVS.cso", device, m_particleVS.ReleaseAndGetAddressOf());
 	m_InputLayout.CreateParticleLayout(device, &bytes[0], bytes.size());
+	bytes = CreateVertexShader("ShadowVS.cso", device, m_shadowVS.ReleaseAndGetAddressOf());
 
 	GameCreateConstantBuffer(device, sizeof(PerSceneConstants), &m_PerSceneCB);
 	GameCreateConstantBuffer(device, sizeof(PerObjectConstants), &m_PerObjectCB);
