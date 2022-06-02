@@ -132,7 +132,7 @@ void Renderer::Clear()
 	static const float CLEAR_COLOR[4] = { 0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f };
 	static const float BLACK_COLOR[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-	static ID3D11ShaderResourceView* nullSRVs[R_MAX_SRV_NUM] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	static ID3D11ShaderResourceView* nullSRVs[R_MAX_SRV_NUM] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 	BindShaderResources(BindTargets::PixelShader, nullSRVs, R_MAX_SRV_NUM);
 
 	ctx->ClearRenderTargetView(rtv, BLACK_COLOR);
