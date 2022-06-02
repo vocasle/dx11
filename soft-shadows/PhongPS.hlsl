@@ -8,12 +8,12 @@ float4 main(VSOut In) : SV_TARGET
 	const float4 specularSampled = specularTexture.Sample(defaultSampler, In.TexCoords);
 	const float4 glossSampled = glossTexture.Sample(defaultSampler, In.TexCoords);
 	const float3 normalSampled = normalTexture.Sample(defaultSampler, In.TexCoords).xyz;
-	const float2 shadowUV = In.ShadowPosH.xy;
-	const float4 shadowSampled = shadowTexture.Sample(defaultSampler, shadowUV);
+	const float2 shadowUV = In.ShadowPosH.xy * 0.5f + 0.5f;
+	const float shadowSampled = shadowTexture.Sample(defaultSampler, shadowUV);
 	float3 normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW), normalize(In.TangentW));
 
 	normal = normalize(normal);
-	
+
 	const float3 viewDir = normalize(cameraPosW - In.PosW);
 
 	LightIntensity intensities[MAX_LIGHTS];
@@ -32,7 +32,7 @@ float4 main(VSOut In) : SV_TARGET
 	//const float diff = dot(normalize(normal), normalize(dirLight.Position));
 	//return float4(diff, diff, diff, 1.0f);
 
-	if (shadowSampled.x < In.ShadowPosH.z)
+	if (shadowSampled < In.ShadowPosH.z)
 	{
 		shadows[0] = 0.0f;
 	}
