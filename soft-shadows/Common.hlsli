@@ -49,6 +49,6 @@ Texture2D<float4> diffuseTexture	: register(t0);
 Texture2D<float4> specularTexture	: register(t1);
 Texture2D<float4> glossTexture		: register(t2);
 Texture2D<float4> normalTexture		: register(t3);
-Texture2D<float> shadowTexture		: register(t4);
+Texture2D<float4> shadowTexture		: register(t4);
 TextureCube	cubeTexture				: register(t5);
 TextureCube envTexture				: register(t6);

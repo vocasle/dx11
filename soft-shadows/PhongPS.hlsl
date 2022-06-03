@@ -8,11 +8,15 @@ float4 main(VSOut In) : SV_TARGET
 	const float4 specularSampled = specularTexture.Sample(defaultSampler, In.TexCoords);
 	const float4 glossSampled = glossTexture.Sample(defaultSampler, In.TexCoords);
 	const float3 normalSampled = normalTexture.Sample(defaultSampler, In.TexCoords).xyz;
-	const float2 shadowUV = In.ShadowPosH.xy * 0.5f + 0.5f;
-	const float shadowSampled = shadowTexture.Sample(defaultSampler, shadowUV);
+	const float4 shadowSampled = shadowTexture.Sample(defaultSampler, In.ShadowPosH.xy);
 	float3 normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW), normalize(In.TangentW));
 
 	normal = normalize(normal);
+	//normal = normalize(In.NormalW);
+
+	//float3 L = normalize(dirLight.Position);
+	//float diff = max(dot(L, normal), 0.0f);
+	//return float4(diffuseSampled.rgb * diff, 1.0f);
 
 	const float3 viewDir = normalize(cameraPosW - In.PosW);
 
@@ -32,10 +36,12 @@ float4 main(VSOut In) : SV_TARGET
 	//const float diff = dot(normalize(normal), normalize(dirLight.Position));
 	//return float4(diff, diff, diff, 1.0f);
 
-	if (shadowSampled < In.ShadowPosH.z)
+	if (shadowSampled.x * 2.0f - 1.0f < In.ShadowPosH.z)
 	{
 		shadows[0] = 0.0f;
 	}
+
+	return float4(shadowSampled.xyz /** 2.0f - 1.0f*/, 1.0f);
 
 
 	const float4 emissive = ZERO_VEC4;
@@ -51,7 +57,6 @@ float4 main(VSOut In) : SV_TARGET
 		material.Specular.a,
 		normal,
 		intensities,
-		shadows,
 		1
 	);
 
@@ -62,5 +67,5 @@ float4 main(VSOut In) : SV_TARGET
 
 	//fragmentColor += reflColor * material.Reflection;
 
-	return fragmentColor.Emissive + fragmentColor.Diffuse + fragmentColor.Specular;
+	return fragmentColor.Emissive + shadows[0] * (fragmentColor.Diffuse + fragmentColor.Specular);
 }

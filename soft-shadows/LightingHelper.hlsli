@@ -122,7 +122,6 @@ Color BlinnPhong(float4 E,
     float m,
     float3 N,
     LightIntensity intensities[MAX_LIGHTS],
-    float shadows[MAX_LIGHTS],
     uint numLights)
 {
     Color outCol;
@@ -136,7 +135,7 @@ Color BlinnPhong(float4 E,
         const float3 Li = normalize(intensities[i].L);
         const float3 Hi = normalize(intensities[i].H);
         const float3 lightDiffuse = intensities[i].diffuse;
-        sum += float4(Ci, 1.0f) * (shadows[i] * DT * float4(lightDiffuse, 1.0f) * max(dot(N, Li), 0.0f) + SG * pow(max(dot(N, Hi), 0.0f), m));
+        sum += float4(Ci, 1.0f) * (DT * float4(lightDiffuse, 1.0f) * max(dot(N, Li), 0.0f) + SG * pow(max(dot(N, Hi), 0.0f), m));
     }
     outCol.Emissive = EM;
     outCol.Diffuse = DT * A;
