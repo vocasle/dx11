@@ -1,0 +1,2 @@
+#define ASSETS_ROOT "${CMAKE_BINARY_DIR}/assets"
+#define SHADERS_ROOT "${CMAKE_CURRENT_BINARY_DIR}/Debug" 
