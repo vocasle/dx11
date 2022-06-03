@@ -129,7 +129,7 @@ static void OLParseMeshes(std::vector<Mesh>& meshes, std::vector<MeshInfo>& info
 	Mesh* mesh = nullptr;
 	MeshInfo* info = nullptr;
 	Face face = {};
-	
+
 	while(OLReadLine(objfile, line, 128))
 	{
 		strncpy_s(prefix, 4, line, 2);
@@ -146,7 +146,7 @@ static void OLParseMeshes(std::vector<Mesh>& meshes, std::vector<MeshInfo>& info
 			assert(result == 4);
 			mesh->Positions.emplace_back(vec[0], vec[1], vec[2]);
 			assert(mesh->Positions.size() <= info->NumPositions);
-			OLLogInfo("Position { %f %f %f }", vec[0], vec[1], vec[2]); 	
+			OLLogInfo("Position { %f %f %f }", vec[0], vec[1], vec[2]);
 		}
 		else if (strcmp(prefix, "vt") == 0)
 		{
@@ -180,7 +180,7 @@ static void OLParseMeshes(std::vector<Mesh>& meshes, std::vector<MeshInfo>& info
 				assert(mesh->Faces.size() <= info->NumFaces);
 			}
 		}
-		else 
+		else
 		{
 			OLLogInfo("Skip %s, because unknown prefix: %s\n",line, prefix);
 		}
@@ -214,7 +214,7 @@ static std::string OLGetCwd(const char* filename)
 	lastSlash = lastSlash ? lastSlash : strrchr(filename, '\\');
 	if (lastSlash)
 	{
-		len = lastSlash - filename; 
+		len = lastSlash - filename;
 	}
 	std::string dir;
 	if (len > 0)
@@ -226,7 +226,7 @@ static std::string OLGetCwd(const char* filename)
 	{
 		dir = filename;
 	}
-	return dir;	
+	return dir;
 }
 
 void OLDumpModelToFile(const struct Model* model, const char* filename)
@@ -237,38 +237,38 @@ void OLDumpModelToFile(const struct Model* model, const char* filename)
 	{
 		OLLogError("Failed to create file %s", filename);
 	}
-	
-	fprintf(f, "NumMeshes: %d\nDirectory: %s\n", model->Meshes.size(), model->Directory);
+
+	fprintf(f, "NumMeshes: %llu\nDirectory: %s\n", model->Meshes.size(), model->Directory.c_str());
 	for (uint32_t i = 0; i < model->Meshes.size(); ++i)
 	{
 		const Mesh* m = &model->Meshes[i];
-		fprintf(f, "MeshName: %s\n", m->Name);
+		fprintf(f, "MeshName: %s\n", m->Name.c_str());
 
-		fprintf(f, "NumPositions: %d\n", m->Positions.size());
+		fprintf(f, "NumPositions: %llu\n", m->Positions.size());
 		for (uint32_t j = 0; j < m->Positions.size(); ++j)
 		{
-			fprintf(f, "Position { %f %f %f }\n", 
+			fprintf(f, "Position { %f %f %f }\n",
 					m->Positions[j].X, m->Positions[j].Y, m->Positions[j].Z);
 		}
 
-		fprintf(f, "NumTexCoords: %d\n", m->TexCoords.size());
+		fprintf(f, "NumTexCoords: %llu\n", m->TexCoords.size());
 		for (uint32_t j = 0; j < m->TexCoords.size(); ++j)
 		{
-			fprintf(f, "TexCoord { %f %f }\n", 
+			fprintf(f, "TexCoord { %f %f }\n",
 					m->TexCoords[j].X, m->TexCoords[j].Y);
 		}
 
-		fprintf(f, "NumNormals: %d\n", m->Normals.size());
+		fprintf(f, "NumNormals: %llu\n", m->Normals.size());
 		for (uint32_t j = 0; j < m->Normals.size(); ++j)
 		{
-			fprintf(f, "Normal { %f %f %f }\n", 
+			fprintf(f, "Normal { %f %f %f }\n",
 					m->Normals[j].X, m->Normals[j].Y, m->Normals[j].Z);
 		}
 
 		fprintf(f, "NumFaces: %llu\n", m->Faces.size());
 		for (uint32_t j = 0; j < m->Faces.size(); ++j)
 		{
-			fprintf(f, "Face { %d %d %d }\n", 
+			fprintf(f, "Face { %d %d %d }\n",
 					m->Faces[j].posIdx, m->Faces[j].texIdx, m->Faces[j].normIdx);
 		}
 	}
