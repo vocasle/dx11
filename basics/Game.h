@@ -39,23 +39,10 @@ private:
 #endif
 
 	std::unique_ptr<DeviceResources> m_DR;
-	//Microsoft::WRL::ComPtr<ID3D11PixelShader> m_particlePS;
-	//Microsoft::WRL::ComPtr<ID3D11VertexShader> m_shadowVS;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PS;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VS;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_IL;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_DefaultSampler;
 	Timer m_Timer;
 	Renderer m_Renderer;
-
-	// new stuff
-	//std::vector<Actor> m_Actors;
-	//PerFrameConstants m_PerFrameData;
-	//PerObjectConstants m_PerObjectData;
-	//PerSceneConstants m_PerSceneData;
-	//Microsoft::WRL::ComPtr<ID3D11Buffer> m_PerFrameCB;
-	//Microsoft::WRL::ComPtr<ID3D11Buffer> m_PerObjectCB;
-	//Microsoft::WRL::ComPtr<ID3D11Buffer> m_PerSceneCB;
-	//ShadowMap m_ShadowMap;
-	//CubeMap m_CubeMap;
-	//InputLayout m_InputLayout;
-	//DynamicCubeMap m_dynamicCubeMap;
-	//ParticleSystem m_particleSystem;
 };

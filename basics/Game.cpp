@@ -209,10 +209,13 @@ void Game::Update()
 
 	if (elapsedTime >= 1.0f)
 	{
+		D3D11_VIEWPORT viewport = m_DR->GetViewport();
 		SetWindowText(m_DR->GetWindow(),
-			UtilsFormatStr("basics -- FPS: %d, frame: %f s",
+			UtilsFormatStr("basics -- FPS: %d, frame: %.4f s, %.0fx%.0f",
 				static_cast<int>(elapsedTime / deltaSeconds),
-				deltaSeconds).c_str());
+				deltaSeconds,
+				viewport.Width,
+				viewport.Height).c_str());
 		elapsedTime = 0.0f;
 	}
 
@@ -242,6 +245,9 @@ void Game::Render()
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 	m_Renderer.SetVertexBuffer(g_VB.Get(), sizeof(Vertex), 0);
 	m_Renderer.SetIndexBuffer(g_IB.Get(), 0);
+	m_Renderer.BindVertexShader(m_VS.Get());
+	m_Renderer.BindPixelShader(m_PS.Get());
+	m_Renderer.SetInputLayout(m_IL.Get());
 	m_Renderer.DrawIndexed(g_Indices.size(), 0, 0);
 
 #if WITH_IMGUI
@@ -296,6 +302,29 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 			g_Vertices.size(), sizeof(Vertex), g_VB.ReleaseAndGetAddressOf());
 	UtilsCreateIndexBuffer(device, &g_Indices[0], g_Indices.size(),
 			g_IB.ReleaseAndGetAddressOf());
+
+	CreatePixelShader("BasicPS.cso", device, m_PS.ReleaseAndGetAddressOf());
+	auto bytes = CreateVertexShader("BasicVS.cso", device, m_VS.ReleaseAndGetAddressOf());
+	UtilsDebugPrint("bytes=%llu\n", bytes.size());
+
+	{
+		D3D11_INPUT_ELEMENT_DESC desc[] =
+		{
+			{
+				"POSITION",
+				0,
+				DXGI_FORMAT_R32G32B32_FLOAT,
+				0,
+				offsetof(Vertex, Position),
+				D3D11_INPUT_PER_VERTEX_DATA,
+				0
+			},
+		};
+
+		HR(device->CreateInputLayout(
+					desc, 1, &bytes[0], bytes.size(),
+					m_IL.ReleaseAndGetAddressOf()))
+	}
 
 #if WITH_IMGUI
 	ImGui::CreateContext();
