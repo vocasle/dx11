@@ -1,0 +1,1 @@
+build\basics\%TARGET%.exe
