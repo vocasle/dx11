@@ -1,11 +1,15 @@
 struct VSIn
 {
 	float3 Position : POSITION;
+	float3 Normal 	: NORMAL;
+	float2 TexCoord : TEXCOORD;
 };
 
 struct PSIn
 {
 	float4 PositionH : SV_POSITION;
+	float3 NormalW 	: NORMAL;
+	float2 TexCoord : TEXCOORD;
 };
 
 PSIn main(VSIn vin)
@@ -14,7 +18,7 @@ PSIn main(VSIn vin)
 	float4 i = float4(1.0f, 0.0f, 0.0f, 0.0f);
 	float4 j = float4(0.0f, 1.0f, 0.0f, 0.0f);
 	float4 k = float4(0.0f, 0.0f, 1.0f, 0.0f);
-	float4 u = float4(2.0f, 2.0f, 10.0f, 1.0f);
+	float4 u = float4(2.0f, -2.0f, 10.0f, 1.0f);
 	float4x4 world = {i,j,k,u};
 
 	static const float PI = 3.14159265f;
@@ -33,5 +37,7 @@ PSIn main(VSIn vin)
 	};
 	float4x4 M = mul(world, proj);
 	pin.PositionH = mul(float4(vin.Position, 1.0f), M);
+	pin.NormalW = mul(float4(vin.Normal, 0.0f), world).xyz;
+	pin.TexCoord = vin.TexCoord;
 	return pin;
 }

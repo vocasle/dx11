@@ -39,6 +39,8 @@ namespace
 	struct Vertex
 	{
 		Vec3D Position;
+		Vec3D Normal;
+		Vec2D TexCoord;
 	};
 
 	std::vector<Vertex> g_Vertices;
@@ -286,16 +288,15 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_Renderer.SetDeviceResources(m_DR.get());
 
 	g_Cube = OLLoad(UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT).c_str());
-	for (const Vec3D& pos : g_Cube->Meshes[0].Positions)
-	{
-		Vertex v = {};
-		v.Position = pos;
-		g_Vertices.push_back(v);
-	}
 
-	for (const Face& face : g_Cube->Meshes[0].Faces)
+	for (int i = 0; const Face& face : g_Cube->Meshes[0].Faces)
 	{
-		g_Indices.push_back(face.posIdx);
+		g_Indices.push_back(i++);
+		Vertex v = {};
+		v.Position = g_Cube->Meshes[0].Positions[face.posIdx];
+		v.Normal = g_Cube->Meshes[0].Normals[face.normIdx];
+		v.TexCoord = g_Cube->Meshes[0].TexCoords[face.texIdx];
+		g_Vertices.push_back(v);
 	}
 
 	UtilsCreateVertexBuffer(device, &g_Vertices[0],
@@ -318,11 +319,27 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 				offsetof(Vertex, Position),
 				D3D11_INPUT_PER_VERTEX_DATA,
 				0
+			},{
+				"NORMAL",
+				0,
+				DXGI_FORMAT_R32G32B32_FLOAT,
+				0,
+				offsetof(Vertex, Normal),
+				D3D11_INPUT_PER_VERTEX_DATA,
+				0
+			},{
+				"TEXCOORD",
+				0,
+				DXGI_FORMAT_R32G32_FLOAT,
+				0,
+				offsetof(Vertex, TexCoord),
+				D3D11_INPUT_PER_VERTEX_DATA,
+				0
 			},
 		};
 
 		HR(device->CreateInputLayout(
-					desc, 1, &bytes[0], bytes.size(),
+					desc, sizeof(desc) / sizeof(desc[0]), &bytes[0], bytes.size(),
 					m_IL.ReleaseAndGetAddressOf()))
 	}
 
