@@ -14,7 +14,7 @@ void UtilsDebugPrint(const char* fmt, ...)
     vsnprintf(out, sizeof(out), fmt, args);
     va_end(args);
     OutputDebugStringA(out);
-    fprintf(stdout, out);
+    fprintf(stdout, "%s", out);
 }
 
 void UtilsFatalError(const char* fmt, ...)
@@ -24,7 +24,7 @@ void UtilsFatalError(const char* fmt, ...)
     va_start(args, fmt);
     vsnprintf(out, sizeof(out), fmt, args);
     va_end(args);
-    fprintf(stderr, out);
+    fprintf(stderr, "%s", out);
     OutputDebugStringA(out);
     ExitProcess(EXIT_FAILURE);
 }
