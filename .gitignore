@@ -6,4 +6,5 @@ x64/
 /imgui.ini
 /.cache
 compile_commands.json
+out/
 
