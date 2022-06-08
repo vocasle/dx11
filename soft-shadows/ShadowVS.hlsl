@@ -1,8 +1,13 @@
 #include "Common.hlsli"
 
-float4 main(float3 pos : POSITION) : SV_POSITION
+VSOut main(VSIn vin)
 {
-	float4x4 toLightSpace = mul(shadowTransform, world);
-	float4 posH = mul(toLightSpace, float4(pos, 1.0f));
-	return posH;
+	//float4x4 toLightSpace = mul(shadowTransform, world);
+	//float4 posH = mul(toLightSpace, float4(pos, 1.0f));
+	VSOut vout = EMPTY_VSOUT;
+	float posH = mul(proj, float4(vin.Pos, 1.0f));
+	posH = mul(view, posH);
+	posH = mul(world, posH);
+	vout.PosH = posH;
+	return vout;
 }

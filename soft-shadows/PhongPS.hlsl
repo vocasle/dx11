@@ -11,6 +11,8 @@ float4 main(VSOut In) : SV_TARGET
 	const float4 shadowSampled = shadowTexture.Sample(defaultSampler, In.ShadowPosH.xy);
 	float3 normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW), normalize(In.TangentW));
 
+	return float4(shadowSampled.xxx, 1.0f);
+
 	normal = normalize(normal);
 	//normal = normalize(In.NormalW);
 

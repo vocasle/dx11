@@ -55,11 +55,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    FILE* fp = nullptr;
-	AllocConsole();
-	freopen_s(&fp, "CONIN$", "r", stdin);
-	freopen_s(&fp, "CONOUT$", "w", stdout);
-	freopen_s(&fp, "CONOUT$", "w", stderr);
     // Initialize global strings
     //LoadStringW(NULL, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     //LoadStringW(NULL, IDC_DX11, szWindowClass, MAX_LOADSTRING);
@@ -92,7 +87,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
-    fclose(fp);
     return (int) msg.wParam;
 }
 

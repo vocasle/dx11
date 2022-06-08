@@ -1,5 +1,7 @@
 set(current_target soft-shadows)
 
+message(STATUS "Current build directory: ${CMAKE_CURRENT_BINARY_DIR}")
+
 set(source_files
 	Actor.cpp
 	Camera.cpp
@@ -20,6 +22,7 @@ set(source_files
 	)
 
 set(header_files
+	ShaderReflection.h
 	Actor.h
 	Camera.h
 	CubeMap.h
@@ -45,6 +48,7 @@ set(header_files
 	)
 
 set(pixel_shader_files
+	ShadowPS.hlsl
 	LightPS.hlsl
 	PhongPS.hlsl
 	PixelShader.hlsl
@@ -91,6 +95,7 @@ set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_DISABLE_OPTIMIZATI
 set_property(TARGET ${current_target} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$(OutDir)")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	message(INFO "WE ARE USING CLANG")
 	set(FXC_EXE "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.19041.0\\x64\\fxc.exe")
 	# Build HLSL shaders
 	set (shader_target ${current_target}-compile-shaders)
@@ -103,7 +108,15 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 		  get_source_file_property(shadertype ${FILE} VS_SHADER_TYPE)
 		  get_source_file_property(shadermodel ${FILE} VS_SHADER_MODEL)
 		  add_custom_command(TARGET ${shader_target}
-			  COMMAND ${FXC_EXE} /nologo /Emain /T${shadertype}_${shadermodel} $<IF:$<CONFIG:DEBUG>,/Od,/O1> /Zi /Fo ${CMAKE_CURRENT_BINARY_DIR}/${FILE_WE}.cso /Fd ${CMAKE_CURRENT_BINARY_DIR}/${FILE_WE}.pdb ${FILE}
+			  COMMAND ${FXC_EXE} /nologo
+						/Fh ${CMAKE_CURRENT_BINARY_DIR}/${FILE_WE}.h
+						/Emain
+						/T${shadertype}_${shadermodel}
+						$<IF:$<CONFIG:DEBUG>,/Od,/O1>
+						/Zi
+						/Fo ${CMAKE_CURRENT_BINARY_DIR}/${FILE_WE}.cso
+						/Fd ${CMAKE_CURRENT_BINARY_DIR}/${FILE_WE}.pdb
+						${FILE}
 				     MAIN_DEPENDENCY ${FILE}
 				     COMMENT "HLSL ${FILE}"
 				     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

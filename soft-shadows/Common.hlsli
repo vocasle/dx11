@@ -20,6 +20,16 @@ struct VSOut
 	float3 BitangentW : BITANGENT;
 };
 
+VSOut EMPTY_VSOUT = {
+	{0.0f, 0.0f, 0.0f, 0.0f},
+	{0.0f, 0.0f, 0.0f},
+	{0.0f, 0.0f},
+	{0.0f, 0.0f, 0.0f},
+	{0.0f, 0.0f, 0.0f, 0.0f},
+	{0.0f, 0.0f, 0.0f},
+	{0.0f, 0.0f, 0.0f}
+};
+
 cbuffer PerObjectConstants : register(b0)
 {
 	float4x4 worldInvTranspose;

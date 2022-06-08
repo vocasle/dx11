@@ -11,6 +11,8 @@
 #include <backends/imgui_impl_win32.h>
 #endif
 
+#include <sstream>
+
 namespace
 {
 	static Vec3D cubePositions[] =
@@ -34,6 +36,8 @@ namespace
 	};
 
 	bool rotateDirLight = false;
+
+	std::ostringstream g_Out;
 };
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -151,6 +155,7 @@ void Game::UpdateImgui()
 	ImGui::SliderFloat("Z far", &zFar, 10.0f, 1000.0f, "%f", 1.0f);
 	m_Camera.SetZFar(zFar);
 	m_Camera.SetZNear(zNear);
+	ImGui::Text("%s", g_Out.str().c_str());
 
 	if (ImGui::CollapsingHeader("Cube 0"))
 	{
@@ -361,64 +366,62 @@ void Game::Render()
 	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 
-	m_DR->PIXBeginEvent(L"Shadow pass");
-	{
-		m_ShadowMap.Bind(m_DR->GetDeviceContext());
-		BuildShadowTransform();
-		m_Renderer.BindPixelShader(nullptr);
-		m_Renderer.BindVertexShader(m_shadowVS.Get());
-		m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
-		m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
-		DrawScene();
-		m_ShadowMap.Unbind(m_DR->GetDeviceContext());
-	}
-	m_DR->PIXEndEvent();
+	//m_DR->PIXBeginEvent(L"Shadow pass");
+	//{
+	//	m_ShadowMap.Bind(m_DR->GetDeviceContext());
+	//	BuildShadowTransform();
+	//	m_Renderer.BindPixelShader(nullptr);
+	//	m_Renderer.BindVertexShader(m_shadowVS.Get());
+	//	m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
+	//	m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
+	//	DrawScene();
+	//	m_ShadowMap.Unbind(m_DR->GetDeviceContext());
+	//}
+	//m_DR->PIXEndEvent();
 
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
 	{
 		m_Renderer.Clear();
-		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_ShadowMap.GetDepthMapSRV(), 4);
 		m_PerFrameData.view = m_Camera.GetViewMat();
 		m_PerFrameData.proj = m_Camera.GetProjMat();
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
-		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_dynamicCubeMap.GetSRV(), 6);
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 		m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
-		m_Renderer.BindPixelShader(m_PhongPS.Get());
+		m_Renderer.BindPixelShader(m_shadowPS.Get());
 		m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
-		m_Renderer.BindVertexShader(m_VS.Get());
+		m_Renderer.BindVertexShader(m_shadowVS.Get());
 
 		DrawScene();
 	}
 	m_DR->PIXEndEvent();
-	m_DR->PIXBeginEvent(L"Draw lights");
-	// Light properties
-	//for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
-	{
-		m_PerObjectData.world = MathMat4X4TranslateFromVec3D(&m_PerSceneData.dirLight.Position);
-		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-			sizeof(PerObjectConstants),
-			&m_PerObjectData,
-			m_PerObjectCB.Get());
+	//m_DR->PIXBeginEvent(L"Draw lights");
+	//// Light properties
+	////for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
+	//{
+	//	m_PerObjectData.world = MathMat4X4TranslateFromVec3D(&m_PerSceneData.dirLight.Position);
+	//	GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+	//		sizeof(PerObjectConstants),
+	//		&m_PerObjectData,
+	//		m_PerObjectCB.Get());
 
-		m_Renderer.BindPixelShader(m_LightPS.Get());
-		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
-		const auto sphere = FindActorByName("Sphere");
-		m_Renderer.SetIndexBuffer(sphere->GetIndexBuffer(), 0);
-		m_Renderer.SetVertexBuffer(sphere->GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
+	//	m_Renderer.BindPixelShader(m_LightPS.Get());
+	//	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+	//	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+	//	const auto sphere = FindActorByName("Sphere");
+	//	m_Renderer.SetIndexBuffer(sphere->GetIndexBuffer(), 0);
+	//	m_Renderer.SetVertexBuffer(sphere->GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
 
-		m_Renderer.DrawIndexed(sphere->GetNumIndices(), 0, 0);
-	}
-	m_DR->PIXEndEvent();
-	// TODO: Need to have a reflection mechanism to query amount of SRV that is possible to bind to PS
-	// After this this clear code could be placed to Renderer::Clear
-	ID3D11ShaderResourceView* nullSRVs[7] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
-	m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 7);
+	//	m_Renderer.DrawIndexed(sphere->GetNumIndices(), 0, 0);
+	//}
+	//m_DR->PIXEndEvent();
+	//// TODO: Need to have a reflection mechanism to query amount of SRV that is possible to bind to PS
+	//// After this this clear code could be placed to Renderer::Clear
+	//ID3D11ShaderResourceView* nullSRVs[7] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+	//m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 7);
 
-	// draw sky
-	DrawSky();
+	//// draw sky
+	//DrawSky();
 
 #if WITH_IMGUI
 	ImGui::Render();
@@ -541,6 +544,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	bytes = CreateVertexShader("ParticleVS.cso", device, m_particleVS.ReleaseAndGetAddressOf());
 	m_InputLayout.CreateParticleLayout(device, &bytes[0], bytes.size());
 	bytes = CreateVertexShader("ShadowVS.cso", device, m_shadowVS.ReleaseAndGetAddressOf());
+	CreatePixelShader("ShadowPS.cso", device, m_shadowPS.ReleaseAndGetAddressOf());
 
 	GameCreateConstantBuffer(device, sizeof(PerSceneConstants), &m_PerSceneCB);
 	GameCreateConstantBuffer(device, sizeof(PerObjectConstants), &m_PerObjectCB);
@@ -572,9 +576,9 @@ void Game::GetDefaultSize(uint32_t* width, uint32_t* height)
 void Game::BuildShadowTransform()
 {
 	// Only the first "main" light casts a shadow.
-	Vec3D lightPos = m_PerSceneData.dirLight.Position;
-	Vec3D targetPos = { 0.0f, 0.0f, 0.0f };
-	Vec3D up = { 0.0f, 1.0f, 0.0f };
+	const Vec3D lightPos = m_PerSceneData.dirLight.Position;
+	const Vec3D targetPos = { 0.0f, 0.0f, 0.0f };
+	const Vec3D up = { 0.0f, 1.0f, 0.0f };
 	const float radius = MathVec3DLength(lightPos);
 
 	Mat4X4 view = MathMat4X4ViewAt(&lightPos, &targetPos, &up);
@@ -582,6 +586,8 @@ void Game::BuildShadowTransform()
 	// Transform bounding sphere to light space.
 	Vec4D targetPos4 = { targetPos.X, targetPos.Y, targetPos.Z, 1.0f };
 	Vec4D sphereCenterLS = MathMat4X4MultVec4DByMat4X4(&targetPos4 , &view);
+//	UtilsDebugPrint("Center LS: %s\n", sphereCenterLS.ToString().c_str());
+//	UtilsDebugPrint("view LS: %s\n", view.ToString().c_str());
 
 	// Ortho frustum in light space encloses scene.
 	float l = sphereCenterLS.X - radius;

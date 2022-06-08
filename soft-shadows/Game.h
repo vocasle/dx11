@@ -97,6 +97,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_particleVS;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_particlePS;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_shadowVS;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_shadowPS;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_DefaultSampler;
 	Timer m_Timer;
 	Camera m_Camera;

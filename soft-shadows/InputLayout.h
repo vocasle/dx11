@@ -3,6 +3,8 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 
+#include "NE_Math.h"
+
 class InputLayout
 {
 public:
