@@ -77,13 +77,15 @@ std::vector<uint8_t> UtilsReadData(const char* filepath)
     fopen_s(&f, filepath, "rb");
     if (!f)
     {
-        UTILS_FATAL_ERROR("Failed to read data from %s", filepath);
+        UtilsDebugPrint("ERROR: Failed to read data from %s", filepath);
+        return {};
     }
 
-    struct stat sb;
+    struct stat sb = {};
     if (stat(filepath, &sb) == -1)
     {
-        UTILS_FATAL_ERROR("Failed to get file stats from %s", filepath);
+        UtilsDebugPrint("ERROR: Failed to get file stats from %s", filepath);
+        return {};
     }
     std::vector<uint8_t> bytes(sb.st_size);
     fread(&bytes[0], sb.st_size, 1, f);
@@ -117,4 +119,20 @@ void UtilsCreateIndexBuffer(ID3D11Device* device, const void* data, size_t num, 
     bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 
     HR(device->CreateBuffer(&bufferDesc, &subresourceData, ppBuffer));
+}
+
+void UtilsWriteData(const char* filepath, const char* bytes, const size_t sz)
+{
+    FILE* out = nullptr;
+    fopen_s(&out, filepath, "w");
+
+    if (out)
+    {
+        for (size_t i = 0; i < sz; ++i)
+        {
+            fputc(bytes[i], out);
+        }
+
+        fclose(out);
+    }
 }
