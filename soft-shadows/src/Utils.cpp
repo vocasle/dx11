@@ -121,10 +121,10 @@ void UtilsCreateIndexBuffer(ID3D11Device* device, const void* data, size_t num, 
     HR(device->CreateBuffer(&bufferDesc, &subresourceData, ppBuffer));
 }
 
-void UtilsWriteData(const char* filepath, const char* bytes, const size_t sz)
+void UtilsWriteData(const char* filepath, const char* bytes, const size_t sz, const bool isBinary)
 {
     FILE* out = nullptr;
-    fopen_s(&out, filepath, "w");
+    fopen_s(&out, filepath, isBinary ? "wb" : "w");
 
     if (out)
     {

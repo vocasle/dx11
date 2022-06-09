@@ -26,7 +26,7 @@ void UtilsStrSub(const char* str, uint32_t start, uint32_t end, char out[], uint
 
 std::vector<uint8_t> UtilsReadData(const char* filepath);
 
-void UtilsWriteData(const char* filepath, const char* bytes, const size_t sz);
+void UtilsWriteData(const char* filepath, const char* bytes, const size_t sz, const bool isBinary = false);
 
 /* Dynamic Array */
 
