@@ -20,7 +20,7 @@ struct VSOut
 	float3 BitangentW : BITANGENT;
 };
 
-VSOut EMPTY_VSOUT = {
+static const VSOut EMPTY_VSOUT = {
 	{0.0f, 0.0f, 0.0f, 0.0f},
 	{0.0f, 0.0f, 0.0f},
 	{0.0f, 0.0f},
