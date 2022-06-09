@@ -8,3 +8,5 @@ x64/
 compile_commands.json
 out/
 
+/.idea
+/cmake-build-debug
