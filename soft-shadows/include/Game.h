@@ -11,13 +11,12 @@
 #include "LightHelper.h"
 #include "ShadowMap.h"
 #include "CubeMap.h"
-#include "InputLayout.h"
 #include "DynamicCubeMap.h"
 #include "ParticleSystem.h"
+#include "ShaderManager.h"
 
 #include <vector>
 #include <memory>
-#include <unordered_map>
 #include <wrl/client.h>
 
 #define MODEL_PULL 10
@@ -67,8 +66,6 @@ private:
 	void Render();
 	void CreateActors();
 	void BuildShadowTransform();
-	void CreateVertexShader(const std::string& filepath, ID3D11Device* device);
-	void CreatePixelShader(const std::string& filepath, ID3D11Device* device);
 	Actor* FindActorByName(const std::string& name);
 	void DrawScene();
 	void DrawSky();
@@ -105,10 +102,5 @@ private:
 	CubeMap m_CubeMap;
 	DynamicCubeMap m_dynamicCubeMap;
 	ParticleSystem m_particleSystem;
-	typedef std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11VertexShader>> VertexShaderMap;
-	typedef std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11PixelShader>> PixelShaderMap;
-	VertexShaderMap m_vertexShaders;
-	PixelShaderMap m_pixelShaders;
-	typedef std::unordered_map<std::string, InputLayout> InputLayoutMap;
-	InputLayoutMap m_inputLayouts;
+	ShaderManager m_shaderManager;
 };

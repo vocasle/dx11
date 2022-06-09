@@ -80,21 +80,6 @@ static void GameCreateConstantBuffer(ID3D11Device* device,
 	}
 }
 
-void Game::CreatePixelShader(const std::string& filepath, ID3D11Device* device)
-{
-	const auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", SHADERS_ROOT, filepath.c_str()).c_str());
-	ComPtr<ID3D11PixelShader> ps;
-
-	if (FAILED(device->CreatePixelShader(&bytes[0], bytes.size(), NULL, ps.GetAddressOf())))
-	{
-		UtilsDebugPrint("ERROR: Failed to create pixel shader from %s", filepath.c_str());
-		return;
-	}
-	
-	const std::string shaderName = filepath.substr(0, filepath.find_last_not_of("cso"));
-	m_pixelShaders[shaderName] = ps;
-}
-
 Actor* Game::FindActorByName(const std::string& name)
 {
 	auto it = std::find_if(std::begin(m_Actors), std::end(m_Actors), [&name](const Actor& actor)
@@ -141,12 +126,12 @@ void Game::DrawSky()
 	m_DR->PIXBeginEvent(L"Draw sky");
 	m_Renderer.SetRasterizerState(m_CubeMap.GetRasterizerState());
 	m_Renderer.SetDepthStencilState(m_CubeMap.GetDepthStencilState());
-	m_Renderer.SetInputLayout(m_inputLayouts["SkyVS"].Get());
-	m_Renderer.BindVertexShader(m_vertexShaders["SkyVS"].Get());
-	m_Renderer.BindPixelShader(m_pixelShaders["SkyPS"].Get());
+	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("SkyVS"));
+	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+	m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("SkyPS"));
 	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_CubeMap.GetCubeMap(), 0);
 	m_Renderer.SetSamplerState(m_CubeMap.GetCubeMapSampler(), 0);
-	m_Renderer.SetVertexBuffer(m_CubeMap.GetVertexBuffer(), m_inputLayouts["SkyVS"].GetStrides(), 0);
+	m_Renderer.SetVertexBuffer(m_CubeMap.GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
 	m_Renderer.SetIndexBuffer(m_CubeMap.GetIndexBuffer(), 0);
@@ -228,20 +213,18 @@ void Game::UpdateImgui()
 				const std::string sn = shaderName.substr(0, shaderName.find_last_not_of("hlsl"));
 				if (sn.find("VS") != std::string::npos)
 				{
-					const auto pair = m_vertexShaders.find(sn);
-					if (pair != std::end(m_vertexShaders))
+					if (auto shader = m_shaderManager.GetVertexShader(sn))
 					{
 						HR(m_DR->GetDevice()->CreateVertexShader(shaderBlob->GetBufferPointer(),
-							shaderBlob->GetBufferSize(), nullptr, pair->second.ReleaseAndGetAddressOf()))
+							shaderBlob->GetBufferSize(), nullptr, &shader))
 					}
 				}
 				else if (sn.find("PS") != std::string::npos)
 				{
-					const auto pair = m_pixelShaders.find(sn);
-					if (pair != std::end(m_pixelShaders))
+					if (auto shader = m_shaderManager.GetPixelShader(sn))
 					{
 						HR(m_DR->GetDevice()->CreatePixelShader(shaderBlob->GetBufferPointer(),
-							shaderBlob->GetBufferSize(), nullptr, pair->second.ReleaseAndGetAddressOf()))
+							shaderBlob->GetBufferSize(), nullptr, &shader))
 					}
 				}
 			}
@@ -283,22 +266,6 @@ void Game::UpdateImgui()
 	//}
 }
 #endif
-
-void Game::CreateVertexShader(const std::string& filepath, ID3D11Device* device)
-{
-	const auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", SHADERS_ROOT, filepath.c_str()).c_str());
-	ComPtr<ID3D11VertexShader> vs;
-
-	if (FAILED(device->CreateVertexShader(&bytes[0], bytes.size(), NULL, vs.GetAddressOf())))
-	{
-		UtilsDebugPrint("ERROR: Failed to create vertex shader from %s", filepath.c_str());
-		return;
-	}
-
-	const std::string shaderName = filepath.substr(0, filepath.find_last_not_of("cso"));
-	m_vertexShaders[shaderName] = vs;
-	m_inputLayouts[shaderName] = InputLayout(device, &bytes[0], bytes.size());
-}
 
 void Game::CreateDefaultSampler()
 {
@@ -483,9 +450,9 @@ void Game::Render()
 		m_PerFrameData.proj = m_Camera.GetProjMat();
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
-		m_Renderer.SetInputLayout(m_inputLayouts["ShadowVS"].Get());
-		m_Renderer.BindPixelShader(m_pixelShaders["ShadowPS"].Get());
-		m_Renderer.BindVertexShader(m_vertexShaders["ShadowVS"].Get());
+		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ShadowVS"));
+		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("ShadowPS"));
+		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 
 		DrawScene();
 	}
@@ -627,16 +594,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	CreateActors();
 	m_CubeMap.CreateCube(*FindActorByName("Cube"), device);
 	InitPerSceneConstants();
-	CreatePixelShader("PixelShader.cso", device);
-	CreatePixelShader("PhongPS.cso", device);
-	CreatePixelShader("LightPS.cso", device);
-	CreatePixelShader("SkyPS.cso", device);
-	CreatePixelShader("ParticlePS.cso", device);
-	CreateVertexShader("VertexShader.cso", device);
-	CreateVertexShader("SkyVS.cso", device);
-	CreateVertexShader("ParticleVS.cso", device);
-	CreateVertexShader("ShadowVS.cso", device);
-	CreatePixelShader("ShadowPS.cso", device);
+	m_shaderManager.Initialize(device);
 
 	GameCreateConstantBuffer(device, sizeof(PerSceneConstants), &m_PerSceneCB);
 	GameCreateConstantBuffer(device, sizeof(PerObjectConstants), &m_PerObjectCB);
@@ -724,7 +682,7 @@ void Game::DrawActor(const Actor& actor)
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
 
 		m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
-		m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_inputLayouts["ShadowVS"].GetStrides(), 0);
+		m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
 
 		m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
 	}
