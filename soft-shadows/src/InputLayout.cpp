@@ -4,7 +4,7 @@
 #include <d3d11shader.h>
 #include <d3dcompiler.h>
 
-static HRESULT CreateInputLayoutDescFromVertexShaderSignature(const void* shaderData, const size_t sz, ID3D11Device* pD3DDevice, ID3D11InputLayout** pInputLayout)
+HRESULT InputLayout::CreateInputLayoutDescFromVertexShaderSignature(const void* shaderData, const size_t sz, ID3D11Device* pD3DDevice)
 {
 	// Reflect shader info
 	ID3D11ShaderReflection* pVertexShaderReflection = nullptr;
@@ -18,7 +18,6 @@ static HRESULT CreateInputLayoutDescFromVertexShaderSignature(const void* shader
 	pVertexShaderReflection->GetDesc(&shaderDesc);
 
 	// Read input layout description from shader info
-	std::vector<D3D11_INPUT_ELEMENT_DESC> inputLayoutDesc;
 	for (uint32_t i = 0; i < shaderDesc.InputParameters; i++)
 	{
 		D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
@@ -60,12 +59,33 @@ static HRESULT CreateInputLayoutDescFromVertexShaderSignature(const void* shader
 		}
 
 		//save element desc
-		inputLayoutDesc.push_back(elementDesc);
+		m_inputDescriptions.push_back(elementDesc);
 	}
 
 	// Try to create Input Layout
-	const HRESULT hr = pD3DDevice->CreateInputLayout(&inputLayoutDesc[0], 
-		static_cast<uint32_t>(inputLayoutDesc.size()), shaderData, sz, pInputLayout);
+	const HRESULT hr = pD3DDevice->CreateInputLayout(&m_inputDescriptions[0],
+		static_cast<uint32_t>(m_inputDescriptions.size()), shaderData, sz, m_inputLayout.ReleaseAndGetAddressOf());
+
+	for (const D3D11_INPUT_ELEMENT_DESC& desc : m_inputDescriptions)
+	{
+		switch (desc.Format)
+		{
+		case DXGI_FORMAT_R32_FLOAT:
+			m_strides += 4;
+			break;
+		case DXGI_FORMAT_R32G32_FLOAT:
+			m_strides += 8;
+			break;
+		case DXGI_FORMAT_R32G32B32_FLOAT:
+			m_strides += 12;
+			break;
+		case DXGI_FORMAT_R32G32B32A32_FLOAT:
+			m_strides += 16;
+			break;
+		default:
+			UtilsDebugPrint("WARN: DXGI_FORMAT(%d) is not handled properly!\n", desc.Format);
+		}
+	}
 
 	//Free allocation shader reflection memory
 	pVertexShaderReflection->Release();
@@ -74,7 +94,7 @@ static HRESULT CreateInputLayoutDescFromVertexShaderSignature(const void* shader
 
 InputLayout::InputLayout(ID3D11Device* device, const void* vsBytes, const size_t sz): m_strides(0)
 {
-	HR(CreateInputLayoutDescFromVertexShaderSignature(vsBytes, sz, device, m_inputLayout.ReleaseAndGetAddressOf()))
+	HR(CreateInputLayoutDescFromVertexShaderSignature(vsBytes, sz, device))
 }
 
 InputLayout::InputLayout(const InputLayout& rhs)
