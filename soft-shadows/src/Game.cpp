@@ -4,6 +4,9 @@
 #include "NE_Math.h"
 #include "Camera.h"
 #include "MeshGenerator.h"
+#include "Mouse.h"
+
+#include <d3dcompiler.h>
 
 #if WITH_IMGUI
 #include <imgui.h>
@@ -12,6 +15,8 @@
 #endif
 
 #include <sstream>
+
+using namespace Microsoft::WRL;
 
 namespace
 {
@@ -75,14 +80,19 @@ static void GameCreateConstantBuffer(ID3D11Device* device,
 	}
 }
 
-void Game::CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps)
+void Game::CreatePixelShader(const std::string& filepath, ID3D11Device* device)
 {
-	auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", SHADERS_ROOT, filepath).c_str());
+	const auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", SHADERS_ROOT, filepath.c_str()).c_str());
+	ComPtr<ID3D11PixelShader> ps;
 
-	if (FAILED(device->CreatePixelShader(&bytes[0], bytes.size(), NULL, ps)))
+	if (FAILED(device->CreatePixelShader(&bytes[0], bytes.size(), NULL, ps.GetAddressOf())))
 	{
-		UTILS_FATAL_ERROR("Failed to create pixel shader from %s", filepath);
+		UtilsDebugPrint("ERROR: Failed to create pixel shader from %s", filepath.c_str());
+		return;
 	}
+	
+	const std::string shaderName = filepath.substr(0, filepath.find_last_not_of("cso"));
+	m_pixelShaders[shaderName] = ps;
 }
 
 Actor* Game::FindActorByName(const std::string& name)
@@ -131,12 +141,12 @@ void Game::DrawSky()
 	m_DR->PIXBeginEvent(L"Draw sky");
 	m_Renderer.SetRasterizerState(m_CubeMap.GetRasterizerState());
 	m_Renderer.SetDepthStencilState(m_CubeMap.GetDepthStencilState());
-	m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
-	m_Renderer.BindVertexShader(m_SkyVS.Get());
-	m_Renderer.BindPixelShader(m_SkyPS.Get());
+	m_Renderer.SetInputLayout(m_inputLayouts["SkyVS"].Get());
+	m_Renderer.BindVertexShader(m_vertexShaders["SkyVS"].Get());
+	m_Renderer.BindPixelShader(m_pixelShaders["SkyPS"].Get());
 	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_CubeMap.GetCubeMap(), 0);
 	m_Renderer.SetSamplerState(m_CubeMap.GetCubeMapSampler(), 0);
-	m_Renderer.SetVertexBuffer(m_CubeMap.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Sky), 0);
+	m_Renderer.SetVertexBuffer(m_CubeMap.GetVertexBuffer(), m_inputLayouts["SkyVS"].GetStrides(), 0);
 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
 	m_Renderer.SetIndexBuffer(m_CubeMap.GetIndexBuffer(), 0);
@@ -157,51 +167,137 @@ void Game::UpdateImgui()
 	m_Camera.SetZNear(zNear);
 	ImGui::Text("%s", g_Out.str().c_str());
 
-	if (ImGui::CollapsingHeader("Cube 0"))
+	if (ImGui::CollapsingHeader("Shader hot reload"))
 	{
-		ImGui::SliderFloat("Cube 0 scale", cubeScales, 0.1f, 2.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 0 Pos.X", &cubePositions[0].X, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 0 Pos.Y", &cubePositions[0].Y, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 0 Pos.Z", &cubePositions[0].Z, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderAngle("Cube 0 Pitch", &cubeRotations[0].X);
-		ImGui::SliderAngle("Cube 0 Yaw", &cubeRotations[0].Y);
-		ImGui::SliderAngle("Cube 0 Roll", &cubeRotations[0].Z);
-	}
+		static std::string buffer(10240, 0);
+		static std::string shaderName(256, 0);
+		ImGui::InputText("Shader name", &shaderName[0], 256);
+		if (ImGui::Button("Open"))
+		{
+			if (shaderName.find_last_of(".hlsl") != std::string::npos)
+			{
+				const std::string shaderPath = UtilsFormatStr("%s/shader/%s", SRC_ROOT, shaderName.c_str());
+				const auto bytes = UtilsReadData(shaderPath.c_str());
+				if (buffer.size() < bytes.size())
+				{
+					buffer.resize(bytes.size() * 2);
+					buffer.clear();
+				}
+				for (size_t i = 0; i < bytes.size(); ++i)
+				{
+					buffer[i] = static_cast<char>(bytes[i]);
+				}
+			}
+		}
 
-	if (ImGui::CollapsingHeader("Cube 1"))
-	{
-		ImGui::SliderFloat("Cube 1 scale", &cubeScales[1], 0.1f, 2.0f, "%f", 1.0f);
+		ImGui::InputTextMultiline("Shader", &buffer[0], buffer.size());
+		if (ImGui::Button("Compile"))
+		{
+			// save new shader
+			const std::string shaderPath = UtilsFormatStr("%s/shader/%s", SRC_ROOT, shaderName.c_str());
+			size_t sz = 0;
+			for (const char& ch : buffer)
+			{
+				if (ch == 0)
+					break;
+				++sz;
+			}
+			UtilsWriteData(shaderPath.c_str(), &buffer[0], sz, true);
+			// compile shader
+			Microsoft::WRL::ComPtr<ID3DBlob> shaderBlob = nullptr;
+			Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+			std::wstring shaderPathW(shaderPath.size(), 0);
+			std::mbstowcs(&shaderPathW[0], &shaderPath[0], shaderPathW.size());
+			HR(D3DCompileFromFile(shaderPathW.c_str(),
+				nullptr,
+				D3D_COMPILE_STANDARD_FILE_INCLUDE,
+				"main",
+				"vs_5_0",
+				0,
+				0,
+				&shaderBlob,
+				&errorBlob))
 
-		ImGui::SliderFloat("Cube 1 Pos.X", &cubePositions[1].X, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 1 Pos.Y", &cubePositions[1].Y, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 1 Pos.Z", &cubePositions[1].Z, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderAngle("Cube 1 Pitch", &cubeRotations[1].X);
-		ImGui::SliderAngle("Cube 1 Yaw", &cubeRotations[1].Y);
-		ImGui::SliderAngle("Cube 1 Roll", &cubeRotations[1].Z);
+			if (errorBlob.Get())
+			{
+				UtilsDebugPrint("ERROR: Failed to hot reload %s, because of compile error. %s\n", 
+					shaderPath.c_str(), static_cast<char*>(errorBlob->GetBufferPointer()));
+			}
+			else if (shaderBlob.Get())
+			{
+				const std::string sn = shaderName.substr(0, shaderName.find_last_not_of("hlsl"));
+				if (sn.find("VS") != std::string::npos)
+				{
+					const auto pair = m_vertexShaders.find(sn);
+					if (pair != std::end(m_vertexShaders))
+					{
+						HR(m_DR->GetDevice()->CreateVertexShader(shaderBlob->GetBufferPointer(),
+							shaderBlob->GetBufferSize(), nullptr, pair->second.ReleaseAndGetAddressOf()))
+					}
+				}
+				else if (sn.find("PS") != std::string::npos)
+				{
+					const auto pair = m_pixelShaders.find(sn);
+					if (pair != std::end(m_pixelShaders))
+					{
+						HR(m_DR->GetDevice()->CreatePixelShader(shaderBlob->GetBufferPointer(),
+							shaderBlob->GetBufferSize(), nullptr, pair->second.ReleaseAndGetAddressOf()))
+					}
+				}
+			}
+		}
 	}
+	
+	//if (ImGui::CollapsingHeader("Cube 0"))
+	//{
+	//	ImGui::SliderFloat("Cube 0 scale", cubeScales, 0.1f, 2.0f, "%f", 1.0f);
+	//	ImGui::SliderFloat("Cube 0 Pos.X", &cubePositions[0].X, -10.0f, 10.0f, "%f", 1.0f);
+	//	ImGui::SliderFloat("Cube 0 Pos.Y", &cubePositions[0].Y, -10.0f, 10.0f, "%f", 1.0f);
+	//	ImGui::SliderFloat("Cube 0 Pos.Z", &cubePositions[0].Z, -10.0f, 10.0f, "%f", 1.0f);
+	//	ImGui::SliderAngle("Cube 0 Pitch", &cubeRotations[0].X);
+	//	ImGui::SliderAngle("Cube 0 Yaw", &cubeRotations[0].Y);
+	//	ImGui::SliderAngle("Cube 0 Roll", &cubeRotations[0].Z);
+	//}
 
-	if (ImGui::CollapsingHeader("Cube 2"))
-	{
-		ImGui::SliderFloat("Cube 2 scale", &cubeScales[2], 0.1f, 2.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 2 Pos.X", &cubePositions[2].X, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 2 Pos.Y", &cubePositions[2].Y, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 2 Pos.Z", &cubePositions[2].Z, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderAngle("Cube 2 Pitch", &cubeRotations[2].X);
-		ImGui::SliderAngle("Cube 2 Yaw", &cubeRotations[2].Y);
-		ImGui::SliderAngle("Cube 2 Roll", &cubeRotations[2].Z);
-	}
+	//if (ImGui::CollapsingHeader("Cube 1"))
+	//{
+	//	ImGui::SliderFloat("Cube 1 scale", &cubeScales[1], 0.1f, 2.0f, "%f", 1.0f);
+
+	//	ImGui::SliderFloat("Cube 1 Pos.X", &cubePositions[1].X, -10.0f, 10.0f, "%f", 1.0f);
+	//	ImGui::SliderFloat("Cube 1 Pos.Y", &cubePositions[1].Y, -10.0f, 10.0f, "%f", 1.0f);
+	//	ImGui::SliderFloat("Cube 1 Pos.Z", &cubePositions[1].Z, -10.0f, 10.0f, "%f", 1.0f);
+	//	ImGui::SliderAngle("Cube 1 Pitch", &cubeRotations[1].X);
+	//	ImGui::SliderAngle("Cube 1 Yaw", &cubeRotations[1].Y);
+	//	ImGui::SliderAngle("Cube 1 Roll", &cubeRotations[1].Z);
+	//}
+
+	//if (ImGui::CollapsingHeader("Cube 2"))
+	//{
+	//	ImGui::SliderFloat("Cube 2 scale", &cubeScales[2], 0.1f, 2.0f, "%f", 1.0f);
+	//	ImGui::SliderFloat("Cube 2 Pos.X", &cubePositions[2].X, -10.0f, 10.0f, "%f", 1.0f);
+	//	ImGui::SliderFloat("Cube 2 Pos.Y", &cubePositions[2].Y, -10.0f, 10.0f, "%f", 1.0f);
+	//	ImGui::SliderFloat("Cube 2 Pos.Z", &cubePositions[2].Z, -10.0f, 10.0f, "%f", 1.0f);
+	//	ImGui::SliderAngle("Cube 2 Pitch", &cubeRotations[2].X);
+	//	ImGui::SliderAngle("Cube 2 Yaw", &cubeRotations[2].Y);
+	//	ImGui::SliderAngle("Cube 2 Roll", &cubeRotations[2].Z);
+	//}
 }
 #endif
 
-std::vector<uint8_t> Game::CreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs)
+void Game::CreateVertexShader(const std::string& filepath, ID3D11Device* device)
 {
-	auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", SHADERS_ROOT, filepath).c_str());
+	const auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", SHADERS_ROOT, filepath.c_str()).c_str());
+	ComPtr<ID3D11VertexShader> vs;
 
-	if (FAILED(device->CreateVertexShader(&bytes[0], bytes.size(), NULL, vs)))
+	if (FAILED(device->CreateVertexShader(&bytes[0], bytes.size(), NULL, vs.GetAddressOf())))
 	{
-		UTILS_FATAL_ERROR("Failed to create vertex shader from %s", filepath);
+		UtilsDebugPrint("ERROR: Failed to create vertex shader from %s", filepath.c_str());
+		return;
 	}
-	return bytes;
+
+	const std::string shaderName = filepath.substr(0, filepath.find_last_not_of("cso"));
+	m_vertexShaders[shaderName] = vs;
+	m_inputLayouts[shaderName] = InputLayout(device, &bytes[0], bytes.size());
 }
 
 void Game::CreateDefaultSampler()
@@ -387,10 +483,9 @@ void Game::Render()
 		m_PerFrameData.proj = m_Camera.GetProjMat();
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
-		m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
-		m_Renderer.BindPixelShader(m_shadowPS.Get());
-		m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
-		m_Renderer.BindVertexShader(m_shadowVS.Get());
+		m_Renderer.SetInputLayout(m_inputLayouts["ShadowVS"].Get());
+		m_Renderer.BindPixelShader(m_pixelShaders["ShadowPS"].Get());
+		m_Renderer.BindVertexShader(m_vertexShaders["ShadowVS"].Get());
 
 		DrawScene();
 	}
@@ -504,6 +599,7 @@ void Game::CreateActors()
 
 void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 {
+	using namespace Microsoft::WRL;
 #ifdef MATH_TEST
 	MathTest();
 #endif
@@ -531,20 +627,16 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	CreateActors();
 	m_CubeMap.CreateCube(*FindActorByName("Cube"), device);
 	InitPerSceneConstants();
-
-	CreatePixelShader("PixelShader.cso", device, m_PS.ReleaseAndGetAddressOf());
-	CreatePixelShader("PhongPS.cso", device, m_PhongPS.ReleaseAndGetAddressOf());
-	CreatePixelShader("LightPS.cso", device, m_LightPS.ReleaseAndGetAddressOf());
-	CreatePixelShader("SkyPS.cso", device, m_SkyPS.ReleaseAndGetAddressOf());
-	CreatePixelShader("ParticlePS.cso", device, m_particlePS.ReleaseAndGetAddressOf());
-	auto bytes = CreateVertexShader("VertexShader.cso", device, m_VS.ReleaseAndGetAddressOf());
-	m_InputLayout.CreateDefaultLayout(device, &bytes[0], bytes.size());
-	bytes = CreateVertexShader("SkyVS.cso", device, m_SkyVS.ReleaseAndGetAddressOf());
-	m_InputLayout.CreateSkyLayout(device, &bytes[0], bytes.size());
-	bytes = CreateVertexShader("ParticleVS.cso", device, m_particleVS.ReleaseAndGetAddressOf());
-	m_InputLayout.CreateParticleLayout(device, &bytes[0], bytes.size());
-	bytes = CreateVertexShader("ShadowVS.cso", device, m_shadowVS.ReleaseAndGetAddressOf());
-	CreatePixelShader("ShadowPS.cso", device, m_shadowPS.ReleaseAndGetAddressOf());
+	CreatePixelShader("PixelShader.cso", device);
+	CreatePixelShader("PhongPS.cso", device);
+	CreatePixelShader("LightPS.cso", device);
+	CreatePixelShader("SkyPS.cso", device);
+	CreatePixelShader("ParticlePS.cso", device);
+	CreateVertexShader("VertexShader.cso", device);
+	CreateVertexShader("SkyVS.cso", device);
+	CreateVertexShader("ParticleVS.cso", device);
+	CreateVertexShader("ShadowVS.cso", device);
+	CreatePixelShader("ShadowPS.cso", device);
 
 	GameCreateConstantBuffer(device, sizeof(PerSceneConstants), &m_PerSceneCB);
 	GameCreateConstantBuffer(device, sizeof(PerObjectConstants), &m_PerObjectCB);
@@ -556,7 +648,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_Renderer.SetDeviceResources(m_DR.get());
 
 	m_particleSystem.Init(device, m_DR->GetDeviceContext(),
-		UtilsFormatStr("%s/textures/flare0.png", ASSETS_ROOT).c_str());
+		UtilsFormatStr("%s/textures/flare0.png", ASSETS_ROOT));
 
 #if WITH_IMGUI
 	ImGui::CreateContext();
@@ -632,7 +724,7 @@ void Game::DrawActor(const Actor& actor)
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
 
 		m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
-		m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
+		m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_inputLayouts["ShadowVS"].GetStrides(), 0);
 
 		m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
 	}

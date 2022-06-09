@@ -6,7 +6,6 @@
 #include "Timer.h"
 #include "Camera.h"
 #include "Keyboard.h"
-#include "Mouse.h"
 #include "Renderer.h"
 #include "Actor.h"
 #include "LightHelper.h"
@@ -18,6 +17,7 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_map>
 #include <wrl/client.h>
 
 #define MODEL_PULL 10
@@ -25,7 +25,7 @@
 
 struct PerFrameConstants
 {
-	PerFrameConstants() : view{}, proj{}, shadowTransform{}, cameraPosW{}, pad{ 0 } {}
+	PerFrameConstants() : pad{ 0.0f } {}
 	Mat4X4 view;
 	Mat4X4 proj;
 	Mat4X4 shadowTransform;
@@ -35,7 +35,7 @@ struct PerFrameConstants
 
 struct PerObjectConstants
 {
-	PerObjectConstants() : worldInvTranspose{}, world {}, material{} {}
+	PerObjectConstants() {}
 	Mat4X4 worldInvTranspose;
 	Mat4X4 world;
 	Material material;
@@ -43,7 +43,7 @@ struct PerObjectConstants
 
 struct PerSceneConstants
 {
-	PerSceneConstants() : pointLights{}, dirLight{}, spotLights{} {}
+	PerSceneConstants() : pointLights{}, spotLights{} {}
 	PointLight pointLights[4];
 	DirectionalLight dirLight;
 	SpotLight spotLights[2];
@@ -67,8 +67,8 @@ private:
 	void Render();
 	void CreateActors();
 	void BuildShadowTransform();
-	std::vector<uint8_t> CreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs);
-	void CreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps);
+	void CreateVertexShader(const std::string& filepath, ID3D11Device* device);
+	void CreatePixelShader(const std::string& filepath, ID3D11Device* device);
 	Actor* FindActorByName(const std::string& name);
 	void DrawScene();
 	void DrawSky();
@@ -88,16 +88,6 @@ private:
 	BoundingSphere m_sceneBounds;
 
 	std::unique_ptr<DeviceResources> m_DR;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VS;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PS;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PhongPS;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_LightPS;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_SkyVS;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_SkyPS;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_particleVS;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_particlePS;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_shadowVS;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_shadowPS;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_DefaultSampler;
 	Timer m_Timer;
 	Camera m_Camera;
@@ -113,7 +103,12 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_PerSceneCB;
 	ShadowMap m_ShadowMap;
 	CubeMap m_CubeMap;
-	InputLayout m_InputLayout;
 	DynamicCubeMap m_dynamicCubeMap;
 	ParticleSystem m_particleSystem;
+	typedef std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11VertexShader>> VertexShaderMap;
+	typedef std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D11PixelShader>> PixelShaderMap;
+	VertexShaderMap m_vertexShaders;
+	PixelShaderMap m_pixelShaders;
+	typedef std::unordered_map<std::string, InputLayout> InputLayoutMap;
+	InputLayoutMap m_inputLayouts;
 };
