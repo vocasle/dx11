@@ -19,7 +19,7 @@ set(source_files
 	"src/stb_image.cpp"
 	"src/DynamicCubeMap.cpp"
 	"src/ParticleSystem.cpp"
-	)
+	 "src/ShaderManager.cpp")
 
 set(header_files
 	"include/ShaderReflection.h"
@@ -45,7 +45,7 @@ set(header_files
 	"include/DynamicCubeMap.h"
 	"include/ParticleSystem.h"
 	"include/Image.h"
-	)
+	 "include/ShaderManager.h")
 
 set(pixel_shader_files
 	shader/ShadowPS.hlsl
