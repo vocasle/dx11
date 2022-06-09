@@ -1,113 +1,118 @@
 #include "InputLayout.h"
 #include "Utils.h"
 
-InputLayout::InputLayout()
-{
-}
+#include <d3d11shader.h>
+#include <d3dcompiler.h>
 
-void InputLayout::CreateDefaultLayout(ID3D11Device* device, unsigned char* bytes, size_t bufferSize)
+static HRESULT CreateInputLayoutDescFromVertexShaderSignature(const void* shaderData, const size_t sz, ID3D11Device* pD3DDevice, ID3D11InputLayout** pInputLayout)
 {
-	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[5] = {
-			{
-				"POSITION",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				0,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			},
-			{
-				"NORMAL",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				12,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0,
-			},
-			{
-				"TANGENT",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				24,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0,
-			},
-			{
-				"BITANGENT",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				36,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0,
-			},
-			{
-				"TEXCOORDS",
-				0,
-				DXGI_FORMAT_R32G32_FLOAT,
-				0,
-				48,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			}
-	};
-	HR(device->CreateInputLayout(inputElementDesc, 5, bytes, bufferSize, m_defaultLayout.ReleaseAndGetAddressOf()))
-}
+	// Reflect shader info
+	ID3D11ShaderReflection* pVertexShaderReflection = nullptr;
+	if (FAILED(D3DReflect(shaderData, sz, IID_ID3D11ShaderReflection, reinterpret_cast<void**>(&pVertexShaderReflection))))
+	{
+		return S_FALSE;
+	}
 
-void InputLayout::CreateSkyLayout(ID3D11Device* device, unsigned char* bytes, size_t bufferSize)
-{
-	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[1] = {
-			{
-				"POSITION",
-				0,
-				DXGI_FORMAT_R32G32B32_FLOAT,
-				0,
-				0,
-				D3D11_INPUT_PER_VERTEX_DATA,
-				0
-			}
-	};
-	HR(device->CreateInputLayout(inputElementDesc, 1, bytes, bufferSize, m_skyLayout.ReleaseAndGetAddressOf()))
-}
+	// Get shader info
+	D3D11_SHADER_DESC shaderDesc;
+	pVertexShaderReflection->GetDesc(&shaderDesc);
 
-void InputLayout::CreateParticleLayout(ID3D11Device* device, unsigned char* bytes, size_t bufferSize)
-{
-	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[3] = {
+	// Read input layout description from shader info
+	std::vector<D3D11_INPUT_ELEMENT_DESC> inputLayoutDesc;
+	for (uint32_t i = 0; i < shaderDesc.InputParameters; i++)
+	{
+		D3D11_SIGNATURE_PARAMETER_DESC paramDesc;
+		pVertexShaderReflection->GetInputParameterDesc(i, &paramDesc);
+
+		// fill out input element desc
+		D3D11_INPUT_ELEMENT_DESC elementDesc;
+		elementDesc.SemanticName = paramDesc.SemanticName;
+		elementDesc.SemanticIndex = paramDesc.SemanticIndex;
+		elementDesc.InputSlot = 0;
+		elementDesc.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+		elementDesc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+		elementDesc.InstanceDataStepRate = 0;
+
+		// determine DXGI format
+		if (paramDesc.Mask == 1)
 		{
-			"POSITION",
-			0,
-			DXGI_FORMAT_R32G32B32_FLOAT,
-			0,
-			0,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		},
-		{
-			"TEXCOORDS",
-			0,
-			DXGI_FORMAT_R32G32_FLOAT,
-			0,
-			12,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		},
-		{
-			"LIFESPAN",
-			0,
-			DXGI_FORMAT_R32_FLOAT,
-			0,
-			20,
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
+			if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) elementDesc.Format = DXGI_FORMAT_R32_UINT;
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) elementDesc.Format = DXGI_FORMAT_R32_SINT;
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) elementDesc.Format = DXGI_FORMAT_R32_FLOAT;
 		}
-	};
-	HR(device->CreateInputLayout(inputElementDesc, 3, bytes, bufferSize, m_particleLayout.ReleaseAndGetAddressOf()))
+		else if (paramDesc.Mask <= 3)
+		{
+			if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) elementDesc.Format = DXGI_FORMAT_R32G32_UINT;
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) elementDesc.Format = DXGI_FORMAT_R32G32_SINT;
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) elementDesc.Format = DXGI_FORMAT_R32G32_FLOAT;
+		}
+		else if (paramDesc.Mask <= 7)
+		{
+			if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) elementDesc.Format = DXGI_FORMAT_R32G32B32_UINT;
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) elementDesc.Format = DXGI_FORMAT_R32G32B32_SINT;
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) elementDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		}
+		else if (paramDesc.Mask <= 15)
+		{
+			if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_UINT32) elementDesc.Format = DXGI_FORMAT_R32G32B32A32_UINT;
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_SINT32) elementDesc.Format = DXGI_FORMAT_R32G32B32A32_SINT;
+			else if (paramDesc.ComponentType == D3D_REGISTER_COMPONENT_FLOAT32) elementDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		}
+
+		//save element desc
+		inputLayoutDesc.push_back(elementDesc);
+	}
+
+	// Try to create Input Layout
+	const HRESULT hr = pD3DDevice->CreateInputLayout(&inputLayoutDesc[0], 
+		static_cast<uint32_t>(inputLayoutDesc.size()), shaderData, sz, pInputLayout);
+
+	//Free allocation shader reflection memory
+	pVertexShaderReflection->Release();
+	return hr;
 }
 
-size_t InputLayout::GetVertexSize(VertexType vertexType)
+InputLayout::InputLayout(ID3D11Device* device, const void* vsBytes, const size_t sz): m_strides(0)
 {
-	return static_cast<size_t>(vertexType);
+	HR(CreateInputLayoutDescFromVertexShaderSignature(vsBytes, sz, device, m_inputLayout.ReleaseAndGetAddressOf()))
+}
+
+InputLayout::InputLayout(const InputLayout& rhs)
+{
+	m_inputLayout = rhs.m_inputLayout;
+	m_strides = rhs.m_strides;
+	m_inputDescriptions = rhs.m_inputDescriptions;
+}
+
+InputLayout::InputLayout(InputLayout&& rhs) noexcept
+{
+	std::swap(m_inputLayout, rhs.m_inputLayout);
+	std::swap(m_strides, rhs.m_strides);
+	std::swap(m_inputDescriptions, rhs.m_inputDescriptions);
+}
+
+InputLayout& InputLayout::operator=(const InputLayout& rhs)
+{
+	if (this != &rhs)
+	{
+		m_inputLayout = rhs.m_inputLayout;
+		m_strides = rhs.m_strides;
+		m_inputDescriptions = rhs.m_inputDescriptions;
+	}
+	return *this;
+}
+
+InputLayout& InputLayout::operator=(InputLayout&& rhs) noexcept
+{
+	if (this != &rhs)
+	{
+		std::swap(m_inputLayout, rhs.m_inputLayout);
+		std::swap(m_strides, rhs.m_strides);
+		std::swap(m_inputDescriptions, rhs.m_inputDescriptions);
+	}
+	return *this;
+}
+
+InputLayout::~InputLayout()
+{
 }

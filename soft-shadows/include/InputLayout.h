@@ -3,31 +3,24 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 
-#include "NE_Math.h"
+#include <vector>
 
 class InputLayout
 {
 public:
-	enum class VertexType
-	{
-		Default = 56,
-		Sky = 12,
-		Particle = 24
-	};
-public:
-	InputLayout();
-	void CreateDefaultLayout(ID3D11Device* device, unsigned char* bytes, size_t bufferSize);
-	void CreateSkyLayout(ID3D11Device* device, unsigned char* bytes, size_t bufferSize);
-	void CreateParticleLayout(ID3D11Device* device, unsigned char* bytes, size_t bufferSize);
-
-	ID3D11InputLayout* GetDefaultLayout() const { return m_defaultLayout.Get(); }
-	ID3D11InputLayout* GetSkyLayout() const { return m_skyLayout.Get(); }
-	ID3D11InputLayout* GetParticleLayout() const { return m_particleLayout.Get(); }
-	static size_t GetVertexSize(VertexType vertexType);
+	InputLayout(): m_strides(0) {}
+	InputLayout(ID3D11Device* device, const void* vsBytes, const size_t sz);
+	InputLayout(const InputLayout& rhs);
+	InputLayout(InputLayout&& rhs) noexcept;
+	InputLayout& operator=(const InputLayout& rhs);
+	InputLayout& operator=(InputLayout&& rhs) noexcept;
+	~InputLayout();
+	ID3D11InputLayout* Get() const { return m_inputLayout.Get(); }
+	size_t GetStrides() const { return m_strides; }
+	const std::vector<D3D11_INPUT_ELEMENT_DESC>& GetInputDescriptions() const { return m_inputDescriptions; }
 
 private:
-
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_defaultLayout;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_skyLayout;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_particleLayout;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
+	std::vector<D3D11_INPUT_ELEMENT_DESC> m_inputDescriptions;
+	size_t m_strides;
 };
