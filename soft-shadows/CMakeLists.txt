@@ -51,14 +51,14 @@ set(pixel_shader_files
 	shader/ShadowPS.hlsl
 	shader/LightPS.hlsl
 	shader/PhongPS.hlsl
-	shader/PixelShader.hlsl
+	shader/DefaultPS.hlsl
 	shader/SkyPS.hlsl
 	shader/ParticlePS.hlsl)
 
 set(vertex_shader_files
 	shader/ShadowVS.hlsl
 	shader/SkyVS.hlsl
-	shader/VertexShader.hlsl
+	shader/ColorVS.hlsl
 	shader/ParticleVS.hlsl)
 
 set(shader_header_files
