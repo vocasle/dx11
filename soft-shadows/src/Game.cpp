@@ -12,6 +12,8 @@
 #include <imgui.h>
 #include <backends/imgui_impl_dx11.h>
 #include <backends/imgui_impl_win32.h>
+
+#include <ZepEditor.h>
 #endif
 
 #include <sstream>
@@ -152,95 +154,95 @@ void Game::UpdateImgui()
 	m_Camera.SetZNear(zNear);
 	ImGui::Text("%s", g_Out.str().c_str());
 
-	if (ImGui::CollapsingHeader("Shader hot reload"))
-	{
-		static std::string buffer(10240, 0);
-		static std::string shaderName(256, 0);
-		ImGui::InputText("Shader name", &shaderName[0], 256);
-		if (ImGui::Button("Open"))
-		{
-			if (shaderName.find(".hlsl") != std::string::npos)
-			{
-				const std::string shaderPath = UtilsFormatStr("%s/shader/%s", SRC_ROOT, shaderName.c_str());
-				const auto bytes = UtilsReadData(shaderPath.c_str());
-				if (buffer.size() < bytes.size())
-				{
-					buffer.resize(bytes.size() * 2);
-					buffer.clear();
-				}
-				for (size_t i = 0; i < bytes.size(); ++i)
-				{
-					buffer[i] = static_cast<char>(bytes[i]);
-				}
-			}
-		}
+	//if (ImGui::CollapsingHeader("Shader hot reload"))
+	//{
+	//	static std::string buffer(10240, 0);
+	//	static std::string shaderName(256, 0);
+	//	ImGui::InputText("Shader name", &shaderName[0], 256);
+	//	if (ImGui::Button("Open"))
+	//	{
+	//		if (shaderName.find(".hlsl") != std::string::npos)
+	//		{
+	//			const std::string shaderPath = UtilsFormatStr("%s/shader/%s", SRC_ROOT, shaderName.c_str());
+	//			const auto bytes = UtilsReadData(shaderPath.c_str());
+	//			if (buffer.size() < bytes.size())
+	//			{
+	//				buffer.resize(bytes.size() * 2);
+	//				buffer.clear();
+	//			}
+	//			for (size_t i = 0; i < bytes.size(); ++i)
+	//			{
+	//				buffer[i] = static_cast<char>(bytes[i]);
+	//			}
+	//		}
+	//	}
 
-		ImGui::InputTextMultiline("Shader", &buffer[0], buffer.size());
-		if (ImGui::Button("Compile"))
-		{
-			// save new shader
-			const std::string shaderPath = UtilsFormatStr("%s/shader/%s", SRC_ROOT, shaderName.c_str());
-			UtilsDebugPrint("Updating shader source file %s\n", shaderPath.c_str());
-			size_t sz = 0;
-			for (const char& ch : buffer)
-			{
-				if (ch == 0)
-					break;
-				++sz;
-			}
-			UtilsWriteData(shaderPath.c_str(), &buffer[0], sz, true);
-			// compile shader
-			const std::string sn = shaderName.substr(0, shaderName.find(".hlsl"));
-			const bool isVS = sn.find("VS") != std::string::npos;
-			ComPtr<ID3DBlob> shaderBlob = nullptr;
-			ComPtr<ID3DBlob> errorBlob = nullptr;
-			std::wstring shaderPathW(shaderPath.size(), 0);
-			std::mbstowcs(&shaderPathW[0], &shaderPath[0], shaderPathW.size());
-			HR(D3DCompileFromFile(shaderPathW.c_str(),
-				nullptr,
-				D3D_COMPILE_STANDARD_FILE_INCLUDE,
-				"main",
-				isVS ? "vs_5_0" : "ps_5_0",
-				0,
-				0,
-				&shaderBlob,
-				&errorBlob))
+	//	ImGui::InputTextMultiline("Shader", &buffer[0], buffer.size());
+	//	if (ImGui::Button("Compile"))
+	//	{
+	//		// save new shader
+	//		const std::string shaderPath = UtilsFormatStr("%s/shader/%s", SRC_ROOT, shaderName.c_str());
+	//		UtilsDebugPrint("Updating shader source file %s\n", shaderPath.c_str());
+	//		size_t sz = 0;
+	//		for (const char& ch : buffer)
+	//		{
+	//			if (ch == 0)
+	//				break;
+	//			++sz;
+	//		}
+	//		UtilsWriteData(shaderPath.c_str(), &buffer[0], sz, true);
+	//		// compile shader
+	//		const std::string sn = shaderName.substr(0, shaderName.find(".hlsl"));
+	//		const bool isVS = sn.find("VS") != std::string::npos;
+	//		ComPtr<ID3DBlob> shaderBlob = nullptr;
+	//		ComPtr<ID3DBlob> errorBlob = nullptr;
+	//		std::wstring shaderPathW(shaderPath.size(), 0);
+	//		std::mbstowcs(&shaderPathW[0], &shaderPath[0], shaderPathW.size());
+	//		HR(D3DCompileFromFile(shaderPathW.c_str(),
+	//			nullptr,
+	//			D3D_COMPILE_STANDARD_FILE_INCLUDE,
+	//			"main",
+	//			isVS ? "vs_5_0" : "ps_5_0",
+	//			0,
+	//			0,
+	//			&shaderBlob,
+	//			&errorBlob))
 
-			if (errorBlob.Get())
-			{
-				UtilsDebugPrint("ERROR: Failed to hot reload %s, because of compile error. %s\n", 
-					shaderPath.c_str(), static_cast<char*>(errorBlob->GetBufferPointer()));
-			}
-			else if (shaderBlob.Get())
-			{
-				if (sn.find("VS") != std::string::npos)
-				{
-					if (m_shaderManager.GetVertexShader(sn))
-					{
-						ComPtr<ID3D11VertexShader> vs = {};
-						const HRESULT hr = m_DR->GetDevice()->CreateVertexShader(shaderBlob->GetBufferPointer(),
-							shaderBlob->GetBufferSize(), nullptr, vs.GetAddressOf());
-						UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
-						HR(hr)
-						m_shaderManager.UpdateVertexShader(sn, vs.Get());
-					}
-				}
-				else if (sn.find("PS") != std::string::npos)
-				{
-					if (m_shaderManager.GetPixelShader(sn))
-					{
-						ComPtr<ID3D11PixelShader> ps = {};
-						UtilsDebugPrint("Hot reload shader %s\n", shaderName.c_str());
-						const HRESULT hr = m_DR->GetDevice()->CreatePixelShader(shaderBlob->GetBufferPointer(),
-							shaderBlob->GetBufferSize(), nullptr, ps.GetAddressOf());
-						UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
-						HR(hr)
-						m_shaderManager.UpdatePixelShader(sn, ps.Get());
-					}
-				}
-			}
-		}
-	}
+	//		if (errorBlob.Get())
+	//		{
+	//			UtilsDebugPrint("ERROR: Failed to hot reload %s, because of compile error. %s\n", 
+	//				shaderPath.c_str(), static_cast<char*>(errorBlob->GetBufferPointer()));
+	//		}
+	//		else if (shaderBlob.Get())
+	//		{
+	//			if (sn.find("VS") != std::string::npos)
+	//			{
+	//				if (m_shaderManager.GetVertexShader(sn))
+	//				{
+	//					ComPtr<ID3D11VertexShader> vs = {};
+	//					const HRESULT hr = m_DR->GetDevice()->CreateVertexShader(shaderBlob->GetBufferPointer(),
+	//						shaderBlob->GetBufferSize(), nullptr, vs.GetAddressOf());
+	//					UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
+	//					HR(hr)
+	//					m_shaderManager.UpdateVertexShader(sn, vs.Get());
+	//				}
+	//			}
+	//			else if (sn.find("PS") != std::string::npos)
+	//			{
+	//				if (m_shaderManager.GetPixelShader(sn))
+	//				{
+	//					ComPtr<ID3D11PixelShader> ps = {};
+	//					UtilsDebugPrint("Hot reload shader %s\n", shaderName.c_str());
+	//					const HRESULT hr = m_DR->GetDevice()->CreatePixelShader(shaderBlob->GetBufferPointer(),
+	//						shaderBlob->GetBufferSize(), nullptr, ps.GetAddressOf());
+	//					UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
+	//					HR(hr)
+	//					m_shaderManager.UpdatePixelShader(sn, ps.Get());
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 	
 	//if (ImGui::CollapsingHeader("Cube 0"))
 	//{
@@ -354,6 +356,8 @@ Game::~Game()
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
+
+	zep_destroy();
 #endif
 }
 
@@ -427,6 +431,8 @@ void Game::Render()
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
+
+	zep_update();
 #endif
 
 #if WITH_IMGUI
@@ -497,6 +503,9 @@ void Game::Render()
 	//DrawSky();
 
 #if WITH_IMGUI
+	static Zep::NVec2i size = Zep::NVec2i(640, 480);
+	zep_show(size);
+
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 #endif
@@ -622,9 +631,14 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 #if WITH_IMGUI
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable some options
+	const std::string droidSansTtf = UtilsFormatStr("%s/../imgui-1.87/misc/fonts/DroidSans.ttf", SRC_ROOT);
+	io.Fonts->AddFontFromFileTTF(droidSansTtf.c_str(), 14.0f);
+
 	ImGui_ImplWin32_Init(hWnd);
 	ImGui_ImplDX11_Init(m_DR->GetDevice(), m_DR->GetDeviceContext());
+
+	zep_init({ 1.0f, 1.0f });
+	zep_load(Zep::ZepPath(SRC_ROOT) / "ShadowPS.hlsl");
 #endif
 }
 
