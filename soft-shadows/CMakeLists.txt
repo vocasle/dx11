@@ -19,7 +19,7 @@ set(source_files
 	"src/stb_image.cpp"
 	"src/DynamicCubeMap.cpp"
 	"src/ParticleSystem.cpp"
-	 "src/ShaderManager.cpp")
+	 "src/ShaderManager.cpp" "src/ZepEditor.cpp")
 
 set(header_files
 	"include/ShaderReflection.h"
@@ -45,7 +45,7 @@ set(header_files
 	"include/DynamicCubeMap.h"
 	"include/ParticleSystem.h"
 	"include/Image.h"
-	 "include/ShaderManager.h")
+	 "include/ShaderManager.h" "include/ZepEditor.h")
 
 set(pixel_shader_files
 	shader/ShadowPS.hlsl
@@ -76,7 +76,13 @@ target_compile_definitions(${current_target} PUBLIC
 	WITH_IMGUI=1)
 
 configure_file(SoftShadowsConfig.h.in SoftShadowsConfig.h)
-target_include_directories(${current_target} PUBLIC ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+add_definitions(-DZEP_SINGLE_HEADER=1)
+add_definitions(-DZEP_FEATURE_CPP_FILE_SYSTEM=1)
+target_include_directories(${current_target} PRIVATE 
+	${CMAKE_CURRENT_BINARY_DIR} 
+	${CMAKE_CURRENT_SOURCE_DIR}/include
+	${CMAKE_SOURCE_DIR}/zep/include)
 
 set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_TYPE ps)
 set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_ENTRYPOINT main)
@@ -95,7 +101,6 @@ set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_DISABLE_OPTIMIZATI
 set_property(TARGET ${current_target} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$(OutDir)")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	message(INFO "WE ARE USING CLANG")
 	set(FXC_EXE "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.19041.0\\x64\\fxc.exe")
 	# Build HLSL shaders
 	set (shader_target ${current_target}-compile-shaders)
