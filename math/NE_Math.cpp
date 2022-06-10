@@ -1106,4 +1106,24 @@ Vec3D operator*(const float s, const Vec3D& rhs)
 {
 	return rhs * s;
 }
+
+Vec3D Vec3D::Cross(const Vec3D& rhs) const
+{
+	return MathVec3DCross(this, &rhs);
+}
+
+float Vec3D::Dot(const Vec3D& rhs) const
+{
+	return MathVec3DDot(this, &rhs);
+}
+
+float Vec3D::Length() const
+{
+	return MathVec3DLength(*this);
+}
+
+void Vec3D::Normalize()
+{
+	MathVec3DNormalize(this);
+}
 #endif

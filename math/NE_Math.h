@@ -22,6 +22,10 @@ struct Vec3D
 	Vec3D(float x, float y, float z) : X{x}, Y{y}, Z{z} {}
 #ifdef __cplusplus
 	std::string ToString() const;
+	Vec3D Cross(const Vec3D& rhs) const;
+	float Dot(const Vec3D& rhs) const;
+	float Length() const;
+	void Normalize();
 #endif
 	float X;
 	float Y;
