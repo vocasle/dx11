@@ -159,7 +159,7 @@ void Game::UpdateImgui()
 		ImGui::InputText("Shader name", &shaderName[0], 256);
 		if (ImGui::Button("Open"))
 		{
-			if (shaderName.find_last_of(".hlsl") != std::string::npos)
+			if (shaderName.find(".hlsl") != std::string::npos)
 			{
 				const std::string shaderPath = UtilsFormatStr("%s/shader/%s", SRC_ROOT, shaderName.c_str());
 				const auto bytes = UtilsReadData(shaderPath.c_str());
@@ -190,7 +190,7 @@ void Game::UpdateImgui()
 			}
 			UtilsWriteData(shaderPath.c_str(), &buffer[0], sz, true);
 			// compile shader
-			const std::string sn = shaderName.substr(0, shaderName.find_last_not_of("hlsl"));
+			const std::string sn = shaderName.substr(0, shaderName.find(".hlsl"));
 			const bool isVS = sn.find("VS") != std::string::npos;
 			ComPtr<ID3DBlob> shaderBlob = nullptr;
 			ComPtr<ID3DBlob> errorBlob = nullptr;
@@ -215,27 +215,27 @@ void Game::UpdateImgui()
 			{
 				if (sn.find("VS") != std::string::npos)
 				{
-					if (auto shader = m_shaderManager.GetVertexShader(sn))
+					if (m_shaderManager.GetVertexShader(sn))
 					{
-						shader->Release();
+						ComPtr<ID3D11VertexShader> vs = {};
 						const HRESULT hr = m_DR->GetDevice()->CreateVertexShader(shaderBlob->GetBufferPointer(),
-							shaderBlob->GetBufferSize(), nullptr, &shader);
+							shaderBlob->GetBufferSize(), nullptr, vs.GetAddressOf());
 						UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
 						HR(hr)
-						m_shaderManager.UpdateVertexShader(sn, shader);
+						m_shaderManager.UpdateVertexShader(sn, vs.Get());
 					}
 				}
 				else if (sn.find("PS") != std::string::npos)
 				{
-					if (auto shader = m_shaderManager.GetPixelShader(sn))
+					if (m_shaderManager.GetPixelShader(sn))
 					{
-						shader->Release();
+						ComPtr<ID3D11PixelShader> ps = {};
 						UtilsDebugPrint("Hot reload shader %s\n", shaderName.c_str());
 						const HRESULT hr = m_DR->GetDevice()->CreatePixelShader(shaderBlob->GetBufferPointer(),
-							shaderBlob->GetBufferSize(), nullptr, &shader);
+							shaderBlob->GetBufferSize(), nullptr, ps.GetAddressOf());
 						UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
 						HR(hr)
-						m_shaderManager.UpdatePixelShader(sn, shader);
+						m_shaderManager.UpdatePixelShader(sn, ps.Get());
 					}
 				}
 			}
