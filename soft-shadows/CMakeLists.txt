@@ -19,7 +19,7 @@ set(source_files
 	"src/stb_image.cpp"
 	"src/DynamicCubeMap.cpp"
 	"src/ParticleSystem.cpp"
-	 "src/ShaderManager.cpp" "src/ZepEditor.cpp")
+	 "src/ShaderManager.cpp" )
 
 set(header_files
 	"include/ShaderReflection.h"
@@ -45,7 +45,7 @@ set(header_files
 	"include/DynamicCubeMap.h"
 	"include/ParticleSystem.h"
 	"include/Image.h"
-	 "include/ShaderManager.h" "include/ZepEditor.h")
+	 "include/ShaderManager.h" )
 
 set(pixel_shader_files
 	shader/ShadowPS.hlsl
@@ -77,12 +77,9 @@ target_compile_definitions(${current_target} PUBLIC
 
 configure_file(SoftShadowsConfig.h.in SoftShadowsConfig.h)
 
-add_definitions(-DZEP_SINGLE_HEADER=1)
-add_definitions(-DZEP_FEATURE_CPP_FILE_SYSTEM=1)
 target_include_directories(${current_target} PRIVATE 
 	${CMAKE_CURRENT_BINARY_DIR} 
-	${CMAKE_CURRENT_SOURCE_DIR}/include
-	${CMAKE_SOURCE_DIR}/zep/include)
+	${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_TYPE ps)
 set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_ENTRYPOINT main)
