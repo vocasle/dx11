@@ -25,6 +25,8 @@ public:
 	void SetZFar(const float zFar);
 	void LookAt(const Vec3D& pos, const Vec3D& target, const Vec3D& up);
 	void SetFov(float fov);
+	float GetZFar() const { return m_zFar; }
+	float GetZNear() const { return m_zNear; }
 
 private:
 	void UpdateVectors();
