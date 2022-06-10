@@ -65,7 +65,7 @@ private:
 	void Update();
 	void Render();
 	void CreateActors();
-	void BuildShadowTransform();
+	void BuildShadowTransform(Mat4X4& view, Mat4X4& proj);
 	Actor* FindActorByName(const std::string& name);
 	void DrawScene();
 	void DrawSky();
@@ -74,15 +74,6 @@ private:
 #if WITH_IMGUI
 	void UpdateImgui();
 #endif
-
-	struct BoundingSphere
-	{
-		BoundingSphere() : Center(0.0f, 0.0f, 0.0f), Radius(0.0f) {}
-		Vec3D Center;
-		float Radius;
-	};
-
-	BoundingSphere m_sceneBounds;
 
 	std::unique_ptr<DeviceResources> m_DR;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_DefaultSampler;
@@ -101,6 +92,5 @@ private:
 	ShadowMap m_ShadowMap;
 	CubeMap m_CubeMap;
 	DynamicCubeMap m_dynamicCubeMap;
-	ParticleSystem m_particleSystem;
 	ShaderManager m_shaderManager;
 };

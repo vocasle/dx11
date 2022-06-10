@@ -340,12 +340,9 @@ void Game::InitPerSceneConstants()
 }
 
 Game::Game() :
-	m_Camera{ {0.0f, 0.0f, -5.0f} },
-	m_particleSystem{ "Fire", {0.0f, 0.0f, 0.0f}, m_Camera }
+	m_Camera{ {0.0f, 0.0f, -5.0f} }
 {
 	m_DR = std::make_unique<DeviceResources>();
-	m_sceneBounds.Center = { 0.0f, 0.0f, 0.0f };
-	m_sceneBounds.Radius = 100.0f;
 }
 
 Game::~Game()
@@ -616,9 +613,6 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 
 	m_Renderer.SetDeviceResources(m_DR.get());
 
-	m_particleSystem.Init(device, m_DR->GetDeviceContext(),
-		UtilsFormatStr("%s/textures/flare0.png", ASSETS_ROOT));
-
 #if WITH_IMGUI
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
@@ -636,46 +630,19 @@ void Game::GetDefaultSize(uint32_t* width, uint32_t* height)
 	*height = DEFAULT_WIN_HEIGHT;
 }
 
-void Game::BuildShadowTransform()
+void Game::BuildShadowTransform(Mat4X4& view, Mat4X4& proj)
 {
 	// Only the first "main" light casts a shadow.
 	const Vec3D lightPos = m_PerSceneData.dirLight.Position;
 	const Vec3D targetPos = { 0.0f, 0.0f, 0.0f };
-	const Vec3D up = { 0.0f, 1.0f, 0.0f };
+	const Vec3D worldUp = { 0.0f, 1.0f, 0.0f };
 	const float radius = MathVec3DLength(lightPos);
 
-	Mat4X4 view = MathMat4X4ViewAt(&lightPos, &targetPos, &up);
+	const Vec3D right = (targetPos - lightPos).Cross(worldUp);
+	const Vec3D up = (targetPos - lightPos).Cross(right);
 
-	// Transform bounding sphere to light space.
-	Vec4D targetPos4 = { targetPos.X, targetPos.Y, targetPos.Z, 1.0f };
-	Vec4D sphereCenterLS = MathMat4X4MultVec4DByMat4X4(&targetPos4 , &view);
-//	UtilsDebugPrint("Center LS: %s\n", sphereCenterLS.ToString().c_str());
-//	UtilsDebugPrint("view LS: %s\n", view.ToString().c_str());
-
-	// Ortho frustum in light space encloses scene.
-	float l = sphereCenterLS.X - radius;
-	float b = sphereCenterLS.Y - radius;
-	float n = sphereCenterLS.Z - radius;
-	float r = sphereCenterLS.X + radius;
-	float t = sphereCenterLS.Y + radius;
-	float f = sphereCenterLS.Z + radius;
-	Mat4X4 proj = MathMat4X4OrthographicOffCenter(l, r, b, t, n, f);
-
-	// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
-	Mat4X4 T(
-		0.5f, 0.0f, 0.0f, 0.0f,
-		0.0f, -0.5f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f);
-
-	Mat4X4 shadowTransform = view * proj * T;
-
-	m_PerFrameData.shadowTransform = shadowTransform;
-	m_PerFrameData.cameraPosW = lightPos;
-	m_PerFrameData.proj = proj;
-	m_PerFrameData.view = view;
-
-	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+	view = MathMat4X4ViewAt(&lightPos, &targetPos, &up);
+	proj = MathMat4X4OrthographicOffCenter(-radius, radius, -radius, radius, m_Camera.GetZNear(), m_Camera.GetZFar());
 }
 
 
