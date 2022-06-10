@@ -60,6 +60,16 @@ ID3D11PixelShader* ShaderManager::GetPixelShader(const std::string& name) const
 	return it == std::end(m_pixelShaders) ? nullptr : it->second.Get();
 }
 
+void ShaderManager::UpdateVertexShader(const std::string& name, ID3D11VertexShader* shader)
+{
+	m_vertexShaders[name] = shader;
+}
+
+void ShaderManager::UpdatePixelShader(const std::string& name, ID3D11PixelShader* shader)
+{
+	m_pixelShaders[name] = shader;
+}
+
 void ShaderManager::CreateVertexShader(const std::string& filepath, ID3D11Device* device)
 {
 	const auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", SHADERS_ROOT, filepath.c_str()).c_str());

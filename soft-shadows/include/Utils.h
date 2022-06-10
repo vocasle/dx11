@@ -84,7 +84,7 @@ void UtilsWriteData(const char* filepath, const char* bytes, const size_t sz, co
 
 #define HR(x) \
 	if (FAILED(x)) { \
-		UTILS_FATAL_ERROR("%s:%d - Operation failed.", __FILE__, __LINE__); \
+		UtilsDebugPrint("%s:%d - Operation failed.\n", __FILE__, __LINE__); \
 	}
 
 

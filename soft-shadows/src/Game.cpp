@@ -180,6 +180,7 @@ void Game::UpdateImgui()
 		{
 			// save new shader
 			const std::string shaderPath = UtilsFormatStr("%s/shader/%s", SRC_ROOT, shaderName.c_str());
+			UtilsDebugPrint("Updating shader source file %s\n", shaderPath.c_str());
 			size_t sz = 0;
 			for (const char& ch : buffer)
 			{
@@ -189,15 +190,17 @@ void Game::UpdateImgui()
 			}
 			UtilsWriteData(shaderPath.c_str(), &buffer[0], sz, true);
 			// compile shader
-			Microsoft::WRL::ComPtr<ID3DBlob> shaderBlob = nullptr;
-			Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+			const std::string sn = shaderName.substr(0, shaderName.find_last_not_of("hlsl"));
+			const bool isVS = sn.find("VS") != std::string::npos;
+			ComPtr<ID3DBlob> shaderBlob = nullptr;
+			ComPtr<ID3DBlob> errorBlob = nullptr;
 			std::wstring shaderPathW(shaderPath.size(), 0);
 			std::mbstowcs(&shaderPathW[0], &shaderPath[0], shaderPathW.size());
 			HR(D3DCompileFromFile(shaderPathW.c_str(),
 				nullptr,
 				D3D_COMPILE_STANDARD_FILE_INCLUDE,
 				"main",
-				"vs_5_0",
+				isVS ? "vs_5_0" : "ps_5_0",
 				0,
 				0,
 				&shaderBlob,
@@ -210,21 +213,29 @@ void Game::UpdateImgui()
 			}
 			else if (shaderBlob.Get())
 			{
-				const std::string sn = shaderName.substr(0, shaderName.find_last_not_of("hlsl"));
 				if (sn.find("VS") != std::string::npos)
 				{
 					if (auto shader = m_shaderManager.GetVertexShader(sn))
 					{
-						HR(m_DR->GetDevice()->CreateVertexShader(shaderBlob->GetBufferPointer(),
-							shaderBlob->GetBufferSize(), nullptr, &shader))
+						shader->Release();
+						const HRESULT hr = m_DR->GetDevice()->CreateVertexShader(shaderBlob->GetBufferPointer(),
+							shaderBlob->GetBufferSize(), nullptr, &shader);
+						UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
+						HR(hr)
+						m_shaderManager.UpdateVertexShader(sn, shader);
 					}
 				}
 				else if (sn.find("PS") != std::string::npos)
 				{
 					if (auto shader = m_shaderManager.GetPixelShader(sn))
 					{
-						HR(m_DR->GetDevice()->CreatePixelShader(shaderBlob->GetBufferPointer(),
-							shaderBlob->GetBufferSize(), nullptr, &shader))
+						shader->Release();
+						UtilsDebugPrint("Hot reload shader %s\n", shaderName.c_str());
+						const HRESULT hr = m_DR->GetDevice()->CreatePixelShader(shaderBlob->GetBufferPointer(),
+							shaderBlob->GetBufferSize(), nullptr, &shader);
+						UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
+						HR(hr)
+						m_shaderManager.UpdatePixelShader(sn, shader);
 					}
 				}
 			}
