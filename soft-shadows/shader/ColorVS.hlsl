@@ -10,8 +10,7 @@ VSOut main(VSIn In)
 	// TODO: Check matrix inverse code. It generates invalid matrix
 	Out.NormalW = mul(world, float4(In.Normal, 0.0f)).xyz;
 	Out.PosW = mul(world, float4(In.Pos, 1.0f)).xyz;
-	float4x4 toLightSpace = mul(shadowTransform, world);
-	Out.ShadowPosH = mul(toLightSpace, float4(In.Pos, 1.0f));
+	Out.ShadowPosH = mul(shadowTransform, float4(In.Pos, 1.0f));
 	Out.TangentW = mul(world, float4(In.Tangent, 0.0f)).xyz;
 	Out.BitangentW = mul(world, float4(In.Bitangent, 0.0f)).xyz;
 	return Out;

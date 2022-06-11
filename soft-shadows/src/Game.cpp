@@ -152,7 +152,6 @@ void Game::UpdateImgui()
 	m_Camera.SetZNear(zNear);
 	ImGui::Text("%s", g_Out.str().c_str());
 
-	if (ImGui::CollapsingHeader("Shader hot reload"))
 	{
 		static std::string buffer(10240, 0);
 		static std::string shaderName(256, 0);
@@ -168,14 +167,19 @@ void Game::UpdateImgui()
 					buffer.resize(bytes.size() * 2);
 					buffer.clear();
 				}
-				for (size_t i = 0; i < bytes.size(); ++i)
+				for (size_t i = 0; i < buffer.size(); ++i)
 				{
-					buffer[i] = static_cast<char>(bytes[i]);
+					if (i < bytes.size())
+					{
+						buffer[i] = static_cast<char>(bytes[i]);
+					}
+					else
+					{
+						buffer[i] = 0;
+					}
 				}
 			}
 		}
-
-		ImGui::InputTextMultiline("Shader", &buffer[0], buffer.size());
 		if (ImGui::Button("Compile"))
 		{
 			// save new shader
@@ -206,40 +210,42 @@ void Game::UpdateImgui()
 				&shaderBlob,
 				&errorBlob))
 
-			if (errorBlob.Get())
-			{
-				UtilsDebugPrint("ERROR: Failed to hot reload %s, because of compile error. %s\n", 
-					shaderPath.c_str(), static_cast<char*>(errorBlob->GetBufferPointer()));
-			}
-			else if (shaderBlob.Get())
-			{
-				if (sn.find("VS") != std::string::npos)
+				if (errorBlob.Get())
 				{
-					if (m_shaderManager.GetVertexShader(sn))
+					UtilsDebugPrint("ERROR: Failed to hot reload %s, because of compile error. %s\n",
+						shaderPath.c_str(), static_cast<char*>(errorBlob->GetBufferPointer()));
+				}
+				else if (shaderBlob.Get())
+				{
+					if (sn.find("VS") != std::string::npos)
 					{
-						ComPtr<ID3D11VertexShader> vs = {};
-						const HRESULT hr = m_DR->GetDevice()->CreateVertexShader(shaderBlob->GetBufferPointer(),
-							shaderBlob->GetBufferSize(), nullptr, vs.GetAddressOf());
-						UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
-						HR(hr)
-						m_shaderManager.UpdateVertexShader(sn, vs.Get());
+						if (m_shaderManager.GetVertexShader(sn))
+						{
+							ComPtr<ID3D11VertexShader> vs = {};
+							const HRESULT hr = m_DR->GetDevice()->CreateVertexShader(shaderBlob->GetBufferPointer(),
+								shaderBlob->GetBufferSize(), nullptr, vs.GetAddressOf());
+							UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
+							HR(hr)
+								m_shaderManager.UpdateVertexShader(sn, vs.Get());
+						}
+					}
+					else if (sn.find("PS") != std::string::npos)
+					{
+						if (m_shaderManager.GetPixelShader(sn))
+						{
+							ComPtr<ID3D11PixelShader> ps = {};
+							UtilsDebugPrint("Hot reload shader %s\n", shaderName.c_str());
+							const HRESULT hr = m_DR->GetDevice()->CreatePixelShader(shaderBlob->GetBufferPointer(),
+								shaderBlob->GetBufferSize(), nullptr, ps.GetAddressOf());
+							UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
+							HR(hr)
+								m_shaderManager.UpdatePixelShader(sn, ps.Get());
+						}
 					}
 				}
-				else if (sn.find("PS") != std::string::npos)
-				{
-					if (m_shaderManager.GetPixelShader(sn))
-					{
-						ComPtr<ID3D11PixelShader> ps = {};
-						UtilsDebugPrint("Hot reload shader %s\n", shaderName.c_str());
-						const HRESULT hr = m_DR->GetDevice()->CreatePixelShader(shaderBlob->GetBufferPointer(),
-							shaderBlob->GetBufferSize(), nullptr, ps.GetAddressOf());
-						UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
-						HR(hr)
-						m_shaderManager.UpdatePixelShader(sn, ps.Get());
-					}
-				}
-			}
 		}
+
+		ImGui::InputTextMultiline("Shader", &buffer[0], buffer.size(), {640.0f, 480.0f});
 	}
 	
 	if (ImGui::CollapsingHeader("Cube 0"))
@@ -437,18 +443,23 @@ void Game::Render()
 	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 
-	//m_DR->PIXBeginEvent(L"Shadow pass");
-	//{
-	//	m_ShadowMap.Bind(m_DR->GetDeviceContext());
-	//	BuildShadowTransform();
-	//	m_Renderer.BindPixelShader(nullptr);
-	//	m_Renderer.BindVertexShader(m_shadowVS.Get());
-	//	m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
-	//	m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
-	//	DrawScene();
-	//	m_ShadowMap.Unbind(m_DR->GetDeviceContext());
-	//}
-	//m_DR->PIXEndEvent();
+	m_DR->PIXBeginEvent(L"Shadow pass");
+	{
+		m_ShadowMap.Bind(m_DR->GetDeviceContext());
+		Mat4X4 view = {};
+		Mat4X4 proj = {};
+		BuildShadowTransform(view, proj);
+		m_Renderer.BindPixelShader(nullptr);
+		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ShadowVS"));
+		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+		m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
+		m_PerFrameData.proj = proj;
+		m_PerFrameData.view = view;
+		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+		DrawScene();
+		m_ShadowMap.Unbind(m_DR->GetDeviceContext());
+	}
+	m_DR->PIXEndEvent();
 
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
@@ -458,9 +469,10 @@ void Game::Render()
 		m_PerFrameData.proj = m_Camera.GetProjMat();
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
-		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ShadowVS"));
-		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("ShadowPS"));
+		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ColorVS"));
+		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("PhongPS"));
 		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_ShadowMap.GetDepthMapSRV(), 4);
 
 		DrawScene();
 	}
@@ -639,7 +651,7 @@ void Game::BuildShadowTransform(Mat4X4& view, Mat4X4& proj)
 	const float radius = MathVec3DLength(lightPos);
 
 	const Vec3D right = (targetPos - lightPos).Cross(worldUp);
-	const Vec3D up = (targetPos - lightPos).Cross(right);
+	const Vec3D up = right.Cross(targetPos - lightPos);
 
 	view = MathMat4X4ViewAt(&lightPos, &targetPos, &up);
 	proj = MathMat4X4OrthographicOffCenter(-radius, radius, -radius, radius, m_Camera.GetZNear(), m_Camera.GetZFar());
@@ -658,8 +670,16 @@ void Game::DrawActor(const Actor& actor)
 			sizeof(PerObjectConstants),
 			&m_PerObjectData,
 			m_PerObjectCB.Get());
+		Mat4X4 view = {};
+		Mat4X4 proj = {};
+		BuildShadowTransform(view, proj);
+		const Mat4X4 toLightSpace = actor.GetWorld() * view * proj;
+		m_PerFrameData.shadowTransform = toLightSpace;
+		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
+		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
 
 		m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
 		m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
