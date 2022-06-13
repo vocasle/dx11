@@ -129,6 +129,7 @@ Color BlinnPhong(float4 E,
     const float4 EM = E * M;
     const float4 DT = D * T;
     const float4 SG = float4(S.rgb, 1.0f) * G;
+    [unroll]
     for (uint i = 0; i < numLights; ++i)
     {
         const float3 Ci = intensities[i].intensity;

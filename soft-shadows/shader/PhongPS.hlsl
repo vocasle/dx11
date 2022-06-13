@@ -1,6 +1,6 @@
 #include "Common.hlsli"
 
-static const float4 AMBIENT = float4(0.4f, 0.4f, 0.4f, 1.0f);
+static const float4 AMBIENT = float4(0.1f, 0.1f, 0.f, 1.0f);
 
 float4 main(VSOut In) : SV_TARGET
 {
@@ -8,12 +8,12 @@ float4 main(VSOut In) : SV_TARGET
 	const float4 specularSampled = specularTexture.Sample(defaultSampler, In.TexCoords);
 	const float4 glossSampled = glossTexture.Sample(defaultSampler, In.TexCoords);
 	const float3 normalSampled = normalTexture.Sample(defaultSampler, In.TexCoords).xyz;
-    float2 shadowUV = In.ShadowPosH.xy * 0.5f + 0.5f;
-    shadowUV.y *= -1;
+    float2 shadowUV = float2(In.ShadowPosH.x * 0.5f + 0.5f,
+                                               -In.ShadowPosH.y * 0.5f + 0.5f);
 	const float4 shadowSampled = shadowTexture.Sample(defaultSampler, shadowUV);
 	float3 normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW), normalize(In.TangentW));
 
-//    return float4(shadowSampled.xxx , 1.0f);
+    //return float4(shadowSampled.xxx / In.ShadowPosH.z , 1.0f);
 //	return float4(In.ShadowPosH.zzz, 1.0f);
 
 	normal = normalize(normal);
@@ -40,8 +40,7 @@ float4 main(VSOut In) : SV_TARGET
 
 	//const float diff = dot(normalize(normal), normalize(dirLight.Position));
 	//return float4(diff, diff, diff, 1.0f);
-
-	if (shadowSampled.x /** 2.0f - 1.0f */< In.ShadowPosH.z)
+	if (In.ShadowPosH.z > shadowSampled.x)
 	{
 		shadows[0] = 0.0f;
 	}
