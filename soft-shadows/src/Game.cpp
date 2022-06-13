@@ -42,7 +42,7 @@ namespace
 
 	bool rotateDirLight = false;
 
-	D3D11_RASTERIZER_DESC g_rasterizerDesc = {};
+	D3D11_RASTERIZER_DESC g_rasterizerDesc = CD3D11_RASTERIZER_DESC{ CD3D11_DEFAULT{} };
 };
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -141,10 +141,6 @@ void Game::DrawSky()
 
 void Game::CreateRasterizerState()
 {
-	g_rasterizerDesc.FrontCounterClockwise = false;
-	g_rasterizerDesc.FillMode = D3D11_FILL_SOLID;
-	g_rasterizerDesc.CullMode = D3D11_CULL_BACK;
-
 	if (FAILED(m_DR->GetDevice()->CreateRasterizerState(&g_rasterizerDesc, 
 		m_rasterizerState.ReleaseAndGetAddressOf())))
 	{
@@ -169,6 +165,16 @@ void Game::UpdateImgui()
 		ImGui::Checkbox("Rotate dir light", &rotateDirLight);
 		m_Camera.SetZFar(zFar);
 		m_Camera.SetZNear(zNear);
+	}
+
+	if (ImGui::CollapsingHeader("Rasterizer settings"))
+	{
+		static bool fillSolid = true;
+		ImGui::PushItemWidth(150.0f);
+		ImGui::Checkbox("Fill Mode", &fillSolid);
+		g_rasterizerDesc.FillMode = fillSolid ? D3D11_FILL_SOLID : D3D11_FILL_WIREFRAME;
+		ImGui::PopItemWidth();
+		CreateRasterizerState();
 	}
 
 	{
@@ -405,9 +411,6 @@ void Game::Update()
 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 
 
-//	m_particleSystem.Tick(static_cast<float>(m_Timer.DeltaMillis / 1000));
-//	m_particleSystem.UpdateVertexBuffer(m_DR->GetDeviceContext());
-
 	static float elapsedTime = 0.0f;
 	const float deltaSeconds = static_cast<float>(m_Timer.DeltaMillis / 1000.0);
 	elapsedTime += deltaSeconds;
@@ -457,7 +460,7 @@ void Game::Render()
 	m_Renderer.SetBlendState(nullptr);
 	m_Renderer.SetDepthStencilState(nullptr);
 	m_Renderer.SetPrimitiveTopology(R_DEFAULT_PRIMTIVE_TOPOLOGY);
-	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
+	m_Renderer.SetRasterizerState(m_rasterizerState.Get());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 
 	m_DR->PIXBeginEvent(L"Shadow pass");
