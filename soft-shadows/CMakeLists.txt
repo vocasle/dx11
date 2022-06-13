@@ -45,7 +45,7 @@ set(header_files
 	"include/DynamicCubeMap.h"
 	"include/ParticleSystem.h"
 	"include/Image.h"
-	 "include/ShaderManager.h" )
+	 "include/ShaderManager.h"  "include/Observer.h")
 
 set(pixel_shader_files
 	shader/ShadowPS.hlsl
