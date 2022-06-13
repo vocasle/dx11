@@ -70,6 +70,7 @@ private:
 	void DrawScene();
 	void DrawSky();
 	void DrawActor(const Actor& actor);
+	void CreateRasterizerState();
 
 #if WITH_IMGUI
 	void UpdateImgui();
@@ -93,4 +94,5 @@ private:
 	CubeMap m_CubeMap;
 	DynamicCubeMap m_dynamicCubeMap;
 	ShaderManager m_shaderManager;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerState;
 };

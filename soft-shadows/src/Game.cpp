@@ -42,7 +42,7 @@ namespace
 
 	bool rotateDirLight = false;
 
-	std::ostringstream g_Out;
+	D3D11_RASTERIZER_DESC g_rasterizerDesc = {};
 };
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -141,25 +141,43 @@ void Game::DrawSky()
 
 void Game::CreateRasterizerState()
 {
+	g_rasterizerDesc.FrontCounterClockwise = false;
+	g_rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	g_rasterizerDesc.CullMode = D3D11_CULL_BACK;
+
+	if (FAILED(m_DR->GetDevice()->CreateRasterizerState(&g_rasterizerDesc, 
+		m_rasterizerState.ReleaseAndGetAddressOf())))
+	{
+		OutputDebugStringA("ERROR: Failed to create rasterizer state\n");
+		ExitProcess(EXIT_FAILURE);
+	}
 }
 
 #if WITH_IMGUI
 void Game::UpdateImgui()
 {
 	// Any application code here
-	ImGui::Checkbox("Rotate dir light", &rotateDirLight);
-	static float zNear = 0.5f;
-	ImGui::SliderFloat("Z near", &zNear, 0.1f, 10.0f, "%f", 1.0f);
-	static float zFar = 200.0f;
-	ImGui::SliderFloat("Z far", &zFar, 10.0f, 1000.0f, "%f", 1.0f);
-	m_Camera.SetZFar(zFar);
-	m_Camera.SetZNear(zNear);
-	ImGui::Text("%s", g_Out.str().c_str());
+	{
+		static float zNear = m_Camera.GetZNear();
+		static float zFar = m_Camera.GetZFar();
+		ImGui::PushItemWidth(150.0f);
+		ImGui::InputFloat("Z near", &zNear);
+		ImGui::SameLine();
+		ImGui::InputFloat("Z far", &zFar);
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+		ImGui::Checkbox("Rotate dir light", &rotateDirLight);
+		m_Camera.SetZFar(zFar);
+		m_Camera.SetZNear(zNear);
+	}
 
 	{
 		static std::string buffer(10240, 0);
 		static std::string shaderName(256, 0);
+		ImGui::PushItemWidth(150.0f);
 		ImGui::InputText("Shader name", &shaderName[0], 256);
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
 		if (ImGui::Button("Open"))
 		{
 			if (shaderName.find(".hlsl") != std::string::npos)
@@ -184,6 +202,7 @@ void Game::UpdateImgui()
 				}
 			}
 		}
+		ImGui::SameLine();
 		if (ImGui::Button("Compile"))
 		{
 			// save new shader
@@ -251,7 +270,8 @@ void Game::UpdateImgui()
 
 		if (ImGui::CollapsingHeader("Shader Source"))
 		{
-			ImGui::InputTextMultiline("Source", &buffer[0], buffer.size(), { 640.0f, 480.0f });
+			ImGui::InputTextMultiline("Source", &buffer[0], buffer.size(), { 640.0f, 480.0f }, 
+				ImGuiInputTextFlags_AllowTabInput);
 		}
 	}
 	
@@ -619,6 +639,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
 
 	CreateDefaultSampler();
+	CreateRasterizerState();
 
 	m_Renderer.SetDeviceResources(m_DR.get());
 
