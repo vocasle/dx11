@@ -139,6 +139,10 @@ void Game::DrawSky()
 	m_DR->PIXEndEvent();
 }
 
+void Game::CreateRasterizerState()
+{
+}
+
 #if WITH_IMGUI
 void Game::UpdateImgui()
 {
@@ -245,41 +249,34 @@ void Game::UpdateImgui()
 				}
 		}
 
-		ImGui::InputTextMultiline("Shader", &buffer[0], buffer.size(), {640.0f, 480.0f});
+		if (ImGui::CollapsingHeader("Shader Source"))
+		{
+			ImGui::InputTextMultiline("Source", &buffer[0], buffer.size(), { 640.0f, 480.0f });
+		}
 	}
 	
-	if (ImGui::CollapsingHeader("Cube 0"))
+	for (int i = 0; i < 3; ++i)
 	{
-		ImGui::SliderFloat("Cube 0 scale", cubeScales, 0.1f, 2.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 0 Pos.X", &cubePositions[0].X, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 0 Pos.Y", &cubePositions[0].Y, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 0 Pos.Z", &cubePositions[0].Z, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderAngle("Cube 0 Pitch", &cubeRotations[0].X);
-		ImGui::SliderAngle("Cube 0 Yaw", &cubeRotations[0].Y);
-		ImGui::SliderAngle("Cube 0 Roll", &cubeRotations[0].Z);
-	}
-
-	if (ImGui::CollapsingHeader("Cube 1"))
-	{
-		ImGui::SliderFloat("Cube 1 scale", &cubeScales[1], 0.1f, 2.0f, "%f", 1.0f);
-
-		ImGui::SliderFloat("Cube 1 Pos.X", &cubePositions[1].X, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 1 Pos.Y", &cubePositions[1].Y, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 1 Pos.Z", &cubePositions[1].Z, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderAngle("Cube 1 Pitch", &cubeRotations[1].X);
-		ImGui::SliderAngle("Cube 1 Yaw", &cubeRotations[1].Y);
-		ImGui::SliderAngle("Cube 1 Roll", &cubeRotations[1].Z);
-	}
-
-	if (ImGui::CollapsingHeader("Cube 2"))
-	{
-		ImGui::SliderFloat("Cube 2 scale", &cubeScales[2], 0.1f, 2.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 2 Pos.X", &cubePositions[2].X, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 2 Pos.Y", &cubePositions[2].Y, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderFloat("Cube 2 Pos.Z", &cubePositions[2].Z, -10.0f, 10.0f, "%f", 1.0f);
-		ImGui::SliderAngle("Cube 2 Pitch", &cubeRotations[2].X);
-		ImGui::SliderAngle("Cube 2 Yaw", &cubeRotations[2].Y);
-		ImGui::SliderAngle("Cube 2 Roll", &cubeRotations[2].Z);
+		if (ImGui::CollapsingHeader(UtilsFormatStr("Cube %d", i).c_str()))
+		{
+			ImGui::PushItemWidth(150.0f);
+			ImGui::SliderFloat(UtilsFormatStr("Cube %d scale", i).c_str(),
+				&cubeScales[i], 0.1f, 2.0f);
+			ImGui::SliderFloat(UtilsFormatStr("Cube %d Pos.X", i).c_str(),
+				&cubePositions[i].X, -10.0f, 10.0f);
+			ImGui::SameLine();
+			ImGui::SliderFloat(UtilsFormatStr("Cube %d Pos.Y", i).c_str(), 
+				&cubePositions[i].Y, -10.0f, 10.0f);
+			ImGui::SameLine();
+			ImGui::SliderFloat(UtilsFormatStr("Cube %d Pos.Z", i).c_str(), 
+				&cubePositions[i].Z, -10.0f, 10.0f);
+			ImGui::SliderAngle(UtilsFormatStr("Cube %d Pitch", i).c_str(), &cubeRotations[i].X);
+			ImGui::SameLine();
+			ImGui::SliderAngle(UtilsFormatStr("Cube %d Yaw", i).c_str(), &cubeRotations[i].Y);
+			ImGui::SameLine();
+			ImGui::SliderAngle(UtilsFormatStr("Cube %d Roll", i).c_str(), &cubeRotations[i].Z);
+			ImGui::PopItemWidth();
+		}
 	}
 }
 #endif
