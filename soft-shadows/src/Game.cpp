@@ -42,7 +42,7 @@ namespace
 
 	bool rotateDirLight = false;
 
-	D3D11_RASTERIZER_DESC g_rasterizerDesc = CD3D11_RASTERIZER_DESC{ CD3D11_DEFAULT{} };
+	D3D11_RASTERIZER_DESC g_rasterizerDesc = {CD3D11_RASTERIZER_DESC{CD3D11_DEFAULT{}}};
 };
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -141,7 +141,7 @@ void Game::DrawSky()
 
 void Game::CreateRasterizerState()
 {
-	if (FAILED(m_DR->GetDevice()->CreateRasterizerState(&g_rasterizerDesc, 
+	if (FAILED(m_DR->GetDevice()->CreateRasterizerState(&g_rasterizerDesc,
 		m_rasterizerState.ReleaseAndGetAddressOf())))
 	{
 		OutputDebugStringA("ERROR: Failed to create rasterizer state\n");
@@ -169,10 +169,17 @@ void Game::UpdateImgui()
 
 	if (ImGui::CollapsingHeader("Rasterizer settings"))
 	{
-		static bool fillSolid = true;
 		ImGui::PushItemWidth(150.0f);
-		ImGui::Checkbox("Fill Mode", &fillSolid);
-		g_rasterizerDesc.FillMode = fillSolid ? D3D11_FILL_SOLID : D3D11_FILL_WIREFRAME;
+		ImGui::SliderInt("FillMode", reinterpret_cast<int*>(&g_rasterizerDesc.FillMode), 2, 3);
+		ImGui::Checkbox("FrontCounterClockwise", reinterpret_cast<bool*>(&g_rasterizerDesc.FrontCounterClockwise));
+		ImGui::SliderInt("DepthBias", &g_rasterizerDesc.DepthBias, 0, 10000);
+		ImGui::SliderInt("CullMode", reinterpret_cast<int*>(&g_rasterizerDesc.CullMode), 1, 3);
+		ImGui::SliderFloat("DepthBiasClamp", &g_rasterizerDesc.DepthBiasClamp, -1000.0f, 1000.0f);
+		ImGui::SliderFloat("SlopeScaledDepthBias", &g_rasterizerDesc.SlopeScaledDepthBias, -1000.0f, 1000.0f);
+		ImGui::Checkbox("DepthClipEnable", reinterpret_cast<bool*>(&g_rasterizerDesc.DepthClipEnable));
+		ImGui::Checkbox("ScissorEnable", reinterpret_cast<bool*>(&g_rasterizerDesc.ScissorEnable));
+		ImGui::Checkbox("MultisampleEnable", reinterpret_cast<bool*>(&g_rasterizerDesc.MultisampleEnable));
+		ImGui::Checkbox("AntialiasedLineEnable", reinterpret_cast<bool*>(&g_rasterizerDesc.AntialiasedLineEnable));
 		ImGui::PopItemWidth();
 		CreateRasterizerState();
 	}
