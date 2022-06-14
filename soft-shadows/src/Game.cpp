@@ -504,33 +504,33 @@ void Game::Render()
 		DrawScene();
 	}
 	m_DR->PIXEndEvent();
-	//m_DR->PIXBeginEvent(L"Draw lights");
-	//// Light properties
-	////for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
-	//{
-	//	m_PerObjectData.world = MathMat4X4TranslateFromVec3D(&m_PerSceneData.dirLight.Position);
-	//	GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-	//		sizeof(PerObjectConstants),
-	//		&m_PerObjectData,
-	//		m_PerObjectCB.Get());
+	m_DR->PIXBeginEvent(L"Draw lights");
+	// Light properties
+	//for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
+	{
+		m_PerObjectData.world = MathMat4X4TranslateFromVec3D(&m_PerSceneData.dirLight.Position);
+		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+			sizeof(PerObjectConstants),
+			&m_PerObjectData,
+			m_PerObjectCB.Get());
 
-	//	m_Renderer.BindPixelShader(m_LightPS.Get());
-	//	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-	//	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
-	//	const auto sphere = FindActorByName("Sphere");
-	//	m_Renderer.SetIndexBuffer(sphere->GetIndexBuffer(), 0);
-	//	m_Renderer.SetVertexBuffer(sphere->GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
+		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("LightPS"));
+		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+		const auto sphere = FindActorByName("Sphere");
+		m_Renderer.SetIndexBuffer(sphere->GetIndexBuffer(), 0);
+		m_Renderer.SetVertexBuffer(sphere->GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
 
-	//	m_Renderer.DrawIndexed(sphere->GetNumIndices(), 0, 0);
-	//}
-	//m_DR->PIXEndEvent();
+		m_Renderer.DrawIndexed(sphere->GetNumIndices(), 0, 0);
+	}
+	m_DR->PIXEndEvent();
 	//// TODO: Need to have a reflection mechanism to query amount of SRV that is possible to bind to PS
 	//// After this this clear code could be placed to Renderer::Clear
 	//ID3D11ShaderResourceView* nullSRVs[7] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 	//m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 7);
 
-	//// draw sky
-	//DrawSky();
+	// draw sky
+	DrawSky();
 
 #if WITH_IMGUI
 	ImGui::Render();
