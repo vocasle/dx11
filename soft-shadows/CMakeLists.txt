@@ -9,9 +9,9 @@ set(source_files
 	"src/DeviceResources.cpp"
 	"src/Game.cpp"
 	"src/InputLayout.cpp"
-	"src/Keyboard.cpp"
+	
 	"src/MeshGenerator.cpp"
-	"src/Mouse.cpp"
+	
 	"src/Renderer.cpp"
 	"src/ShadowMap.cpp"
 	
@@ -29,10 +29,10 @@ set(header_files
 	"include/DeviceResources.h"
 	"include/Game.h"
 	"include/InputLayout.h"
-	"include/Keyboard.h"
+	
 	"include/LightHelper.h"
 	"include/MeshGenerator.h"
-	"include/Mouse.h"
+	
 	"include/Renderer.h"
 	"include/Resource.h"
 	"include/ShadowMap.h"
@@ -69,7 +69,7 @@ set(shader_header_files
 
 add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_shader_files} ${vertex_shader_files} ${shader_header_files})
 
-target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math ne_objloader ne_utils)
+target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math ne_objloader ne_utils ne_input)
 
 target_compile_definitions(${current_target} PUBLIC
 	NOMINMAX=1
