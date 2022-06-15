@@ -22,7 +22,7 @@ set(source_files
 	 "src/ShaderManager.cpp" )
 
 set(header_files
-	"include/ShaderReflection.h"
+	
 	"include/Actor.h"
 	"include/Camera.h"
 	"include/CubeMap.h"
@@ -36,7 +36,7 @@ set(header_files
 	"include/Renderer.h"
 	"include/Resource.h"
 	"include/ShadowMap.h"
-	"include/Timer.h"
+	
 	
 	"include/dx11.h"
 	"include/framework.h"
