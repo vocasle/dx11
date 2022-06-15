@@ -1,6 +1,6 @@
 #include "Common.hlsli"
 
-static const float4 AMBIENT = float4(0.1f, 0.1f, 0.f, 1.0f);
+static const float4 AMBIENT = float4(0.4f, 0.4f, 0.4f, 1.0f);
 
 float4 main(VSOut In) : SV_TARGET
 {
@@ -72,5 +72,5 @@ float4 main(VSOut In) : SV_TARGET
 
 	//fragmentColor += reflColor * material.Reflection;
 
-	return fragmentColor.Emissive + AMBIENT + shadows[0] * (fragmentColor.Diffuse + fragmentColor.Specular);
+	return fragmentColor.Emissive + shadows[0] * (fragmentColor.Diffuse + fragmentColor.Specular);
 }

@@ -11,8 +11,9 @@ ShadowMap::~ShadowMap()
 
 void ShadowMap::InitResources(ID3D11Device* device, uint32_t texWidth, uint32_t texHeight)
 {
+	// TODO: Use logirithmic depth function instead of linear
 	D3D11_TEXTURE2D_DESC texDesc = {};
-	texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+	texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS; // TODO: Convert to 32 bit
 	texDesc.Width = texWidth;
 	texDesc.Height = texHeight;
 	texDesc.ArraySize = 1;

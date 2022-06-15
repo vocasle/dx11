@@ -503,7 +503,6 @@ void Game::Render()
 		const auto sphere = FindActorByName("Sphere");
 		m_Renderer.SetIndexBuffer(sphere->GetIndexBuffer(), 0);
 		m_Renderer.SetVertexBuffer(sphere->GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
-
 		m_Renderer.DrawIndexed(sphere->GetNumIndices(), 0, 0);
 	}
 	m_DR->PIXEndEvent();
