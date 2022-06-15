@@ -14,7 +14,7 @@ set(source_files
 	"src/Mouse.cpp"
 	"src/Renderer.cpp"
 	"src/ShadowMap.cpp"
-	"src/Utils.cpp"
+	
 	"src/dx11.cpp"
 	"src/stb_image.cpp"
 	"src/DynamicCubeMap.cpp"
@@ -37,7 +37,7 @@ set(header_files
 	"include/Resource.h"
 	"include/ShadowMap.h"
 	"include/Timer.h"
-	"include/Utils.h"
+	
 	"include/dx11.h"
 	"include/framework.h"
 	"include/stb_image.h"
@@ -69,7 +69,7 @@ set(shader_header_files
 
 add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_shader_files} ${vertex_shader_files} ${shader_header_files})
 
-target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math objloader)
+target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math objloader utils)
 
 target_compile_definitions(${current_target} PUBLIC
 	NOMINMAX=1
