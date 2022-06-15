@@ -1,4 +1,4 @@
-set(current_target objloader)
+set(current_target ne_objloader)
 
 set(source_files objloader.cpp)
 set(header_files objloader.h)
