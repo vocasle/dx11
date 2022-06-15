@@ -57,6 +57,7 @@ public:
 	void Tick();
 	void Initialize(HWND hWnd, uint32_t width, uint32_t height);
 	void GetDefaultSize(uint32_t* width, uint32_t* height);
+	void OnWindowSizeChanged(int width, int height);
 
 private:
 	void InitPerSceneConstants();
@@ -71,6 +72,7 @@ private:
 	void DrawSky();
 	void DrawActor(const Actor& actor);
 	void CreateRasterizerState();
+	void CreateWindowSizeDependentResources();
 
 #if WITH_IMGUI
 	void UpdateImgui();

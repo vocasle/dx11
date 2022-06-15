@@ -35,6 +35,7 @@ public:
 	const D3D11_VIEWPORT& GetViewport() const { return m_ScreenViewport; }
 	IDXGISwapChain* GetSwapChain() const { return m_SwapChain.Get(); }
 	HWND GetWindow() const { return m_hWnd; }
+	RECT GetOutputSize() const { return m_OutputSize; }
 
 	void PIXBeginEvent(_In_z_ const wchar_t* name)
 	{
@@ -45,6 +46,8 @@ public:
 	{
 		m_d3dAnnotation->EndEvent();
 	}
+
+	bool WindowSizeChanged(int width, int height);
 
 private:
 	void CreateFactory();

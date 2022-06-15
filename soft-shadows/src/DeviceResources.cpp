@@ -117,8 +117,8 @@ void DeviceResources::CreateWindowSizeDependentResources()
 {
 	if (!m_hWnd)
 	{
-		OutputDebugStringA("ERROR: hWnd is not set!\n");
-		ExitProcess(EXIT_FAILURE);
+		UtilsDebugPrint("ERROR: hWnd is not set! Windows size dependent resources will not be created!\n");
+		return;
 	}
 
 	ID3D11DeviceContext* ctx = m_Context.Get();
@@ -259,4 +259,20 @@ void DeviceResources::ReportLiveObjects(void)
 		}
 	}
 #endif
+}
+
+bool DeviceResources::WindowSizeChanged(int width, int height)
+{
+	RECT newRc;
+	newRc.left = newRc.top = 0;
+	newRc.right = width;
+	newRc.bottom = height;
+	if (newRc == m_OutputSize)
+	{
+		return false;
+	}
+
+	m_OutputSize = newRc;
+	CreateWindowSizeDependentResources();
+	return true;
 }

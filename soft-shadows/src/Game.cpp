@@ -698,3 +698,28 @@ void Game::DrawActor(const Actor& actor)
 		m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
 	}
 }
+
+void Game::OnWindowSizeChanged(int width, int height)
+{
+	if (!m_DR->WindowSizeChanged(width, height))
+		return;
+
+	CreateWindowSizeDependentResources();
+}
+
+void Game::CreateWindowSizeDependentResources()
+{
+	auto const size = m_DR->GetOutputSize();
+	const float aspectRatio = static_cast<float>(size.right) / static_cast<float>(size.bottom);
+	float fovAngleY = 45.0f;
+
+	// portrait or snapped view.
+	if (aspectRatio < 1.0f)
+	{
+		fovAngleY *= 2.0f;
+	}
+
+	m_Camera.SetFov(fovAngleY);
+	m_Camera.SetViewDimensions(size.right, size.bottom);
+
+}

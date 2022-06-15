@@ -245,12 +245,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             s_minimized = FALSE;
             if (s_in_suspend && gGame)
-                //pOnResuming();
+                //OnResuming();
             s_in_suspend = FALSE;
         }
         else if (!s_in_sizemove && gGame)
         {
-            //OnWindowSizeChanged(LOWORD(lParam), HIWORD(lParam));
+            gGame->OnWindowSizeChanged(LOWORD(lParam), HIWORD(lParam));
         }
         break;
 
@@ -265,7 +265,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             RECT rc;
             GetClientRect(hWnd, &rc);
 
-            //OnWindowSizeChanged(rc.right - rc.left, rc.bottom - rc.top);
+            gGame->OnWindowSizeChanged(rc.right - rc.left, rc.bottom - rc.top);
         }
         break;
 
