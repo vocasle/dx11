@@ -2,10 +2,7 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <sys/stat.h>
-#include <math.h>
 #include <d3d11.h>
-#include <dinput.h>
 #include <stdint.h>
 #include <vector>
 #include <string>
@@ -88,5 +85,13 @@ void UtilsWriteData(const char* filepath, const char* bytes, const size_t sz, co
 	}
 
 
-void UtilsCreateIndexBuffer(ID3D11Device * device, const void* data, size_t num, ID3D11Buffer * *ppBuffer);
-void UtilsCreateVertexBuffer(ID3D11Device * device, const void* data, size_t num, size_t structSize, ID3D11Buffer * *ppBuffer);
+void UtilsCreateIndexBuffer(ID3D11Device* device, const void* data, size_t num, ID3D11Buffer** ppBuffer);
+void UtilsCreateVertexBuffer(ID3D11Device* device, const void* data, size_t num, size_t structSize, ID3D11Buffer** ppBuffer);
+void UtilsUpdateConstantBuffer(ID3D11DeviceContext* context,
+	size_t bufferSize,
+	void* data,
+	ID3D11Buffer* dest);
+
+void UtilsCreateConstantBuffer(ID3D11Device* device,
+	size_t byteWidth,
+	ID3D11Buffer** pDest);
