@@ -16,7 +16,7 @@ set(source_files
 	"src/ShadowMap.cpp"
 	
 	"src/dx11.cpp"
-	"src/stb_image.cpp"
+	
 	"src/DynamicCubeMap.cpp"
 	"src/ParticleSystem.cpp"
 	 "src/ShaderManager.cpp" )
@@ -40,11 +40,11 @@ set(header_files
 	
 	"include/dx11.h"
 	"include/framework.h"
-	"include/stb_image.h"
+	
 	"include/targetver.h"
 	"include/DynamicCubeMap.h"
 	"include/ParticleSystem.h"
-	"include/Image.h"
+	
 	 "include/ShaderManager.h"  )
 
 set(pixel_shader_files
