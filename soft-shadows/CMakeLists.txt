@@ -69,7 +69,7 @@ set(shader_header_files
 
 add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_shader_files} ${vertex_shader_files} ${shader_header_files})
 
-target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math objloader utils)
+target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math ne_objloader ne_utils)
 
 target_compile_definitions(${current_target} PUBLIC
 	NOMINMAX=1
