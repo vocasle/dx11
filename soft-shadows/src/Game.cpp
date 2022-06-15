@@ -40,8 +40,6 @@ namespace
 		0.5f,
 	};
 
-	bool rotateDirLight = false;
-
 	D3D11_RASTERIZER_DESC g_rasterizerDesc = {CD3D11_RASTERIZER_DESC{CD3D11_DEFAULT{}}};
 };
 
@@ -154,6 +152,7 @@ void Game::UpdateImgui()
 {
 	// Any application code here
 	{
+		static_assert(sizeof(float) * 3 == sizeof(Vec3D), "ERROR: Cannot cast Vec3D to float[3]");
 		static float zNear = m_Camera.GetZNear();
 		static float zFar = m_Camera.GetZFar();
 		ImGui::PushItemWidth(150.0f);
@@ -161,8 +160,7 @@ void Game::UpdateImgui()
 		ImGui::SameLine();
 		ImGui::InputFloat("Z far", &zFar);
 		ImGui::PopItemWidth();
-		ImGui::SameLine();
-		ImGui::Checkbox("Rotate dir light", &rotateDirLight);
+		ImGui::InputFloat3("Dir light pos", reinterpret_cast<float*>(&m_PerSceneData.dirLight.Position));
 		m_Camera.SetZFar(zFar);
 		m_Camera.SetZNear(zNear);
 	}
@@ -360,7 +358,6 @@ void Game::InitPerSceneConstants()
 	dirLight.Diffuse = ColorFromRGBA(0.5f, 0.5f, 0.5f, 1.0f);
 	dirLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	dirLight.Position = MathVec3DFromXYZ(5.0f, 5.0f, 5.0f);
-	dirLight.Radius = MathVec3DLength(dirLight.Position);
 	m_PerSceneData.dirLight = dirLight;
 
 	SpotLight spotLight = {};
@@ -434,20 +431,6 @@ void Game::Update()
 #if WITH_IMGUI
 	static float totalTime = 0.0f;
 	totalTime += deltaSeconds;
-	// update directional light
-	if (rotateDirLight)
-	{
-		m_PerSceneData.dirLight.Position.X = m_PerSceneData.dirLight.Radius * sinf(totalTime);
-		m_PerSceneData.dirLight.Position.Z = m_PerSceneData.dirLight.Radius * cosf(totalTime);
-
-		const Vec3D at = m_Camera.GetAt();
-		const Vec3D pos = m_Camera.GetPos();
-
-		m_PerSceneData.spotLights[0].Position = pos;
-		m_PerSceneData.spotLights[0].Direction = at;
-	}
-
-	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
 #endif
 }
 
@@ -504,7 +487,7 @@ void Game::Render()
 		DrawScene();
 	}
 	m_DR->PIXEndEvent();
-	m_DR->PIXBeginEvent(L"Draw lights");
+	m_DR->PIXBeginEvent(L"Light source pass");
 	// Light properties
 	//for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
 	{
