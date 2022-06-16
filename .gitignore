@@ -10,3 +10,4 @@ out/
 
 /.idea
 /cmake-build-debug
+/log.txt
