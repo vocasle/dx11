@@ -16,6 +16,6 @@
 
 - [X] Make dynamic environment reflections via render to cube map
 
-- [ ] Add fog effect (pixel shader or post-process)
+- [X] Add fog effect (pixel shader or post-process)
 
 - [ ] Add bloom post-process effect
