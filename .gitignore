@@ -11,3 +11,5 @@ out/
 /.idea
 /cmake-build-debug
 /log.txt
+/build-debug
+/cmake-build-debug-visual-studio
