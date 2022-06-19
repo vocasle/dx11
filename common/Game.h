@@ -13,35 +13,6 @@
 #include <memory>
 #include <wrl/client.h>
 
-struct PerFrameConstants
-{
-    PerFrameConstants()
-        : Pad{0.0f}
-    {
-    }
-
-    Mat4X4 View;
-    Mat4X4 Proj;
-    Mat4X4 ShadowTransform;
-    Vec3D CameraPosW;
-    float Pad;
-};
-
-struct PerObjectConstants
-{
-    PerObjectConstants() = default;
-    Mat4X4 WorldInvTranspose;
-    Mat4X4 World;
-    Material Material;
-};
-
-struct PerSceneConstants
-{
-    PerSceneConstants() = default;
-    PointLight PointLights[4];
-    DirectionalLight DirLight;
-    SpotLight SpotLights[2];
-};
 
 class Game
 {
@@ -65,11 +36,5 @@ protected:
     Timer m_timer;
     Camera m_camera;
     Renderer m_renderer;
-    PerFrameConstants m_perFrameData;
-    PerObjectConstants m_perObjectData;
-    PerSceneConstants m_perSceneData;
-    Microsoft::WRL::ComPtr<ID3D11Buffer> m_perFrameCB;
-    Microsoft::WRL::ComPtr<ID3D11Buffer> m_perObjectCB;
-    Microsoft::WRL::ComPtr<ID3D11Buffer> m_perSceneCB;
     ShaderManager m_shaderManager;
 };
