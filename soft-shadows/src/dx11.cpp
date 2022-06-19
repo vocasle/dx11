@@ -26,6 +26,7 @@
 HINSTANCE hInst;                                // current instance
 const char szTitle[MAX_LOADSTRING] = "soft-shadows";                  // The title bar text
 const char szWindowClass[MAX_LOADSTRING] = "softShadowsWindowClass";            // the main window class name
+FILE* hLog = nullptr;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -57,6 +58,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
+    fopen_s(&hLog, "log.txt", "w");
     // Initialize global strings
     //LoadStringW(NULL, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     //LoadStringW(NULL, IDC_DX11, szWindowClass, MAX_LOADSTRING);
@@ -89,10 +91,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
+    fclose(hLog);
     return (int) msg.wParam;
 }
-
-
 
 //
 //  FUNCTION: MyRegisterClass()
