@@ -1,205 +1,204 @@
 #include "FogGame.h"
 #include "Config.h"
-#include "Actor.h"
 #include "objloader.h"
 #include "Utils.h"
+#include "NE_Math.h"
+#include "Image.h"
+
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
-#include "NE_Math.h"
-#include "Image.h"
+
 
 #include <vector>
 #include <memory>
 #include <wrl/client.h>
 
+using namespace Microsoft::WRL;
 
-
-namespace Globals
+struct Drawable
 {
-	using namespace Microsoft::WRL;
-
-    struct Drawable
-    {
-		Drawable() {}
-		Drawable(const Model* model, ID3D11Device* device)
+	Drawable() {}
+	Drawable(const Model* model, ID3D11Device* device)
+	{
+		size_t i = 0;
+		for (const Mesh& mesh : model->Meshes)
 		{
-			size_t i = 0;
-		    for (const Mesh& mesh : model->Meshes)
-		    {
-		        for (const Face& face : mesh.Faces)
-		        {
-					Vertices.emplace_back(mesh.Positions[face.posIdx], mesh.Normals[face.normIdx], mesh.TexCoords[face.normIdx]);
-					Indices.emplace_back(i++);
-		        }
-		    }
-
-			UtilsCreateVertexBuffer(device, &Vertices[0], Vertices.size(), 
-				sizeof(Vertex), VertexBuffer.ReleaseAndGetAddressOf());
-			UtilsCreateIndexBuffer(device, &Indices[0], Indices.size(), 
-				IndexBuffer.ReleaseAndGetAddressOf());
+			for (const Face& face : mesh.Faces)
+			{
+				Vertices.emplace_back(mesh.Positions[face.posIdx], mesh.Normals[face.normIdx], mesh.TexCoords[face.normIdx]);
+				Indices.emplace_back(i++);
+			}
 		}
-        struct Vertex
-        {
-			Vertex(const Vec3D& inPos, const Vec3D& inNorm, const Vec2D& inTexCoord):
-			    Pos(inPos), Norm(inNorm), TexCoord(inTexCoord) {}
-			Vec3D Pos;
-			Vec3D Norm;
-			Vec2D TexCoord;
-        };
 
-		std::vector<Vertex> Vertices;
-		std::vector<uint32_t> Indices;
-		ComPtr<ID3D11Buffer> IndexBuffer;
-		ComPtr<ID3D11Buffer> VertexBuffer;
-    };
+		UtilsCreateVertexBuffer(device, &Vertices[0], Vertices.size(),
+			sizeof(Vertex), VertexBuffer.ReleaseAndGetAddressOf());
+		UtilsCreateIndexBuffer(device, &Indices[0], Indices.size(),
+			IndexBuffer.ReleaseAndGetAddressOf());
+	}
+	struct Vertex
+	{
+		Vertex(const Vec3D& inPos, const Vec3D& inNorm, const Vec2D& inTexCoord) :
+			Pos(inPos), Norm(inNorm), TexCoord(inTexCoord) {}
+		Vec3D Pos;
+		Vec3D Norm;
+		Vec2D TexCoord;
+	};
 
-    struct Texture
-    {
-		Texture() = default;
-		Texture(Texture&& rhs) noexcept
+	std::vector<Vertex> Vertices;
+	std::vector<uint32_t> Indices;
+	ComPtr<ID3D11Buffer> IndexBuffer;
+	ComPtr<ID3D11Buffer> VertexBuffer;
+};
+
+struct Texture
+{
+	Texture() = default;
+	Texture(Texture&& rhs) noexcept
+	{
+		ImagePath = std::move(rhs.ImagePath);
+		SRV = std::move(rhs.SRV);
+	}
+	Texture& operator==(Texture&& rhs) noexcept
+	{
+		if (this != &rhs)
 		{
 			ImagePath = std::move(rhs.ImagePath);
 			SRV = std::move(rhs.SRV);
 		}
-		Texture& operator==(Texture&& rhs) noexcept
-		{
-		    if (this != &rhs)
-		    {
-				ImagePath = std::move(rhs.ImagePath);
-				SRV = std::move(rhs.SRV);
-		    }
-			return *this;
-		}
-		Texture(const std::string& inImagePath, ID3D11Device* device, ID3D11DeviceContext* context): ImagePath(inImagePath)
-		{
-			Load(inImagePath, device, context);
-		}
-		void Load(const std::string& inImagePath, ID3D11Device* device, ID3D11DeviceContext* context)
-		{
-			const Image img(inImagePath);
-			ComPtr<ID3D11Texture2D> texture;
-			D3D11_TEXTURE2D_DESC texDesc = {};
-			texDesc.Width = img.GetWidth();
-			texDesc.Height = img.GetHeight();
-			texDesc.MipLevels = 0;
-			texDesc.ArraySize = 1;
-			texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			texDesc.SampleDesc.Count = 1;
-			texDesc.SampleDesc.Quality = 0;
-			texDesc.Usage = D3D11_USAGE_DEFAULT;
-			texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-			texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+		return *this;
+	}
+	Texture(const std::string& inImagePath, ID3D11Device* device, ID3D11DeviceContext* context) : ImagePath(inImagePath)
+	{
+		Load(inImagePath, device, context);
+	}
+	void Load(const std::string& inImagePath, ID3D11Device* device, ID3D11DeviceContext* context)
+	{
+		const Image img(inImagePath);
+		ComPtr<ID3D11Texture2D> texture;
+		D3D11_TEXTURE2D_DESC texDesc = {};
+		texDesc.Width = img.GetWidth();
+		texDesc.Height = img.GetHeight();
+		texDesc.MipLevels = 0;
+		texDesc.ArraySize = 1;
+		texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		texDesc.SampleDesc.Count = 1;
+		texDesc.SampleDesc.Quality = 0;
+		texDesc.Usage = D3D11_USAGE_DEFAULT;
+		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+		texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
-			HR(device->CreateTexture2D(&texDesc, nullptr, texture.ReleaseAndGetAddressOf()))
+		HR(device->CreateTexture2D(&texDesc, nullptr, texture.ReleaseAndGetAddressOf()))
 
-		    context->UpdateSubresource(texture.Get(), 0, 
+			context->UpdateSubresource(texture.Get(), 0,
 				nullptr, img.GetBytes(), img.GetWidth() * sizeof(uint8_t) * img.GetChannels(), 0);
 
-			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-			memset(&srvDesc, 0, sizeof(srvDesc));
-			srvDesc.Format = texDesc.Format;
-			srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-			srvDesc.Texture2D.MostDetailedMip = 0;
-			srvDesc.Texture2D.MipLevels = -1;
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		memset(&srvDesc, 0, sizeof(srvDesc));
+		srvDesc.Format = texDesc.Format;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = -1;
 
-			HR(device->CreateShaderResourceView(texture.Get(), &srvDesc, SRV.ReleaseAndGetAddressOf()))
+		HR(device->CreateShaderResourceView(texture.Get(), &srvDesc, SRV.ReleaseAndGetAddressOf()))
 			context->GenerateMips(SRV.Get());
-		}
-		std::string ImagePath;
-		ComPtr<ID3D11ShaderResourceView> SRV;
-    };
+	}
+	std::string ImagePath;
+	ComPtr<ID3D11ShaderResourceView> SRV;
+};
 
-	enum class HLSLType
+enum class HLSLType
+{
+	FLOAT = sizeof(float),
+	FLOAT2 = sizeof(float) * 2,
+	FLOAT3 = sizeof(float) * 3,
+	FLOAT4 = sizeof(float) * 4,
+	FLOAT3X3 = sizeof(float) * 3 * 3,
+	FLOAT4X4 = sizeof(float) * 4 * 4,
+};
+
+class CBuffer
+{
+public:
+	void CreateBuffer(ID3D11Device* device)
 	{
-		FLOAT = sizeof(float),
-		FLOAT2 = sizeof(float) * 2,
-		FLOAT3 = sizeof(float) * 3,
-		FLOAT4 = sizeof(float) * 4,
-		FLOAT3X3 = sizeof(float) * 3 * 3,
-		FLOAT4X4 = sizeof(float) * 4 * 4,
-    };
+		UtilsCreateConstantBuffer(device, Bytes.size(), Buffer.ReleaseAndGetAddressOf());
+	}
+	void UpdateBuffer(ID3D11DeviceContext* context)
+	{
+		UtilsUpdateConstantBuffer(context, Bytes.size(), &Bytes[0], Buffer.Get());
+	}
+	template <typename T>
+	void Add(const T& value, const std::string& name)
+	{
+		size_t offset = 0;
+		for (const Entry& e : Entries)
+		{
+			offset += static_cast<size_t>(e.Type);
+		}
+		assert(offset == Bytes.size() && "Bytes do no match Etnries");
+		Entries.emplace_back(static_cast<HLSLType>(sizeof(T)), name);
+		const uint8_t* pValue = reinterpret_cast<const uint8_t*>(&value);
+		for (size_t i = 0; i < sizeof(T); ++i)
+		{
+			Bytes.push_back(pValue[i]);
+		}
+	}
 
-    class CBuffer
-    {
-    public:
-		void CreateBuffer(ID3D11Device* device)
+	template <typename T>
+	T* Get(const std::string& name)
+	{
+		size_t offset = 0;
+		for (const Entry& e : Entries)
 		{
-			UtilsCreateConstantBuffer(device, Bytes.size(), Buffer.ReleaseAndGetAddressOf());
-		}
-		void UpdateBuffer(ID3D11DeviceContext* context)
-		{
-			UtilsUpdateConstantBuffer(context, Bytes.size(), &Bytes[0], Buffer.Get());
-		}
-		template <typename T>
-		void Add(const T& value, const std::string& name)
-		{
-			size_t offset = 0;
-		    for (const Entry& e : Entries)
-		    {
-				offset += static_cast<size_t>(e.Type);
-		    }
-			assert(offset == Bytes.size() && "Bytes do no match Etnries");
-			Entries.emplace_back(static_cast<HLSLType>(sizeof(T)), name);
-			const uint8_t* pValue = reinterpret_cast<const uint8_t*>(&value);
-			for (size_t i = 0; i < sizeof(T); ++i)
+			offset += static_cast<size_t>(e.Type);
+			if (e.Name == name)
 			{
-				Bytes.push_back(pValue[i]);
+				return reinterpret_cast<T>(&Bytes[0] + offset);
 			}
 		}
+		return nullptr;
+	}
 
-		template <typename T>
-		T* Get(const std::string& name)
+	template <typename T>
+	void Set(const std::string& name, const T& value)
+	{
+		size_t offset = 0;
+		for (const Entry& e : Entries)
 		{
-			size_t offset = 0;
-		    for (const Entry& e : Entries)
-		    {
-				offset += static_cast<size_t>(e.Type);
-		        if (e.Name == name)
-		        {
-					return reinterpret_cast<T>(&Bytes[0] + offset);
-		        }
-		    }
-			return nullptr;
-		}
-
-		template <typename T>
-		void Set(const std::string& name, const T& value)
-		{
-			size_t offset = 0;
-			for (const Entry& e : Entries)
+			if (e.Name == name)
 			{
-				if (e.Name == name)
-				{
-					T* pData = reinterpret_cast<T*>(&Bytes[0] + offset);
-					*pData = value;
-					return;
-				}
-				offset += static_cast<size_t>(e.Type);
+				T* pData = reinterpret_cast<T*>(&Bytes[0] + offset);
+				*pData = value;
+				return;
 			}
-			UtilsDebugPrint("WARN: %s not found in constant buffer!\n", name.c_str());
+			offset += static_cast<size_t>(e.Type);
 		}
+		UtilsDebugPrint("WARN: %s not found in constant buffer!\n", name.c_str());
+	}
 
-		ID3D11Buffer* GetBuffer() const
+	ID3D11Buffer* GetBuffer() const
+	{
+		return Buffer.Get();
+	}
+private:
+	struct Entry
+	{
+		Entry() = default;
+		Entry(HLSLType inType, const std::string& inName) : Type(inType), Name(inName)
 		{
-			return Buffer.Get();
 		}
-    private:
-		struct Entry
-		{
-			Entry() = default;
-			Entry(HLSLType inType, const std::string& inName): Type(inType), Name(inName)
-			{
-			}
-			HLSLType Type;
-			std::string Name;
-		};
+		HLSLType Type;
+		std::string Name;
+	};
 
-		ComPtr<ID3D11Buffer> Buffer;
-		std::vector<uint8_t> Bytes;
-		std::vector<Entry> Entries;
-    };
+	ComPtr<ID3D11Buffer> Buffer;
+	std::vector<uint8_t> Bytes;
+	std::vector<Entry> Entries;
+};
 
+namespace Globals
+{
 	ComPtr<ID3D11SamplerState> DefaultSampler;
 	Texture DefaultTexture;
 	std::vector<Drawable> Drawables;
@@ -237,10 +236,17 @@ void FogGame::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	Globals::DefaultTexture.Load(texPath, m_deviceResources->GetDevice(), m_deviceResources->GetDeviceContext());
 
     {
-		CD3D11_SAMPLER_DESC desc(D3D11_FILTER_ANISOTROPIC, D3D11_TEXTURE_ADDRESS_WRAP, 
-			D3D11_TEXTURE_ADDRESS_WRAP, D3D11_TEXTURE_ADDRESS_WRAP, 
-			0, 16, D3D11_COMPARISON_LESS, nullptr, 0, 0);
-		HR(m_deviceResources->GetDevice()->CreateSamplerState(&desc, Globals::DefaultSampler.ReleaseAndGetAddressOf()))
+		D3D11_SAMPLER_DESC samplerDesc = {};
+		samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+		samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.ComparisonFunc = D3D11_COMPARISON_GREATER;
+		samplerDesc.MaxAnisotropy = D3D11_REQ_MAXANISOTROPY;
+		samplerDesc.MipLODBias = 0.0f;
+		samplerDesc.MinLOD = 0;
+		samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+		HR(m_deviceResources->GetDevice()->CreateSamplerState(&samplerDesc, Globals::DefaultSampler.ReleaseAndGetAddressOf()))
     }
 
     {
@@ -295,9 +301,6 @@ void FogGame::Render()
 	m_renderer.SetVertexBuffer(Globals::Drawables[0].VertexBuffer.Get(), m_shaderManager.GetStrides(), 0);
 	m_renderer.SetIndexBuffer(Globals::Drawables[0].IndexBuffer.Get(), 0);
 	m_renderer.SetInputLayout(m_shaderManager.GetInputLayout());
-	const Vec3D offset = { 1.0f, -1.0f, 2.0f };
-	Globals::PerObjectCB.Set("World", MathMat4X4TranslateFromVec3D(&offset));
-	Globals::PerObjectCB.UpdateBuffer(m_deviceResources->GetDeviceContext());
 	m_renderer.BindConstantBuffer(BindTargets::VertexShader, Globals::PerObjectCB.GetBuffer(), 0);
 	m_renderer.BindConstantBuffer(BindTargets::VertexShader, Globals::PerFrameCB.GetBuffer(), 1);
 	m_renderer.BindShaderResource(BindTargets::PixelShader, Globals::DefaultTexture.SRV.Get(), 0);
