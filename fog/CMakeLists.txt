@@ -10,12 +10,15 @@ set(header_files
 	"include/fog.h"   "include/FogGame.h")
 
 set(pixel_shader_files
+	shader/PS.hlsl
 	)
 
 set(vertex_shader_files
+	shader/VS.hlsl
 	)
 
 set(shader_header_files
+	shader/Common.hlsli
 	)
 
 add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_shader_files} ${vertex_shader_files} ${shader_header_files})
