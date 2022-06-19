@@ -226,7 +226,7 @@ void FogGame::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 {
     Game::Initialize(hWnd, width, height);
 
-    m_shaderManager.Initialize(m_deviceResources->GetDevice(), SHADERS_ROOT);
+    m_shaderManager.Initialize(m_deviceResources->GetDevice(), SHADERS_ROOT, UtilsFormatStr("%s/shader", SRC_ROOT));
 
     const std::string cubePath = UtilsFormatStr("%s/meshes/cube.obj", ASSETS_ROOT);
 	UtilsDebugPrint("Loading %s\n", cubePath.c_str());
@@ -322,6 +322,9 @@ void FogGame::CreateWindowSizeDependentResources()
 #if WITH_IMGUI
 void FogGame::UpdateImgui()
 {
-	ImGui::Text("Test");
+	if(ImGui::Button("Recompile shaders"))
+	{
+		m_shaderManager.Recompile(m_deviceResources->GetDevice());
+	}
 }
 #endif
