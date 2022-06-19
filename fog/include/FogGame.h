@@ -14,5 +14,7 @@ private:
     void Update() override;
     void Render() override;
     void CreateWindowSizeDependentResources() override;
+#if WITH_IMGUI
     void UpdateImgui() override;
+#endif
 };
