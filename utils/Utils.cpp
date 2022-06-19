@@ -7,6 +7,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+extern FILE* hLog;
+
 void UtilsDebugPrint(const char* fmt, ...)
 {
     char out[512];
@@ -15,7 +17,8 @@ void UtilsDebugPrint(const char* fmt, ...)
     vsnprintf(out, sizeof(out), fmt, args);
     va_end(args);
     OutputDebugStringA(out);
-    fprintf(stdout, out);
+    fprintf(stdout, "%s", out);
+    fprintf(hLog, "%s", out); 
 }
 
 void UtilsFatalError(const char* fmt, ...)
@@ -25,7 +28,8 @@ void UtilsFatalError(const char* fmt, ...)
     va_start(args, fmt);
     vsnprintf(out, sizeof(out), fmt, args);
     va_end(args);
-    fprintf(stderr, out);
+    fprintf(stderr, "%s", out);
+    fprintf(hLog, "%s", out); 
     OutputDebugStringA(out);
     ExitProcess(EXIT_FAILURE);
 }
