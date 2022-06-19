@@ -14,7 +14,7 @@ public:
 	Camera(const Vec3D& cameraPos);
 	Mat4X4 GetViewMat() const;
 	Mat4X4 GetProjMat() const;
-	void UpdatePos(double deltaMillis);
+	void ProcessKeyboard(double deltaMillis);
 	void ProcessMouse(double deltaMillis);
 	Vec3D GetPos() const { return m_Pos; }
 	Vec3D GetAt() const { return m_At; }

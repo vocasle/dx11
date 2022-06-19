@@ -46,7 +46,7 @@ void Camera::UpdateSpeed()
 	m_Speed = MathClamp(0.1f, 100.0f, m_Speed);
 }
 
-void Camera::UpdatePos(double deltaMillis)
+void Camera::ProcessKeyboard(double deltaMillis)
 {
 	UpdateSpeed();
 	Vec3D cameraFocus = m_At;
