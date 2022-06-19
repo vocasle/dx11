@@ -130,12 +130,11 @@ void Renderer::Clear()
 	ID3D11DepthStencilView* dsv = m_DR->GetDepthStencilView();
 
 	static const float CLEAR_COLOR[4] = { 0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f };
-	static const float BLACK_COLOR[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 	static ID3D11ShaderResourceView* nullSRVs[R_MAX_SRV_NUM] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 	BindShaderResources(BindTargets::PixelShader, nullSRVs, R_MAX_SRV_NUM);
 
-	ctx->ClearRenderTargetView(rtv, BLACK_COLOR);
+	ctx->ClearRenderTargetView(rtv, CLEAR_COLOR);
 	ctx->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	ctx->OMSetRenderTargets(1, &rtv, dsv);
 	ctx->RSSetViewports(1, &m_DR->GetViewport());

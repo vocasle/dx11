@@ -26,61 +26,21 @@ Game::~Game()
 #endif
 }
 
-void Game::Render()
-{
-#if WITH_IMGUI
-    ImGui_ImplDX11_NewFrame();
-    ImGui_ImplWin32_NewFrame();
-    ImGui::NewFrame();
-#endif
-
-#if WITH_IMGUI
-    UpdateImgui();
-#endif
-    m_renderer.Clear();
-#if WITH_IMGUI
-    ImGui::Render();
-    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-#endif
-
-    m_renderer.Present();
-}
-
-void Game::Tick()
-{
-    TimerTick(&m_timer);
-    Update();
-    Render();
-}
-
-
 void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 {
-    using namespace Microsoft::WRL;
 #ifdef MATH_TEST
-	MathTest();
+    MathTest();
 #endif
     m_deviceResources->SetWindow(hWnd, width, height);
     m_deviceResources->CreateDeviceResources();
     m_deviceResources->CreateWindowSizeDependentResources();
     TimerInitialize(&m_timer);
     Mouse::Get().SetWindowDimensions(m_deviceResources->GetBackBufferWidth(), m_deviceResources->GetBackBufferHeight());
-    ID3D11Device *device = m_deviceResources->GetDevice();
     m_camera.SetViewDimensions(m_deviceResources->GetBackBufferWidth(), m_deviceResources->GetBackBufferHeight());
-
-    UtilsCreateConstantBuffer(device, sizeof(PerSceneConstants), &m_perSceneCB);
-    UtilsCreateConstantBuffer(device, sizeof(PerObjectConstants), &m_perObjectCB);
-    UtilsCreateConstantBuffer(device, sizeof(PerFrameConstants), &m_perFrameCB);
-    UtilsUpdateConstantBuffer(m_deviceResources->GetDeviceContext(), sizeof(PerSceneConstants), &m_perSceneData, m_perSceneCB.Get());
-
     m_renderer.SetDeviceResources(m_deviceResources.get());
 
 #if WITH_IMGUI
     ImGui::CreateContext();
-    //ImGuiIO& io = ImGui::GetIO();
-    //const std::string droidSansTtf = UtilsFormatStr("%s/../imgui-1.87/misc/fonts/DroidSans.ttf", SRC_ROOT);
-    //io.Fonts->AddFontFromFileTTF(droidSansTtf.c_str(), 16.0f);
-
     ImGui_ImplWin32_Init(hWnd);
     ImGui_ImplDX11_Init(m_deviceResources->GetDevice(), m_deviceResources->GetDeviceContext());
 #endif

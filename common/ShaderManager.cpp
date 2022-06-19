@@ -8,6 +8,7 @@ using namespace Microsoft::WRL;
 
 void ShaderManager::Initialize(ID3D11Device* device, const std::string& shaderSrcRootDir)
 {
+	UtilsDebugPrint("Shaders source root: %s\n", shaderSrcRootDir.c_str());
 	m_shaderSrcRootDir = shaderSrcRootDir;
 	WIN32_FIND_DATA findData = {};
 	const std::string shadersRoot = UtilsFormatStr("%s\\*", m_shaderSrcRootDir.c_str());

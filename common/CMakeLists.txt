@@ -1,11 +1,28 @@
 set(current_target ne_common)
 
-set(source_files "Game.cpp" "Camera.cpp" "DeviceResources.cpp" "Renderer.cpp" "ShaderManager.cpp" "InputLayout.cpp")
-set(header_files "Game.h" "Camera.h" "DeviceResources.h" "Renderer.h" "ShaderManager.h" "LightHelper.h" "InputLayout.h")
+set(source_files 
+	"Game.cpp" 
+	"Camera.cpp" 
+	"DeviceResources.cpp"
+	"Renderer.cpp"
+	"ShaderManager.cpp"
+	"InputLayout.cpp"
+	"Actor.cpp"
+	"MeshGenerator.cpp")
+set(header_files 
+	"Game.h"
+	"Camera.h"
+	"DeviceResources.h"
+	"Renderer.h" 
+	"ShaderManager.h" 
+	"LightHelper.h"
+	"InputLayout.h"
+	"Actor.h"
+	"MeshGenerator.h")
 
 add_library(${current_target} ${source_files} ${header_files})
 
-target_link_libraries(${current_target} ne_math ne_input ne_utils imgui)
+target_link_libraries(${current_target} ne_math ne_input ne_utils ne_objloader imgui)
 
 target_include_directories(${current_target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

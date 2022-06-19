@@ -48,13 +48,13 @@ class Game
 public:
     virtual ~Game();
     virtual void Tick() = 0;
-    virtual void Initialize(HWND hWnd, uint32_t width, uint32_t height) = 0;
+    virtual void Initialize(HWND hWnd, uint32_t width, uint32_t height);
     static void GetDefaultSize(uint32_t *width, uint32_t *height);
     virtual void OnWindowSizeChanged(int width, int height);
 
 protected:
     virtual void Update() = 0;
-    virtual void Render();
+    virtual void Render() = 0;
     virtual void CreateWindowSizeDependentResources();
 
 #if WITH_IMGUI
