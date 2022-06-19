@@ -1,12 +1,16 @@
-#include "fog.h"
+// dx11.cpp : Defines the entry point for the application.
+//
 
-#include "FogGame.h"
-#include "Keyboard.h"
-#include "Mouse.h"
+#include "framework.h"
+#include "dx11.h"
+
+#include "Game.h"
 #include "Utils.h"
+#include "Mouse.h"
 
-#include <shellapi.h>
 #include <winuser.h>
+#include <shellapi.h>
+
 
 #if WITH_VLD
 #include <vld.h>
@@ -19,50 +23,57 @@
 #define MAX_LOADSTRING 1000
 
 // Global Variables:
-HINSTANCE hInst;                                                     // current instance
-const char szTitle[MAX_LOADSTRING] = "soft-shadows";                 // The title bar text
-const char szWindowClass[MAX_LOADSTRING] = "softShadowsWindowClass"; // the main window class name
-FILE* hLog = nullptr; 						     // log handle
+HINSTANCE hInst;                                // current instance
+const char szTitle[MAX_LOADSTRING] = "soft-shadows";                  // The title bar text
+const char szWindowClass[MAX_LOADSTRING] = "softShadowsWindowClass";            // the main window class name
+FILE* hLog = nullptr;
 
 // Forward declarations of functions included in this code module:
-ATOM MyRegisterClass(HINSTANCE hInstance);
-BOOL InitInstance(HINSTANCE, int, Game *);
-LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
+ATOM                MyRegisterClass(HINSTANCE hInstance);
+BOOL                InitInstance(HINSTANCE, int, Game*);
+LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 HMODULE GetCurrentModule()
 { // NB: XP+ solution!
-    HMODULE hModule = NULL;
-    GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)GetCurrentModule, &hModule);
+  HMODULE hModule = NULL;
+  GetModuleHandleEx(
+    GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+    (LPCTSTR)GetCurrentModule,
+    &hModule);
 
-    return hModule;
+  return hModule;
 }
 
 namespace
 {
-std::unique_ptr<Game> gGame = nullptr;
+    std::unique_ptr<Game> gGame = nullptr;
 }
 
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine,
-                      _In_ int nCmdShow)
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
+                     _In_opt_ HINSTANCE hPrevInstance,
+                     _In_ LPWSTR    lpCmdLine,
+                     _In_ int       nCmdShow)
 {
-	fopen_s(&hLog, "log.txt", "w");
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
+    fopen_s(&hLog, "log.txt", "w");
     // Initialize global strings
-    // LoadStringW(NULL, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    // LoadStringW(NULL, IDC_DX11, szWindowClass, MAX_LOADSTRING);
+    //LoadStringW(NULL, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    //LoadStringW(NULL, IDC_DX11, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
-    gGame = std::make_unique<FogGame>();
+    gGame = std::make_unique<Game>();
 
     // Perform application initialization:
-    if (!InitInstance(hInstance, nCmdShow, gGame.get()))
+    if (!InitInstance (hInstance, nCmdShow, gGame.get()))
     {
-        printf("ERROR: InitInstance failed!\n");
+	    printf("ERROR: InitInstance failed!\n");
         return FALSE;
     }
+
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_DX11));
 
     MSG msg = {};
 
@@ -79,9 +90,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             gGame->Tick();
         }
     }
-    fclose(hLog);
 
-    return static_cast<int>(msg.wParam);
+    fclose(hLog);
+    return (int) msg.wParam;
 }
 
 //
@@ -95,14 +106,17 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc = WndProc;
-    wcex.cbClsExtra = 0;
-    wcex.cbWndExtra = 0;
-    wcex.hInstance = hInstance;
-    wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground = reinterpret_cast<HBRUSH>((COLOR_WINDOW + 1));
-    wcex.lpszClassName = szWindowClass;
+    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc    = WndProc;
+    wcex.cbClsExtra     = 0;
+    wcex.cbWndExtra     = 0;
+    wcex.hInstance      = hInstance;
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_DX11));
+    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.lpszMenuName   = MAKEINTRESOURCE(IDC_DX11);
+    wcex.lpszClassName  = szWindowClass;
+    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
     return RegisterClassEx(&wcex);
 }
@@ -117,38 +131,38 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //        In this function, we save the instance handle in a global variable and
 //        create and display the main program window.
 //
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, Game *gGame)
+BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, Game* gGame)
 {
-    hInst = hInstance; // Store instance handle in our global variable
+   hInst = hInstance; // Store instance handle in our global variable
 
-    uint32_t width = 0;
-    uint32_t height = 0;
+   uint32_t width = 0;
+   uint32_t height = 0;
 
-    gGame->GetDefaultSize(&width, &height);
+   gGame->GetDefaultSize(&width, &height);
 
-    RECT rc = {0, 0, static_cast<LONG>(width), static_cast<LONG>(height)};
+   RECT rc = { 0, 0, (LONG)width, (LONG)height };
 
-    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, TRUE);
+   AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, TRUE);
 
-    HWND hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-                             rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
+   HWND hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+       CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
-    if (!hWnd)
-    {
-        printf("ERROR: hWnd is NULL!\n");
-        return FALSE;
-    }
+   if (!hWnd)
+   {
+	   printf("ERROR: hWnd is NULL!\n");
+      return FALSE;
+   }
 
-    SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)gGame);
+   SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)gGame);
 
-    ShowWindow(hWnd, nCmdShow);
-    UpdateWindow(hWnd);
+   ShowWindow(hWnd, nCmdShow);
+   UpdateWindow(hWnd);
 
-    GetClientRect(hWnd, &rc);
+   GetClientRect(hWnd, &rc);
 
-    gGame->Initialize(hWnd, rc.right - rc.left, rc.bottom - rc.top);
+   gGame->Initialize(hWnd, rc.right - rc.left, rc.bottom - rc.top);
 
-    return TRUE;
+   return TRUE;
 }
 
 //
@@ -180,8 +194,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message)
     {
-    case WM_COMMAND: {
-        return DefWindowProc(hWnd, message, wParam, lParam);
+    case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        // Parse the menu selections:
+        switch (wmId)
+        {
+        case IDM_ABOUT:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
+            break;
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        }
     }
     break;
     case WM_PAINT:
@@ -200,7 +227,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_MOVE:
         if (gGame)
         {
-            // OnWindowMoved();
+            //OnWindowMoved();
         }
         break;
 
@@ -211,16 +238,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 s_minimized = TRUE;
                 if (!s_in_suspend && gGame)
-                    // OnSuspending();
-                    s_in_suspend = TRUE;
+                    //OnSuspending();
+                s_in_suspend = TRUE;
             }
         }
         else if (s_minimized)
         {
             s_minimized = FALSE;
             if (s_in_suspend && gGame)
-                // OnResuming();
-                s_in_suspend = FALSE;
+                //OnResuming();
+            s_in_suspend = FALSE;
         }
         else if (!s_in_sizemove && gGame)
         {
@@ -246,7 +273,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_GETMINMAXINFO:
         if (lParam)
         {
-            MINMAXINFO *info = (MINMAXINFO *)(lParam);
+            MINMAXINFO* info = (MINMAXINFO*)(lParam);
             info->ptMinTrackSize.x = 320;
             info->ptMinTrackSize.y = 200;
         }
@@ -257,15 +284,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             if (wParam)
             {
-                // OnActivated();
+                //OnActivated();
             }
             else
             {
-                // OnDeactivated();
+                //OnDeactivated();
             }
         }
-        // Keyboard::ProcessMessage(message, wParam, lParam);
-        // Mouse::ProcessMessage(message, wParam, lParam);
+        //Keyboard::ProcessMessage(message, wParam, lParam);
+        //Mouse::ProcessMessage(message, wParam, lParam);
         break;
 
     case WM_POWERBROADCAST:
@@ -273,16 +300,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
         case PBT_APMQUERYSUSPEND:
             if (!s_in_suspend && gGame)
-                // OnSuspending();
-                s_in_suspend = TRUE;
+                //OnSuspending();
+            s_in_suspend = TRUE;
             return TRUE;
 
         case PBT_APMRESUMESUSPEND:
             if (!s_minimized)
             {
                 if (s_in_suspend && gGame)
-                    // OnResuming();
-                    s_in_suspend = FALSE;
+                    //OnResuming();
+                s_in_suspend = FALSE;
             }
             return TRUE;
         }
@@ -293,7 +320,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_SYSKEYDOWN:
-        // Keyboard::ProcessMessage(message, wParam, lParam);
+        //Keyboard::ProcessMessage(message, wParam, lParam);
         if (wParam == VK_RETURN && (lParam & 0x60000000) == 0x20000000)
         {
             // Implements the classic ALT+ENTER fullscreen toggle
@@ -397,9 +424,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             Keyboard::Get().OnKeyUp(wParam);
         }
         break;
-    case WM_SYSKEYUP: {
-        // Keyboard::ProcessMessage(message, wParam, lParam);
-    }
+    case WM_SYSKEYUP:
+	{
+        //Keyboard::ProcessMessage(message, wParam, lParam);
+	}
     break;
     }
 

@@ -3,36 +3,82 @@ set(current_target fog)
 message(STATUS "Current build directory: ${CMAKE_CURRENT_BINARY_DIR}")
 
 set(source_files
-	"src/fog.cpp"
-	  "src/FogGame.cpp")
+	"src/Actor.cpp"
+	"src/Camera.cpp"
+	"src/CubeMap.cpp"
+	"src/DeviceResources.cpp"
+	"src/Game.cpp"
+	"src/InputLayout.cpp"
+
+	"src/MeshGenerator.cpp"
+
+	"src/Renderer.cpp"
+	"src/ShadowMap.cpp"
+
+	"src/dx11.cpp"
+
+	"src/DynamicCubeMap.cpp"
+	"src/ParticleSystem.cpp"
+	 "src/ShaderManager.cpp" )
 
 set(header_files
-	"include/fog.h"   "include/FogGame.h")
+
+	"include/Actor.h"
+	"include/Camera.h"
+	"include/CubeMap.h"
+	"include/DeviceResources.h"
+	"include/Game.h"
+	"include/InputLayout.h"
+
+	"include/LightHelper.h"
+	"include/MeshGenerator.h"
+
+	"include/Renderer.h"
+	"include/Resource.h"
+	"include/ShadowMap.h"
+
+
+	"include/dx11.h"
+	"include/framework.h"
+
+	"include/targetver.h"
+	"include/DynamicCubeMap.h"
+	"include/ParticleSystem.h"
+
+	 "include/ShaderManager.h"  )
 
 set(pixel_shader_files
-	shader/PS.hlsl
-	)
+	shader/ShadowPS.hlsl
+	shader/LightPS.hlsl
+	shader/PhongPS.hlsl
+	shader/DefaultPS.hlsl
+	shader/SkyPS.hlsl
+	shader/ParticlePS.hlsl)
 
 set(vertex_shader_files
-	shader/VS.hlsl
-	)
+	shader/ShadowVS.hlsl
+	shader/SkyVS.hlsl
+	shader/ColorVS.hlsl
+	shader/ParticleVS.hlsl)
 
 set(shader_header_files
+	shader/Sky.hlsli
+	shader/LightingHelper.hlsli
 	shader/Common.hlsli
-	)
+	shader/Particle.hlsli)
 
 add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_shader_files} ${vertex_shader_files} ${shader_header_files})
 
-target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math ne_objloader ne_utils ne_input ne_common)
+target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math ne_objloader ne_utils ne_input)
 
 target_compile_definitions(${current_target} PUBLIC
 	NOMINMAX=1
 	WITH_IMGUI=1)
 
-configure_file("include/Config.h.in" Config.h)
+configure_file(SoftShadowsConfig.h.in SoftShadowsConfig.h)
 
-target_include_directories(${current_target} PRIVATE 
-	${CMAKE_CURRENT_BINARY_DIR} 
+target_include_directories(${current_target} PRIVATE
+	${CMAKE_CURRENT_BINARY_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_TYPE ps)

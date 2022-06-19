@@ -1,77 +1,68 @@
+#include "LightingHelper.hlsli"
+
 struct VSIn
 {
 	float3 Pos : POSITION;
-	float3 Norm : NORMAL;
-	float2 TexCoord : TEXCOORD0;
+	float3 Normal : NORMAL;
+	float3 Tangent : TANGENT;
+	float3 Bitangent : BITANGENT;
+	float2 TexCoords : TEXCOORDS;
 };
 
-struct PSIn
+struct VSOut
 {
-	float4 Pos : SV_POSITION;
-	float3 Norm : NORMAL;
-	float2 TexCoord : TEXCOORD0;
+	float4 PosH : SV_POSITION;
+	float3 NormalW : NORMAL;
+	float2 TexCoords : TEXCOORDS;
+	float3 PosW : POSITION;
+	float4 ShadowPosH : TEXCOORD1;
+	float3 TangentW : TANGENT;
+	float3 BitangentW : BITANGENT;
 };
 
-struct DirectionalLight
-{
-	float4 Ambient;
-	float4 Diffuse;
-	float4 Specular;
-	float3 Position;
-	float Radius;
-};
-
-struct PointLight
-{
-	float4 Ambient;
-	float4 Diffuse;
-	float4 Specular;
-	float3 Position;
-	float Range;
-	float3 Att;
-	float pad;
-};
-
-struct SpotLight
-{
-	float4 Ambient;
-	float4 Diffuse;
-	float4 Specular;
-	float3 Position;
-	float Range;
-	float3 Direction;
-	float Spot;
-	float3 Att;
-	float pad;
-};
-
-struct Material
-{
-	float4 Ambient;
-	float4 Diffuse;
-	float4 Specular;
-	float4 Reflection;
+static const VSOut EMPTY_VSOUT = {
+	{0.0f, 0.0f, 0.0f, 0.0f},
+	{0.0f, 0.0f, 0.0f},
+	{0.0f, 0.0f},
+	{0.0f, 0.0f, 0.0f},
+	{0.0f, 0.0f, 0.0f, 0.0f},
+	{0.0f, 0.0f, 0.0f},
+	{0.0f, 0.0f, 0.0f}
 };
 
 cbuffer PerObjectConstants : register(b0)
 {
-    float4x4 World;
+	float4x4 worldInvTranspose;
+	float4x4 world;
+	Material material;
 };
 
-cbuffer PerFrameConstants :  register(b1)
+cbuffer PerFrameConstants : register(b1)
 {
-    float4x4 View;
-    float4x4 Proj;
-    float3 CameraPos;
-    float Pad;
+	float4x4 view;
+	float4x4 proj;
+	float4x4 shadowTransform;
+	float3 cameraPosW;
 };
 
 cbuffer PerSceneConstants : register(b2)
 {
-    PointLight PointLights[4];
-    DirectionalLight DirLight;
-    SpotLight SpotLights[2];
+	PointLight pointLights[4];
+	DirectionalLight dirLight;
+	SpotLight spotLights[2];
+	float4 fogColor;
+	float fogStart;
+	float fogEnd;
+	float pad[2];
 };
 
-sampler anisSam : register(s0);
-Texture2D diffuseMap : register(t0);
+sampler defaultSampler					: register(s0);
+SamplerComparisonState shadowSampler	: register(s1);
+
+Texture2D<float4> diffuseTexture	: register(t0);
+Texture2D<float4> specularTexture	: register(t1);
+Texture2D<float4> glossTexture		: register(t2);
+Texture2D<float4> normalTexture		: register(t3);
+Texture2D<float4> shadowTexture		: register(t4);
+TextureCube	cubeTexture				: register(t5);
+TextureCube envTexture				: register(t6);
