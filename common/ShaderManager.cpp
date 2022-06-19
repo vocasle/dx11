@@ -3,15 +3,19 @@
 #include "Utils.h"
 
 #include <Windows.h>
+#include <d3dcompiler.h>
+#include <filesystem>
 
 using namespace Microsoft::WRL;
 
-void ShaderManager::Initialize(ID3D11Device* device, const std::string& shaderSrcRootDir)
+void ShaderManager::Initialize(ID3D11Device* device, const std::string& shaderBlobRootDir, const std::string& shaderSrcRootDir)
 {
 	UtilsDebugPrint("Shaders source root: %s\n", shaderSrcRootDir.c_str());
+	UtilsDebugPrint("Shaders blob root: %s\n", shaderBlobRootDir.c_str());
 	m_shaderSrcRootDir = shaderSrcRootDir;
+	m_shaderBlobRootDir = shaderBlobRootDir;
 	WIN32_FIND_DATA findData = {};
-	const std::string shadersRoot = UtilsFormatStr("%s\\*", m_shaderSrcRootDir.c_str());
+	const std::string shadersRoot = UtilsFormatStr("%s\\*", m_shaderBlobRootDir.c_str());
 	HANDLE f = FindFirstFile(shadersRoot.c_str(), &findData);
 	do
 	{
@@ -72,7 +76,7 @@ void ShaderManager::UpdatePixelShader(const std::string& name, ID3D11PixelShader
 
 void ShaderManager::CreateVertexShader(const std::string& filepath, ID3D11Device* device)
 {
-	const auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", m_shaderSrcRootDir.c_str(), filepath.c_str()).c_str());
+	const auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", m_shaderBlobRootDir.c_str(), filepath.c_str()).c_str());
 	ComPtr<ID3D11VertexShader> vs;
 
 	if (FAILED(device->CreateVertexShader(&bytes[0], bytes.size(), NULL, vs.GetAddressOf())))
@@ -88,7 +92,7 @@ void ShaderManager::CreateVertexShader(const std::string& filepath, ID3D11Device
 
 void ShaderManager::CreatePixelShader(const std::string& filepath, ID3D11Device* device)
 {
-	const auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", m_shaderSrcRootDir.c_str(), filepath.c_str()).c_str());
+	const auto bytes = UtilsReadData(UtilsFormatStr("%s/%s", m_shaderBlobRootDir.c_str(), filepath.c_str()).c_str());
 	ComPtr<ID3D11PixelShader> ps;
 
 	if (FAILED(device->CreatePixelShader(&bytes[0], bytes.size(), NULL, ps.GetAddressOf())))
@@ -99,4 +103,76 @@ void ShaderManager::CreatePixelShader(const std::string& filepath, ID3D11Device*
 
 	const std::string shaderName = filepath.substr(0, filepath.find_last_not_of("cso"));
 	m_pixelShaders[shaderName] = ps;
+}
+
+
+void ShaderManager::Recompile(ID3D11Device* device)
+{
+	UtilsDebugPrint("Recompiling shaders\n");
+
+	WIN32_FIND_DATA findData = {};
+	const std::string shadersRoot = UtilsFormatStr("%s/*", m_shaderSrcRootDir.c_str());
+	HANDLE f = FindFirstFile(shadersRoot.c_str(), &findData);
+	do
+	{
+		using namespace std::filesystem;
+		const path shaderName = findData.cFileName;
+		if (shaderName.extension().string() != ".hlsl")
+			continue;
+		// compile shader
+		const std::string shaderNameStr = UtilsFormatStr("%s/%s", m_shaderSrcRootDir.c_str(), shaderName.string().c_str());
+		const bool isVS = shaderNameStr.find("VS") != std::string::npos;
+		ComPtr<ID3DBlob> shaderBlob = nullptr;
+		ComPtr<ID3DBlob> errorBlob = nullptr;
+		const std::wstring shaderPathW = UtilsStrToWstr(shaderNameStr);
+		UtilsDebugPrint("Compiling from file: %s\n", UtilsWstrToStr(shaderPathW).c_str());
+		HR(D3DCompileFromFile(shaderPathW.c_str(),
+			nullptr,
+			D3D_COMPILE_STANDARD_FILE_INCLUDE,
+			"main",
+			isVS ? "vs_5_0" : "ps_5_0",
+			0,
+			0,
+			&shaderBlob,
+			&errorBlob))
+
+		if (errorBlob.Get())
+		{
+			UtilsDebugPrint("ERROR: Failed to hot reload %s, because of compile error. %s\n",
+				shaderName.c_str(), static_cast<char*>(errorBlob->GetBufferPointer()));
+		}
+		else if (shaderBlob.Get())
+		{
+			const std::string sn = shaderName.stem().string();
+			if (sn.find("VS") != std::string::npos)
+			{
+				if (GetVertexShader(sn))
+				{
+					ComPtr<ID3D11VertexShader> vs = {};
+					UtilsDebugPrint("Hot reload shader %s\n", shaderName.c_str());
+					const HRESULT hr = device->CreateVertexShader(shaderBlob->GetBufferPointer(),
+						shaderBlob->GetBufferSize(), nullptr, vs.GetAddressOf());
+					UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
+					HR(hr)
+					UpdateVertexShader(sn, vs.Get());
+				}
+			}
+			else if (sn.find("PS") != std::string::npos)
+			{
+				if (GetPixelShader(sn))
+				{
+					ComPtr<ID3D11PixelShader> ps = {};
+					UtilsDebugPrint("Hot reload shader %s\n", shaderName.c_str());
+					const HRESULT hr = device->CreatePixelShader(shaderBlob->GetBufferPointer(),
+						shaderBlob->GetBufferSize(), nullptr, ps.GetAddressOf());
+					UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
+					HR(hr)
+					UpdatePixelShader(sn, ps.Get());
+				}
+			}
+		}
+	}
+	while (FindNextFile(f, &findData));
+	FindClose(f);
+
 }
