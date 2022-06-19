@@ -95,3 +95,6 @@ void UtilsUpdateConstantBuffer(ID3D11DeviceContext* context,
 void UtilsCreateConstantBuffer(ID3D11Device* device,
 	size_t byteWidth,
 	ID3D11Buffer** pDest);
+
+std::wstring UtilsStrToWstr(const std::string& str);
+std::string UtilsWstrToStr(const std::wstring& wstr);

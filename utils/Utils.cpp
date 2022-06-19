@@ -18,7 +18,7 @@ void UtilsDebugPrint(const char* fmt, ...)
     va_end(args);
     OutputDebugStringA(out);
     fprintf(stdout, "%s", out);
-    fprintf(hLog, "%s", out); 
+    fprintf(hLog, "%s", out);
 }
 
 void UtilsFatalError(const char* fmt, ...)
@@ -29,7 +29,7 @@ void UtilsFatalError(const char* fmt, ...)
     vsnprintf(out, sizeof(out), fmt, args);
     va_end(args);
     fprintf(stderr, "%s", out);
-    fprintf(hLog, "%s", out); 
+    fprintf(hLog, "%s", out);
     OutputDebugStringA(out);
     ExitProcess(EXIT_FAILURE);
 }
@@ -175,4 +175,24 @@ void UtilsCreateConstantBuffer(ID3D11Device* device,
     {
         UtilsFatalError("ERROR: Failed to create per frame constants cbuffer\n");
     }
+}
+
+std::wstring UtilsStrToWstr(const std::string& str)
+{
+	size_t numConverted = 0;
+	const size_t wstrSz = str.size() + 1;
+	std::wstring wstr(wstrSz, 0);
+	const errno_t res = mbstowcs_s(&numConverted, &wstr[0], wstrSz, &str[0], str.size());
+	assert(res == 0 && "Failed to convert string to widestring");
+	return wstr;
+}
+
+std::string UtilsWstrToStr(const std::wstring &wstr)
+{
+	size_t numConverted = 0;
+	const size_t strSz = wstr.size() + 1;
+	std::string str(strSz, 0);
+	const errno_t res = wcstombs_s(&numConverted, &str[0], strSz, &wstr[0], wstr.size());
+	assert(res == 0 && "Failed to convert widestring to string");
+	return str;
 }
