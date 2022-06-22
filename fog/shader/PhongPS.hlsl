@@ -8,23 +8,10 @@ float4 main(VSOut In) : SV_TARGET
 	const float4 specularSampled = specularTexture.Sample(defaultSampler, In.TexCoords);
 	const float4 glossSampled = glossTexture.Sample(defaultSampler, In.TexCoords);
 	const float3 normalSampled = normalTexture.Sample(defaultSampler, In.TexCoords).xyz;
-    float2 shadowUV = float2(In.ShadowPosH.x * 0.5f + 0.5f,
-                                               -In.ShadowPosH.y * 0.5f + 0.5f);
+    float2 shadowUV = float2(In.ShadowPosH.x * 0.5f + 0.5f, In.ShadowPosH.y * 0.5f - 0.5f);
 	const float4 shadowSampled = shadowTexture.Sample(defaultSampler, shadowUV);
 	float3 normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW), normalize(In.TangentW));
-
-		return float4(In.PosH.zzz , 1.0f);
-
-
- //   return float4(shadowSampled.xxx / In.ShadowPosH.z , 1.0f);
-
 	normal = normalize(normal);
-	//normal = normalize(In.NormalW);
-
-	//float3 L = normalize(dirLight.Position);
-	//float diff = max(dot(L, normal), 0.0f);
-	//return float4(diffuseSampled.rgb * diff, 1.0f);
-
 	const float3 viewDir = normalize(cameraPosW - In.PosW);
 
 	LightIntensity intensities[MAX_LIGHTS];
@@ -38,18 +25,7 @@ float4 main(VSOut In) : SV_TARGET
 
 	intensities[5] = SpotLightIntensity(spotLights[0], normal, In.PosW, viewDir);
 	float shadows[MAX_LIGHTS] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
-	//shadows[0] = CalcShadowFactor(shadowSampler, shadowTexture, In.ShadowPosH);
-
-	//const float diff = dot(normalize(normal), normalize(dirLight.Position));
-	//return float4(diff, diff, diff, 1.0f);
-	//if (In.ShadowPosH.z > shadowSampled.x)
-	//{
-	//	shadows[0] = 0.0f;
-	//}
-		shadows[0] = CalcShadowFactor(shadowSampler, shadowTexture, In.ShadowPosH);
-
-	//return float4(shadowSampled.xyz /** 2.0f - 1.0f*/, 1.0f);
-
+    shadows[0] = CalcShadowFactor(shadowSampler, shadowTexture, In.ShadowPosH);
 
 	const float4 emissive = ZERO_VEC4;
 	const float4 emissiveSampled = ZERO_VEC4;
@@ -80,5 +56,6 @@ float4 main(VSOut In) : SV_TARGET
 //		float d = length(cameraPosW - In.PosW);
 //		float fogFactor =  clamp((d - fogStart) / (fogEnd - fogStart), 0, 1);
 //		color.rgb = lerp(color.rgb, fogColor * color.a, fogFactor);
+    color = color * float4(1.0f, 0.0f, 0.0f, 1.0f);
 		return color;
 }

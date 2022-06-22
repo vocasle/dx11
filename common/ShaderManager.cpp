@@ -139,7 +139,7 @@ void ShaderManager::Recompile(ID3D11Device* device)
 		if (errorBlob.Get())
 		{
 			UtilsDebugPrint("ERROR: Failed to hot reload %s, because of compile error. %s\n",
-				shaderName.c_str(), static_cast<char*>(errorBlob->GetBufferPointer()));
+				shaderName.string().c_str(), static_cast<char*>(errorBlob->GetBufferPointer()));
 		}
 		else if (shaderBlob.Get())
 		{
@@ -149,10 +149,9 @@ void ShaderManager::Recompile(ID3D11Device* device)
 				if (GetVertexShader(sn))
 				{
 					ComPtr<ID3D11VertexShader> vs = {};
-					UtilsDebugPrint("Hot reload shader %s\n", shaderName.c_str());
 					const HRESULT hr = device->CreateVertexShader(shaderBlob->GetBufferPointer(),
 						shaderBlob->GetBufferSize(), nullptr, vs.GetAddressOf());
-					UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
+					UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.string().c_str(), hr);
 					HR(hr)
 					UpdateVertexShader(sn, vs.Get());
 				}
@@ -162,10 +161,9 @@ void ShaderManager::Recompile(ID3D11Device* device)
 				if (GetPixelShader(sn))
 				{
 					ComPtr<ID3D11PixelShader> ps = {};
-					UtilsDebugPrint("Hot reload shader %s\n", shaderName.c_str());
 					const HRESULT hr = device->CreatePixelShader(shaderBlob->GetBufferPointer(),
 						shaderBlob->GetBufferSize(), nullptr, ps.GetAddressOf());
-					UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
+					UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.string().c_str(), hr);
 					HR(hr)
 					UpdatePixelShader(sn, ps.Get());
 				}
