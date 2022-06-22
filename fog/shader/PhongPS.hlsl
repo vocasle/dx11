@@ -13,8 +13,10 @@ float4 main(VSOut In) : SV_TARGET
 	const float4 shadowSampled = shadowTexture.Sample(defaultSampler, shadowUV);
 	float3 normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW), normalize(In.TangentW));
 
-    //return float4(shadowSampled.xxx / In.ShadowPosH.z , 1.0f);
-//	return float4(In.ShadowPosH.zzz, 1.0f);
+		return float4(In.PosH.zzz , 1.0f);
+
+
+ //   return float4(shadowSampled.xxx / In.ShadowPosH.z , 1.0f);
 
 	normal = normalize(normal);
 	//normal = normalize(In.NormalW);
@@ -75,8 +77,8 @@ float4 main(VSOut In) : SV_TARGET
 	float4 color = fragmentColor.Emissive + shadows[0] * (fragmentColor.Diffuse + fragmentColor.Specular);
 //		const float fogLerp = saturate((length(cameraPosW) - fogStart) / fogRange);
 //		color = lerp(color, fogColor, fogLerp);
-		float d = length(cameraPosW - In.PosW);
-		float fogFactor =  clamp((d - fogStart) / (fogEnd - fogStart), 0, 1);
-		color.rgb = lerp(color.rgb, fogColor * color.a, fogFactor);
+//		float d = length(cameraPosW - In.PosW);
+//		float fogFactor =  clamp((d - fogStart) / (fogEnd - fogStart), 0, 1);
+//		color.rgb = lerp(color.rgb, fogColor * color.a, fogFactor);
 		return color;
 }

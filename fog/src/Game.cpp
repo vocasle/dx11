@@ -631,7 +631,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	CreateActors();
 	m_CubeMap.CreateCube(*FindActorByName("Cube"), device);
 	InitPerSceneConstants();
-	m_shaderManager.Initialize(device);
+	m_shaderManager.Initialize(device, SHADERS_ROOT, UtilsFormatStr("%s/shader", SRC_ROOT));
 
 	GameCreateConstantBuffer(device, sizeof(PerSceneConstants), &m_PerSceneCB);
 	GameCreateConstantBuffer(device, sizeof(PerObjectConstants), &m_PerObjectCB);
