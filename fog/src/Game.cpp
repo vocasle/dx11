@@ -430,7 +430,7 @@ void Game::Update()
 	if (elapsedTime >= 1.0f)
 	{
 		SetWindowText(m_DR->GetWindow(),
-			UtilsFormatStr("soft-shadows -- FPS: %d, frame: %f s",
+			UtilsFormatStr("fog -- FPS: %d, frame: %f s",
 				static_cast<int>(elapsedTime / deltaSeconds),
 				deltaSeconds).c_str());
 		elapsedTime = 0.0f;
