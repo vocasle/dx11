@@ -160,8 +160,8 @@ void DeviceResources::CreateWindowSizeDependentResources()
 		swapChainDesc.Format = backBufferFormat;
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swapChainDesc.BufferCount = 2;
-		swapChainDesc.SampleDesc.Count = m_MultiSampleQualityLevel;
-		swapChainDesc.SampleDesc.Quality = m_MultiSampleQualityLevel - 1;
+		swapChainDesc.SampleDesc.Count = 1;
+		swapChainDesc.SampleDesc.Quality = 0;
 		swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
