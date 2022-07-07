@@ -8,7 +8,7 @@ set(source_files
 	"ShaderManager.cpp"
 	"InputLayout.cpp"
 	"Actor.cpp"
-	"MeshGenerator.cpp")
+	"MeshGenerator.cpp" "DynamicConstBuffer.cpp")
 set(header_files 
 	"Game.h"
 	"Camera.h"
@@ -18,7 +18,8 @@ set(header_files
 	"LightHelper.h"
 	"InputLayout.h"
 	"Actor.h"
-	"MeshGenerator.h")
+	"MeshGenerator.h"
+	"DynamicConstBuffer.h")
 
 add_library(${current_target} ${source_files} ${header_files})
 
