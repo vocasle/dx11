@@ -13,3 +13,4 @@ out/
 /log.txt
 /build-debug
 /cmake-build-debug-visual-studio
+/.vim
