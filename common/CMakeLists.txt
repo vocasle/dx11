@@ -8,7 +8,7 @@ set(source_files
 	"ShaderManager.cpp"
 	"InputLayout.cpp"
 	"Actor.cpp"
-	"MeshGenerator.cpp" "DynamicConstBuffer.cpp")
+	"MeshGenerator.cpp" "DynamicConstBuffer.cpp" "VertexBuffer.cpp")
 set(header_files 
 	"Game.h"
 	"Camera.h"

@@ -38,7 +38,7 @@ struct Node
 
     void AddChild(const std::string& inName, NodeType inType)
     {
-        assert(Type == NodeType::Array || Type == NodeType::Struct 
+        assert(Type == NodeType::Array || Type == NodeType::Struct
             && "Only composite types allowed to have children");
         Node n;
         n.Name = Type == NodeType::Struct
@@ -195,11 +195,16 @@ public:
 	    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 
-	    if (FAILED(device->CreateBuffer(&bufferDesc, NULL, mBuffer.ReleaseAndGetAddressOf())))
+	    D3D11_SUBRESOURCE_DATA initData = {};
+	    initData.pSysMem = mBytes.data();
+
+	    if (FAILED(device->CreateBuffer(&bufferDesc, &initData, mBuffer.ReleaseAndGetAddressOf())))
 	    {
 		    UtilsFatalError("ERROR: Failed to create per frame constants cbuffer\n");
 	    }
     }
+
+	const std::vector<uint8_t>& GetBytes() const { return mBytes; }
 
 private:
 
