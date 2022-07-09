@@ -412,7 +412,7 @@ void Game::Clear()
 
 void Game::Update()
 {
-	m_Camera.UpdatePos(m_Timer.DeltaMillis);
+	m_Camera.ProcessKeyboard(m_Timer.DeltaMillis);
 	m_Camera.ProcessMouse(m_Timer.DeltaMillis);
 
 	m_PerFrameData.view = m_Camera.GetViewMat();
@@ -454,7 +454,9 @@ void Game::Render()
 	UpdateImgui();
 #endif
 
-	m_Renderer.Clear();
+	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
+	m_Renderer.SetViewport(m_DR->GetViewport());
+	m_Renderer.Clear(nullptr);
 	m_Renderer.SetBlendState(nullptr);
 	m_Renderer.SetDepthStencilState(nullptr);
 	m_Renderer.SetPrimitiveTopology(R_DEFAULT_PRIMTIVE_TOPOLOGY);
@@ -482,7 +484,6 @@ void Game::Render()
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
 	{
-		m_Renderer.Clear();
 		m_PerFrameData.view = m_Camera.GetViewMat();
 		m_PerFrameData.proj = m_Camera.GetProjMat();
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
@@ -631,7 +632,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	CreateActors();
 	m_CubeMap.CreateCube(*FindActorByName("Cube"), device);
 	InitPerSceneConstants();
-	m_shaderManager.Initialize(device);
+	m_shaderManager.Initialize(device, SHADERS_ROOT, UtilsFormatStr("%s/shader", SRC_ROOT));
 
 	GameCreateConstantBuffer(device, sizeof(PerSceneConstants), &m_PerSceneCB);
 	GameCreateConstantBuffer(device, sizeof(PerObjectConstants), &m_PerObjectCB);
