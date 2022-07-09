@@ -9,7 +9,6 @@
 DeviceResources::DeviceResources():
 	m_BackbufferWidth{0},
 	m_BackbufferHeight{0},
-	m_MultiSampleQualityLevel{0},
 	m_ScreenViewport{},
 	m_hWnd{nullptr},
 	m_OutputSize{}
@@ -136,14 +135,6 @@ void DeviceResources::CreateWindowSizeDependentResources()
 	const UINT backBufferHeight = std::max(m_OutputSize.bottom - m_OutputSize.top, 1l);
 	const DXGI_FORMAT backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
 
-	UINT numQualityLevels = 0;
-	if (FAILED(m_Device->CheckMultisampleQualityLevels(DXGI_FORMAT_B8G8R8A8_UNORM, 4, &numQualityLevels)))
-	{
-		OutputDebugStringA("ERROR: Failed to query multisample quality levels\n");
-		ExitProcess(EXIT_FAILURE);
-	}
-	m_MultiSampleQualityLevel = numQualityLevels;
-
 	if (m_SwapChain)
 	{
 		if (FAILED(m_SwapChain->ResizeBuffers(2, backBufferWidth, backBufferHeight, backBufferFormat, 0)))
@@ -160,8 +151,8 @@ void DeviceResources::CreateWindowSizeDependentResources()
 		swapChainDesc.Format = backBufferFormat;
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swapChainDesc.BufferCount = 2;
-		swapChainDesc.SampleDesc.Count = m_MultiSampleQualityLevel;
-		swapChainDesc.SampleDesc.Quality = m_MultiSampleQualityLevel - 1;
+		swapChainDesc.SampleDesc.Count = 1;
+		swapChainDesc.SampleDesc.Quality = 0;
 		swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;

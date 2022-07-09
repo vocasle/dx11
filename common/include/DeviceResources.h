@@ -65,7 +65,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation> m_d3dAnnotation;
 	uint32_t m_BackbufferWidth;
 	uint32_t m_BackbufferHeight;
-	uint32_t m_MultiSampleQualityLevel;
 	D3D11_VIEWPORT m_ScreenViewport;
 	HWND m_hWnd;
 	RECT m_OutputSize;
