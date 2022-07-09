@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "Utils.h"
 
 #include <cassert>
 
@@ -123,21 +124,38 @@ void Renderer::DrawIndexed(uint32_t indexCount,
 	m_DR->GetDeviceContext()->DrawIndexed(indexCount, startIndexLocation, baseVertexLocation);
 }
 
-void Renderer::Clear()
+void Renderer::Clear(const float* color)
 {
 	ID3D11DeviceContext* ctx = m_DR->GetDeviceContext();
-	ID3D11RenderTargetView* rtv = m_DR->GetRenderTargetView();
-	ID3D11DepthStencilView* dsv = m_DR->GetDepthStencilView();
+
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> rtv;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsv;
+	ctx->OMGetRenderTargets(1, rtv.GetAddressOf(), dsv.GetAddressOf());
+
+	D3D11_VIEWPORT viewport;
+	unsigned int numViewports = 1;
+	ctx->RSGetViewports(&numViewports, &viewport);
+
+	if (!rtv)
+	{
+		UtilsDebugPrint("WARN: render target view is not set!\n");
+		return;
+	}
+	if (!dsv)
+	{
+		UtilsDebugPrint("WARN: depth stencil view is not set!\n");
+		return;
+	}
 
 	static const float CLEAR_COLOR[4] = { 0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f };
 
 	static ID3D11ShaderResourceView* nullSRVs[R_MAX_SRV_NUM] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 	BindShaderResources(BindTargets::PixelShader, nullSRVs, R_MAX_SRV_NUM);
 
-	ctx->ClearRenderTargetView(rtv, CLEAR_COLOR);
-	ctx->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	ctx->OMSetRenderTargets(1, &rtv, dsv);
-	ctx->RSSetViewports(1, &m_DR->GetViewport());
+	ctx->ClearRenderTargetView(rtv.Get(), color ? color : CLEAR_COLOR);
+	ctx->ClearDepthStencilView(dsv.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	ctx->OMSetRenderTargets(1, rtv.GetAddressOf(), dsv.Get());
+	ctx->RSSetViewports(1, &viewport);
 }
 
 void Renderer::Present()

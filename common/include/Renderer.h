@@ -34,20 +34,20 @@ public:
 	void SetViewport(D3D11_VIEWPORT viewport);
 	void SetRenderTargets(ID3D11RenderTargetView* rtv, ID3D11DepthStencilView* dsv);
 	void SetBlendState(ID3D11BlendState* blendState);
-	
+
 	void BindPixelShader(ID3D11PixelShader* shader);
 	void BindVertexShader(ID3D11VertexShader* shader);
 	void BindShaderResources(enum BindTargets bindTarget, ID3D11ShaderResourceView** SRVs, uint32_t numSRVs);
 	void BindConstantBuffers(enum BindTargets bindTarget, ID3D11Buffer** CBs, uint32_t numCBs);
 	void BindShaderResource(enum BindTargets bindTarget, ID3D11ShaderResourceView* srv, uint32_t slot);
 	void BindConstantBuffer(enum BindTargets bindTarget, ID3D11Buffer* cb, uint32_t slot);
-	
+
 	void DrawIndexed(uint32_t indexCount,
 		uint32_t startIndexLocation,
 		uint32_t baseVertexLocation);
-	
-	void Clear();
-	
+
+	void Clear(const float* color);
+
 	void Present();
 
 	void ClearRenderTargetView(ID3D11RenderTargetView* rtv, const float* color);
