@@ -3,38 +3,23 @@ set(current_target fog)
 message(STATUS "Current build directory: ${CMAKE_CURRENT_BINARY_DIR}")
 
 set(source_files
-	"src/Actor.cpp"
-	"src/Camera.cpp"
 	"src/CubeMap.cpp"
-	"src/DeviceResources.cpp"
 	"src/Game.cpp"
-	"src/InputLayout.cpp"
-	"src/MeshGenerator.cpp"
-	"src/Renderer.cpp"
 	"src/ShadowMap.cpp"
 	"src/dx11.cpp"
 	"src/DynamicCubeMap.cpp"
-	"src/ParticleSystem.cpp"
-	 "src/ShaderManager.cpp" )
+	"src/ParticleSystem.cpp")
 
 set(header_files
-	"include/Actor.h"
-	"include/Camera.h"
 	"include/CubeMap.h"
-	"include/DeviceResources.h"
 	"include/Game.h"
-	"include/InputLayout.h"
-	"include/LightHelper.h"
-	"include/MeshGenerator.h"
-	"include/Renderer.h"
 	"include/Resource.h"
 	"include/ShadowMap.h"
 	"include/dx11.h"
 	"include/framework.h"
 	"include/targetver.h"
 	"include/DynamicCubeMap.h"
-	"include/ParticleSystem.h"
-	"include/ShaderManager.h")
+	"include/ParticleSystem.h")
 
 set(pixel_shader_files
 	shader/ShadowPS.hlsl
@@ -61,14 +46,14 @@ set(shader_header_files
 
 add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_shader_files} ${vertex_shader_files} ${shader_header_files})
 
-target_link_libraries(${current_target} 
-	d3d11.lib 
-	dxgi.lib 
-	dxguid.lib 
-	imgui 
-	ne_math 
-	ne_objloader 
-	ne_utils 
+target_link_libraries(${current_target}
+	d3d11.lib
+	dxgi.lib
+	dxguid.lib
+	imgui
+	ne_math
+	ne_objloader
+	ne_utils
 	ne_input
 	ne_common)
 

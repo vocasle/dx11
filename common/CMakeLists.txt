@@ -1,7 +1,6 @@
 set(current_target ne_common)
 
 set(source_files
-	"src/Game.cpp"
 	"src/Camera.cpp"
 	"src/DeviceResources.cpp"
 	"src/Renderer.cpp"
@@ -13,7 +12,6 @@ set(source_files
 	"src/VertexBuffer.cpp"
 	"src/Texture.cpp")
 set(header_files
-	"include/Game.h"
 	"include/Camera.h"
 	"include/DeviceResources.h"
 	"include/Renderer.h"
