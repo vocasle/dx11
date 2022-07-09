@@ -9,43 +9,32 @@ set(source_files
 	"src/DeviceResources.cpp"
 	"src/Game.cpp"
 	"src/InputLayout.cpp"
-
 	"src/MeshGenerator.cpp"
-
 	"src/Renderer.cpp"
 	"src/ShadowMap.cpp"
-
 	"src/dx11.cpp"
-
 	"src/DynamicCubeMap.cpp"
 	"src/ParticleSystem.cpp"
 	 "src/ShaderManager.cpp" )
 
 set(header_files
-
 	"include/Actor.h"
 	"include/Camera.h"
 	"include/CubeMap.h"
 	"include/DeviceResources.h"
 	"include/Game.h"
 	"include/InputLayout.h"
-
 	"include/LightHelper.h"
 	"include/MeshGenerator.h"
-
 	"include/Renderer.h"
 	"include/Resource.h"
 	"include/ShadowMap.h"
-
-
 	"include/dx11.h"
 	"include/framework.h"
-
 	"include/targetver.h"
 	"include/DynamicCubeMap.h"
 	"include/ParticleSystem.h"
-
-	 "include/ShaderManager.h"  )
+	"include/ShaderManager.h")
 
 set(pixel_shader_files
 	shader/ShadowPS.hlsl
@@ -53,23 +42,35 @@ set(pixel_shader_files
 	shader/PhongPS.hlsl
 	shader/DefaultPS.hlsl
 	shader/SkyPS.hlsl
-	shader/ParticlePS.hlsl)
+	shader/ParticlePS.hlsl
+	shader/FogPS.hlsl)
 
 set(vertex_shader_files
 	shader/ShadowVS.hlsl
 	shader/SkyVS.hlsl
 	shader/ColorVS.hlsl
-	shader/ParticleVS.hlsl)
+	shader/ParticleVS.hlsl
+	shader/FogVS.hlsl)
 
 set(shader_header_files
 	shader/Sky.hlsli
 	shader/LightingHelper.hlsli
 	shader/Common.hlsli
-	shader/Particle.hlsli)
+	shader/Particle.hlsli
+	shader/Fog.hlsli)
 
 add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_shader_files} ${vertex_shader_files} ${shader_header_files})
 
-target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math ne_objloader ne_utils ne_input)
+target_link_libraries(${current_target} 
+	d3d11.lib 
+	dxgi.lib 
+	dxguid.lib 
+	imgui 
+	ne_math 
+	ne_objloader 
+	ne_utils 
+	ne_input
+	ne_common)
 
 target_compile_definitions(${current_target} PUBLIC
 	NOMINMAX=1
