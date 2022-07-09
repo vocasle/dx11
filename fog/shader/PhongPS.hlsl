@@ -73,10 +73,5 @@ float4 main(VSOut In) : SV_TARGET
 	//fragmentColor += reflColor * material.Reflection;
 
 	float4 color = fragmentColor.Emissive + shadows[0] * (fragmentColor.Diffuse + fragmentColor.Specular);
-//		const float fogLerp = saturate((length(cameraPosW) - fogStart) / fogRange);
-//		color = lerp(color, fogColor, fogLerp);
-		float d = length(cameraPosW - In.PosW);
-		float fogFactor =  clamp((d - fogStart) / (fogEnd - fogStart), 0, 1);
-		color.rgb = lerp(color.rgb, fogColor * color.a, fogFactor);
-		return color;
+	return color;
 }
