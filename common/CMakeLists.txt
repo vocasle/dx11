@@ -1,31 +1,35 @@
 set(current_target ne_common)
 
-set(source_files 
-	"Game.cpp" 
-	"Camera.cpp" 
-	"DeviceResources.cpp"
-	"Renderer.cpp"
-	"ShaderManager.cpp"
-	"InputLayout.cpp"
-	"Actor.cpp"
-	"MeshGenerator.cpp" "DynamicConstBuffer.cpp" "VertexBuffer.cpp")
-set(header_files 
-	"Game.h"
-	"Camera.h"
-	"DeviceResources.h"
-	"Renderer.h" 
-	"ShaderManager.h" 
-	"LightHelper.h"
-	"InputLayout.h"
-	"Actor.h"
-	"MeshGenerator.h"
-	"DynamicConstBuffer.h")
+set(source_files
+	"src/Game.cpp"
+	"src/Camera.cpp"
+	"src/DeviceResources.cpp"
+	"src/Renderer.cpp"
+	"src/ShaderManager.cpp"
+	"src/InputLayout.cpp"
+	"src/Actor.cpp"
+	"src/MeshGenerator.cpp"
+	"src/DynamicConstBuffer.cpp"
+	"src/VertexBuffer.cpp"
+	"src/Texture.cpp")
+set(header_files
+	"include/Game.h"
+	"include/Camera.h"
+	"include/DeviceResources.h"
+	"include/Renderer.h"
+	"include/ShaderManager.h"
+	"include/LightHelper.h"
+	"include/InputLayout.h"
+	"include/Actor.h"
+	"include/MeshGenerator.h"
+	"include/DynamicConstBuffer.h"
+	"include/Texture.h")
 
 add_library(${current_target} ${source_files} ${header_files})
 
 target_link_libraries(${current_target} ne_math ne_input ne_utils ne_objloader imgui)
 
-target_include_directories(${current_target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${current_target} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 set_target_properties(${current_target} PROPERTIES
 	ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
