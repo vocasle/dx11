@@ -162,13 +162,21 @@ public:
     template <typename T, typename S>
     void SetValue(const S& inName, const T& inValue) const
     {
+	    bool isSet = false;
         for (const auto& [key, value] : mValues)
         {
             if (key == inName)
             {
                 *static_cast<T*>(value.Ptr) = inValue;
+		isSet = true;
+		break;
             }
         }
+
+	if (!isSet)
+	{
+		UtilsFormatStr("WARN: key %s does not exist in this cbuffer\n", inName);
+	}
     }
 
     void UpdateConstantBuffer(ID3D11DeviceContext* context)
