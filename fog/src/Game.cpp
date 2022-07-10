@@ -5,6 +5,8 @@
 #include "Camera.h"
 #include "MeshGenerator.h"
 #include "Mouse.h"
+#include "Texture.h"
+#include "DynamicConstBuffer.h"
 
 #include <d3dcompiler.h>
 
@@ -41,6 +43,12 @@ namespace
 	};
 
 	D3D11_RASTERIZER_DESC g_rasterizerDesc = {CD3D11_RASTERIZER_DESC{CD3D11_DEFAULT{}}};
+
+	std::unique_ptr<Texture> g_OffscreenRTV;
+
+	bool g_FogPass = false;
+
+	std::unique_ptr<DynamicConstBuffer> g_FogCBuf;
 };
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -90,11 +98,15 @@ Actor* Game::FindActorByName(const std::string& name)
 // TODO: Update this to get list of actors to draw
 void Game::DrawScene()
 {
-	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
-	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
+	if (!g_FogPass)
+	{
 
-	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerSceneCB.Get(), 2);
-	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerSceneCB.Get(), 2);
+		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
+		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
+
+		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerSceneCB.Get(), 2);
+		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerSceneCB.Get(), 2);
+	}
 
 	for (size_t i = 0; i < m_Actors.size(); ++i)
 	{
@@ -153,8 +165,8 @@ void Game::UpdateImgui()
 	// Any application code here
 	{
 		static_assert(sizeof(float) * 3 == sizeof(Vec3D), "ERROR: Cannot cast Vec3D to float[3]");
-		static float zNear = m_Camera.GetZNear();
-		static float zFar = m_Camera.GetZFar();
+		static float zNear = 0.1f;
+		static float zFar = 1000.0f;
 		ImGui::PushItemWidth(150.0f);
 		ImGui::InputFloat("Z near", &zNear);
 		ImGui::SameLine();
@@ -239,8 +251,8 @@ void Game::UpdateImgui()
 			const bool isVS = sn.find("VS") != std::string::npos;
 			ComPtr<ID3DBlob> shaderBlob = nullptr;
 			ComPtr<ID3DBlob> errorBlob = nullptr;
-			std::wstring shaderPathW(shaderPath.size(), 0);
-			std::mbstowcs(&shaderPathW[0], &shaderPath[0], shaderPathW.size());
+			const std::wstring shaderPathW = UtilsStrToWstr(shaderPath);
+
 			HR(D3DCompileFromFile(shaderPathW.c_str(),
 				nullptr,
 				D3D_COMPILE_STANDARD_FILE_INCLUDE,
@@ -436,6 +448,10 @@ void Game::Update()
 		elapsedTime = 0.0f;
 	}
 
+	g_FogCBuf->SetValue("view", m_Camera.GetViewMat());
+	g_FogCBuf->SetValue("proj", m_Camera.GetProjMat());
+	g_FogCBuf->SetValue("cameraPos", m_Camera.GetPos());
+
 #if WITH_IMGUI
 	static float totalTime = 0.0f;
 	totalTime += deltaSeconds;
@@ -484,6 +500,9 @@ void Game::Render()
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
 	{
+		// draw to offscreen texture
+		m_Renderer.SetRenderTargets(g_OffscreenRTV->GetRTV(), g_OffscreenRTV->GetDSV());
+		m_Renderer.Clear(nullptr);
 		m_PerFrameData.view = m_Camera.GetViewMat();
 		m_PerFrameData.proj = m_Camera.GetProjMat();
 		m_PerFrameData.cameraPosW = m_Camera.GetPos();
@@ -522,6 +541,22 @@ void Game::Render()
 
 	// draw sky
 	DrawSky();
+
+	m_DR->PIXBeginEvent(L"Fog");
+	{
+		g_FogPass = true;
+		m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
+		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("FogVS"));
+		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("FogPS"));
+		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+		m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
+
+		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
+
+		DrawScene();
+		g_FogPass = false;
+	}
+	m_DR->PIXEndEvent();
 
 #if WITH_IMGUI
 	ImGui::Render();
@@ -640,9 +675,34 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
 
 	CreateDefaultSampler();
+	g_rasterizerDesc.DepthBias = 500;
 	CreateRasterizerState();
 
 	m_Renderer.SetDeviceResources(m_DR.get());
+
+	g_OffscreenRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
+			m_DR->GetOutputSize().right, m_DR->GetOutputSize().bottom, m_DR->GetDevice());
+
+	{
+		DynamicConstBufferDesc desc = {};
+		desc.AddNode({"fogEnd", NodeType::Float});
+		desc.AddNode({"fogStart", NodeType::Float});
+		desc.AddNode({"_pad", NodeType::Float2});
+		desc.AddNode({"fogColor", NodeType::Float4});
+		desc.AddNode({"world", NodeType::Float4X4});
+		desc.AddNode({"view", NodeType::Float4X4});
+		desc.AddNode({"proj", NodeType::Float4X4});
+		desc.AddNode({"cameraPos", NodeType::Float3});
+		desc.AddNode({"_pad1", NodeType::Float});
+		g_FogCBuf = std::make_unique<DynamicConstBuffer>(desc);
+		g_FogCBuf->SetValue("fogEnd", 0.0f);
+		g_FogCBuf->SetValue("fogStart", 0.0f);
+		g_FogCBuf->SetValue("fogColor", Vec4D(0.5f, 0.5f, 0.5f, 1.0f));
+		g_FogCBuf->SetValue("world", MathMat4X4Identity());
+		g_FogCBuf->SetValue("view", MathMat4X4Identity());
+		g_FogCBuf->SetValue("proj", MathMat4X4Identity());
+		g_FogCBuf->CreateConstantBuffer(m_DR->GetDevice());
+	}
 
 #if WITH_IMGUI
 	ImGui::CreateContext();
@@ -681,27 +741,35 @@ void Game::DrawActor(const Actor& actor)
 {
 	if (actor.IsVisible())
 	{
-		m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
-		m_PerObjectData.material = actor.GetMaterial();
-		m_PerObjectData.world = actor.GetWorld();
-		m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
-		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-			sizeof(PerObjectConstants),
-			&m_PerObjectData,
-			m_PerObjectCB.Get());
-		Mat4X4 view = {};
-		Mat4X4 proj = {};
-		BuildShadowTransform(view, proj);
-		const Mat4X4 toLightSpace = actor.GetWorld() * view * proj;
-		m_PerFrameData.shadowTransform = toLightSpace;
-		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
-		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
-		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
-		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
+		if (!g_FogPass)
+		{
+			m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
+			m_PerObjectData.material = actor.GetMaterial();
+			m_PerObjectData.world = actor.GetWorld();
+			m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
+			GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+				sizeof(PerObjectConstants),
+				&m_PerObjectData,
+				m_PerObjectCB.Get());
+			Mat4X4 view = {};
+			Mat4X4 proj = {};
+			BuildShadowTransform(view, proj);
+			const Mat4X4 toLightSpace = actor.GetWorld() * view * proj;
+			m_PerFrameData.shadowTransform = toLightSpace;
+			GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+			m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+			m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+			m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
+			m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
+		}
+		else
+		{
+			g_FogCBuf->SetValue("world", actor.GetWorld());
+			g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+		}
 
 		m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
-		m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
+		m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), /*m_shaderManager.GetStrides()*/sizeof(Vertex), 0);
 
 		m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
 	}
