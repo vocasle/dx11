@@ -15,12 +15,15 @@ public:
 
 	ID3D11ShaderResourceView* GetSRV() const { return mSRV.Get(); }
 	ID3D11RenderTargetView* GetRTV() const { return mRTV.Get(); }
+	ID3D11DepthStencilView* GetDSV() const { return mDSV.Get(); }
 
 private:
 
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> mTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> mSRV;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> mRTV;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> mDSV;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> mDepthTexture;
 
 	int mWidth;
 	int mHeight;

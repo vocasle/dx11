@@ -23,6 +23,26 @@ Texture::Texture(DXGI_FORMAT format, int width, int height, ID3D11Device* device
 	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 
 	HR(device->CreateRenderTargetView(mTexture.Get(), &rtvDesc, mRTV.ReleaseAndGetAddressOf()))
+
+	{
+		D3D11_TEXTURE2D_DESC depthStencilDesc = {};
+		depthStencilDesc.Width = width;
+		depthStencilDesc.Height = height;
+		depthStencilDesc.ArraySize = 1;
+		depthStencilDesc.MipLevels = 1;
+		depthStencilDesc.SampleDesc.Count = 1;
+		depthStencilDesc.SampleDesc.Quality = 0;
+		depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+
+		HR(device->CreateTexture2D(&depthStencilDesc, NULL, mDepthTexture.ReleaseAndGetAddressOf()))
+
+		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc = {};
+		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		depthStencilViewDesc.Format = depthStencilDesc.Format;
+
+		HR(device->CreateDepthStencilView(mDepthTexture.Get(), &depthStencilViewDesc, mDSV.ReleaseAndGetAddressOf()))
+	}
 }
 
 
