@@ -3,8 +3,7 @@
 PSIn main(VSIn vin)
 {
     PSIn vout;
-    float4x4 wvp = mul(proj, view);
-    wvp = mul(wvp, world);
-    vout.PosH = mul(wvp, float4(vin, 1.0f));
+    vout.PosH = float4(vin.Pos.xy, 0.0f, 1.0f);
+    vout.TexCoord = float2((vin.Pos.x + 1) / 2.0f, -(vin.Pos.y - 1) / 2.0f);
     return vout;
 }

@@ -8,13 +8,15 @@ struct VSIn
 struct PSIn
 {
     float4 PosH : SV_POSITION;
+    float2 TexCoord : TEXCOORD;
 };
 
 cbuffer Constants : register(b0)
 {
     float fogEnd;
     float fogStart;
-    float2 _pad;
+    float width;
+    float height;
     float4 fogColor;
     float4x4 world;
     float4x4 view;
