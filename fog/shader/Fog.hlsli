@@ -19,4 +19,9 @@ cbuffer Constants : register(b0)
     float4x4 world;
     float4x4 view;
     float4x4 proj;
+    float3 cameraPos;
+    float _pad1;
 };
+
+Texture2D<float4> backBuffer : register(t0);
+sampler defaultSampler : register(s0);
