@@ -201,108 +201,9 @@ void Game::UpdateImgui()
 		CreateRasterizerState();
 	}
 
+	if (ImGui::Button("Compile"))
 	{
-		static std::string buffer(10240, 0);
-		static std::string shaderName(256, 0);
-		ImGui::PushItemWidth(150.0f);
-		ImGui::InputText("Shader name", &shaderName[0], 256);
-		ImGui::PopItemWidth();
-		ImGui::SameLine();
-		if (ImGui::Button("Open"))
-		{
-			if (shaderName.find(".hlsl") != std::string::npos)
-			{
-				const std::string shaderPath = UtilsFormatStr("%s/shader/%s", SRC_ROOT, shaderName.c_str());
-				const auto bytes = UtilsReadData(shaderPath.c_str());
-				if (buffer.size() < bytes.size())
-				{
-					buffer.resize(bytes.size() * 2);
-					buffer.clear();
-				}
-				for (size_t i = 0; i < buffer.size(); ++i)
-				{
-					if (i < bytes.size())
-					{
-						buffer[i] = static_cast<char>(bytes[i]);
-					}
-					else
-					{
-						buffer[i] = 0;
-					}
-				}
-			}
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Compile"))
-		{
-			// save new shader
-			const std::string shaderPath = UtilsFormatStr("%s/shader/%s", SRC_ROOT, shaderName.c_str());
-			UtilsDebugPrint("Updating shader source file %s\n", shaderPath.c_str());
-			size_t sz = 0;
-			for (const char& ch : buffer)
-			{
-				if (ch == 0)
-					break;
-				++sz;
-			}
-			UtilsWriteData(shaderPath.c_str(), &buffer[0], sz, true);
-			// compile shader
-			const std::string sn = shaderName.substr(0, shaderName.find(".hlsl"));
-			const bool isVS = sn.find("VS") != std::string::npos;
-			ComPtr<ID3DBlob> shaderBlob = nullptr;
-			ComPtr<ID3DBlob> errorBlob = nullptr;
-			const std::wstring shaderPathW = UtilsStrToWstr(shaderPath);
-
-			HR(D3DCompileFromFile(shaderPathW.c_str(),
-				nullptr,
-				D3D_COMPILE_STANDARD_FILE_INCLUDE,
-				"main",
-				isVS ? "vs_5_0" : "ps_5_0",
-				0,
-				0,
-				&shaderBlob,
-				&errorBlob))
-
-				if (errorBlob.Get())
-				{
-					UtilsDebugPrint("ERROR: Failed to hot reload %s, because of compile error. %s\n",
-						shaderPath.c_str(), static_cast<char*>(errorBlob->GetBufferPointer()));
-				}
-				else if (shaderBlob.Get())
-				{
-					if (sn.find("VS") != std::string::npos)
-					{
-						if (m_shaderManager.GetVertexShader(sn))
-						{
-							ComPtr<ID3D11VertexShader> vs = {};
-							const HRESULT hr = m_DR->GetDevice()->CreateVertexShader(shaderBlob->GetBufferPointer(),
-								shaderBlob->GetBufferSize(), nullptr, vs.GetAddressOf());
-							UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
-							HR(hr)
-								m_shaderManager.UpdateVertexShader(sn, vs.Get());
-						}
-					}
-					else if (sn.find("PS") != std::string::npos)
-					{
-						if (m_shaderManager.GetPixelShader(sn))
-						{
-							ComPtr<ID3D11PixelShader> ps = {};
-							UtilsDebugPrint("Hot reload shader %s\n", shaderName.c_str());
-							const HRESULT hr = m_DR->GetDevice()->CreatePixelShader(shaderBlob->GetBufferPointer(),
-								shaderBlob->GetBufferSize(), nullptr, ps.GetAddressOf());
-							UtilsDebugPrint("Hot reloading shader %s. Result: %ld\n", shaderName.c_str(), hr);
-							HR(hr)
-								m_shaderManager.UpdatePixelShader(sn, ps.Get());
-						}
-					}
-				}
-		}
-
-		if (ImGui::CollapsingHeader("Shader Source"))
-		{
-			ImGui::InputTextMultiline("Source", &buffer[0], buffer.size(), { 640.0f, 480.0f },
-				ImGuiInputTextFlags_AllowTabInput);
-		}
+		m_shaderManager.Recompile(m_DR->GetDevice());
 	}
 
 	for (int i = 0; i < 3; ++i)
@@ -687,7 +588,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		DynamicConstBufferDesc desc = {};
 		desc.AddNode({"fogEnd", NodeType::Float});
 		desc.AddNode({"fogStart", NodeType::Float});
-		desc.AddNode({"_pad", NodeType::Float2});
+		desc.AddNode({"width", NodeType::Float});
+		desc.AddNode({"height", NodeType::Float});
 		desc.AddNode({"fogColor", NodeType::Float4});
 		desc.AddNode({"world", NodeType::Float4X4});
 		desc.AddNode({"view", NodeType::Float4X4});
@@ -701,6 +603,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		g_FogCBuf->SetValue("world", MathMat4X4Identity());
 		g_FogCBuf->SetValue("view", MathMat4X4Identity());
 		g_FogCBuf->SetValue("proj", MathMat4X4Identity());
+		g_FogCBuf->SetValue("width", m_DR->GetOutputSize().right);
+		g_FogCBuf->SetValue("height", m_DR->GetOutputSize().bottom);
 		g_FogCBuf->CreateConstantBuffer(m_DR->GetDevice());
 	}
 
