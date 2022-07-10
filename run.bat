@@ -1,1 +1,1 @@
-build\basics\%TARGET%.exe
+build\%TARGET%\%TARGET%.exe
