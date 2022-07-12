@@ -25,23 +25,31 @@ Texture::Texture(DXGI_FORMAT format, int width, int height, ID3D11Device* device
 	HR(device->CreateRenderTargetView(mTexture.Get(), &rtvDesc, mRTV.ReleaseAndGetAddressOf()))
 
 	{
-		D3D11_TEXTURE2D_DESC depthStencilDesc = {};
-		depthStencilDesc.Width = width;
-		depthStencilDesc.Height = height;
-		depthStencilDesc.ArraySize = 1;
-		depthStencilDesc.MipLevels = 1;
-		depthStencilDesc.SampleDesc.Count = 1;
-		depthStencilDesc.SampleDesc.Quality = 0;
-		depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-		depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+        D3D11_TEXTURE2D_DESC texDesc = {};
+        texDesc.Format = DXGI_FORMAT_R24G8_TYPELESS; // TODO: Convert to 32 bit
+        texDesc.Width = width;
+        texDesc.Height = height;
+        texDesc.ArraySize = 1;
+        texDesc.MipLevels = 1;
+        texDesc.SampleDesc.Count = 1;
+        texDesc.SampleDesc.Quality = 0;
+        texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 
-		HR(device->CreateTexture2D(&depthStencilDesc, NULL, mDepthTexture.ReleaseAndGetAddressOf()))
+        HR(device->CreateTexture2D(&texDesc, NULL, mDepthTexture.ReleaseAndGetAddressOf()))
 
-		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc = {};
-		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-		depthStencilViewDesc.Format = depthStencilDesc.Format;
+        D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+        dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+        dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-		HR(device->CreateDepthStencilView(mDepthTexture.Get(), &depthStencilViewDesc, mDSV.ReleaseAndGetAddressOf()))
+        HR(device->CreateDepthStencilView(mDepthTexture.Get(), &dsvDesc, mDSV.ReleaseAndGetAddressOf()))
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+        srvDesc.Texture2D.MipLevels = 1;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+
+        HR(device->CreateShaderResourceView(mDepthTexture.Get(), &srvDesc, mDepthSRV.ReleaseAndGetAddressOf()))
 	}
 }
 
