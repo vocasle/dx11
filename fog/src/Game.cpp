@@ -45,9 +45,6 @@ namespace
 	D3D11_RASTERIZER_DESC g_rasterizerDesc = {CD3D11_RASTERIZER_DESC{CD3D11_DEFAULT{}}};
 
 	std::unique_ptr<Texture> g_OffscreenRTV;
-
-	bool g_FogPass = false;
-
 	std::unique_ptr<DynamicConstBuffer> g_FogCBuf;
 };
 
@@ -98,15 +95,11 @@ Actor* Game::FindActorByName(const std::string& name)
 // TODO: Update this to get list of actors to draw
 void Game::DrawScene()
 {
-	if (!g_FogPass)
-	{
+	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
+	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
 
-		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
-		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
-
-		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerSceneCB.Get(), 2);
-		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerSceneCB.Get(), 2);
-	}
+	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerSceneCB.Get(), 2);
+	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerSceneCB.Get(), 2);
 
 	for (size_t i = 0; i < m_Actors.size(); ++i)
 	{
@@ -182,6 +175,13 @@ void Game::UpdateImgui()
         ImGui::SliderFloat("Fog end", &m_PerSceneData.fogEnd, 0.0f, 100.0f);
         ImGui::SliderFloat("Fog start", &m_PerSceneData.fogStart, -10.0f, 10.0f);
         ImGui::ColorPicker4("Fog color", reinterpret_cast<float*>(&m_PerSceneData.fogColor));
+	g_FogCBuf->SetValue("fogEnd", m_PerSceneData.fogEnd);
+	g_FogCBuf->SetValue("fogStart", m_PerSceneData.fogStart);
+	const Vec4D fogColor = { m_PerSceneData.fogColor.R,
+		m_PerSceneData.fogColor.G,
+		m_PerSceneData.fogColor.B,
+		m_PerSceneData.fogColor.A };
+	g_FogCBuf->SetValue("fogColor", m_PerSceneData.fogColor);
     }
 
 	if (ImGui::CollapsingHeader("Rasterizer settings"))
@@ -349,9 +349,10 @@ void Game::Update()
 		elapsedTime = 0.0f;
 	}
 
-	g_FogCBuf->SetValue("view", m_Camera.GetViewMat());
-	g_FogCBuf->SetValue("proj", m_Camera.GetProjMat());
+	g_FogCBuf->SetValue("viewInverse", MathMat4X4Inverse(m_Camera.GetViewMat()));
+	g_FogCBuf->SetValue("projInverse", MathMat4X4Inverse(m_Camera.GetProjMat()));
 	g_FogCBuf->SetValue("cameraPos", m_Camera.GetPos());
+	g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
 
 #if WITH_IMGUI
 	static float totalTime = 0.0f;
@@ -445,17 +446,22 @@ void Game::Render()
 
 	m_DR->PIXBeginEvent(L"Fog");
 	{
-		g_FogPass = true;
+		g_FogCBuf->SetValue("world", MathMat4X4RotateX(90.0f));
+		g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+
 		m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
 		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("FogVS"));
 		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("FogPS"));
 		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 		m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
-
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
+		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_FogCBuf->Get(), 0);
 
-		DrawScene();
-		g_FogPass = false;
+		const auto fogPlane = FindActorByName("FogPlane");
+		m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(), sizeof(Vertex), 0);
+		m_Renderer.SetIndexBuffer(fogPlane->GetIndexBuffer(), 0);
+
+		m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
 	}
 	m_DR->PIXEndEvent();
 
@@ -533,6 +539,31 @@ void Game::CreateActors()
 		m_Actors.emplace_back(plane);
 	}
 
+	{
+		Mesh mesh = {};
+		mesh.Positions.push_back({-1.0f, 1.0f, 0.0f});
+		mesh.Positions.push_back({1.0f, 1.0f, 0.0f});
+		mesh.Positions.push_back({-1.0f, -1.0f, 0.0f});
+		mesh.Positions.push_back({1.0f, -1.0f, 0.0f});
+		mesh.TexCoords.push_back({0.0f, 0.0f});
+		mesh.TexCoords.push_back({1.0f, 0.0f});
+		mesh.TexCoords.push_back({0.0f, 1.0f});
+		mesh.TexCoords.push_back({1.0f, 1.0f});
+		mesh.Faces.push_back({0, 0, 0});
+		mesh.Faces.push_back({1, 1, 0});
+		mesh.Faces.push_back({2, 2, 0});
+		mesh.Faces.push_back({2, 2, 0});
+		mesh.Faces.push_back({1, 1, 0});
+		mesh.Faces.push_back({3, 3, 0});
+		mesh.Normals.push_back({});
+		Actor plane = Actor(&mesh);
+		plane.CreateIndexBuffer(m_DR->GetDevice());
+		plane.CreateVertexBuffer(m_DR->GetDevice());
+		plane.SetIsVisible(false);
+		plane.SetName("FogPlane");
+		m_Actors.emplace_back(plane);
+	}
+
 	Actor* p = FindActorByName("Plane");
 	Actor* c = FindActorByName("Cube");
 	c->SetTextures(p->GetShaderResources());
@@ -592,8 +623,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		desc.AddNode({"height", NodeType::Float});
 		desc.AddNode({"fogColor", NodeType::Float4});
 		desc.AddNode({"world", NodeType::Float4X4});
-		desc.AddNode({"view", NodeType::Float4X4});
-		desc.AddNode({"proj", NodeType::Float4X4});
+		desc.AddNode({"viewInverse", NodeType::Float4X4});
+		desc.AddNode({"projInverse", NodeType::Float4X4});
 		desc.AddNode({"cameraPos", NodeType::Float3});
 		desc.AddNode({"_pad1", NodeType::Float});
 		g_FogCBuf = std::make_unique<DynamicConstBuffer>(desc);
@@ -601,8 +632,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		g_FogCBuf->SetValue("fogStart", 0.0f);
 		g_FogCBuf->SetValue("fogColor", Vec4D(0.5f, 0.5f, 0.5f, 1.0f));
 		g_FogCBuf->SetValue("world", MathMat4X4Identity());
-		g_FogCBuf->SetValue("view", MathMat4X4Identity());
-		g_FogCBuf->SetValue("proj", MathMat4X4Identity());
+		g_FogCBuf->SetValue("viewInverse", MathMat4X4Identity());
+		g_FogCBuf->SetValue("projInverse", MathMat4X4Identity());
 		g_FogCBuf->SetValue("width", m_DR->GetOutputSize().right);
 		g_FogCBuf->SetValue("height", m_DR->GetOutputSize().bottom);
 		g_FogCBuf->CreateConstantBuffer(m_DR->GetDevice());
@@ -645,32 +676,24 @@ void Game::DrawActor(const Actor& actor)
 {
 	if (actor.IsVisible())
 	{
-		if (!g_FogPass)
-		{
-			m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
-			m_PerObjectData.material = actor.GetMaterial();
-			m_PerObjectData.world = actor.GetWorld();
-			m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
-			GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
-				sizeof(PerObjectConstants),
-				&m_PerObjectData,
-				m_PerObjectCB.Get());
-			Mat4X4 view = {};
-			Mat4X4 proj = {};
-			BuildShadowTransform(view, proj);
-			const Mat4X4 toLightSpace = actor.GetWorld() * view * proj;
-			m_PerFrameData.shadowTransform = toLightSpace;
-			GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
-			m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-			m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
-			m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
-			m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
-		}
-		else
-		{
-			g_FogCBuf->SetValue("world", actor.GetWorld());
-			g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
-		}
+		m_Renderer.BindShaderResources(BindTargets::PixelShader, actor.GetShaderResources(), ACTOR_NUM_TEXTURES);
+		m_PerObjectData.material = actor.GetMaterial();
+		m_PerObjectData.world = actor.GetWorld();
+		m_PerObjectData.worldInvTranspose = MathMat4X4Inverse(actor.GetWorld());
+		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+			sizeof(PerObjectConstants),
+			&m_PerObjectData,
+			m_PerObjectCB.Get());
+		Mat4X4 view = {};
+		Mat4X4 proj = {};
+		BuildShadowTransform(view, proj);
+		const Mat4X4 toLightSpace = actor.GetWorld() * view * proj;
+		m_PerFrameData.shadowTransform = toLightSpace;
+		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
+		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerFrameCB.Get(), 1);
 
 		m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
 		m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), /*m_shaderManager.GetStrides()*/sizeof(Vertex), 0);

@@ -19,8 +19,8 @@ cbuffer Constants : register(b0)
     float height;
     float4 fogColor;
     float4x4 world;
-    float4x4 view;
-    float4x4 proj;
+    float4x4 viewInverse;
+    float4x4 projInverse;
     float3 cameraPos;
     float _pad1;
 };
