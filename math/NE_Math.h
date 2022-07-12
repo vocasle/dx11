@@ -46,6 +46,8 @@ struct Vec4D
 #ifdef __cplusplus
 	Vec4D(const Vec3D& v, float w) : Vec4D(v.X, v.Y, v.Z, w) {}
 	std::string ToString() const;
+    Vec4D& operator*(const float scalar);
+    Vec4D& operator/(const float scalar);
 #endif
 	float X;
 	float Y;
@@ -79,7 +81,7 @@ struct Mat4X4
 {
 	Mat4X4(): Mat4X4(0.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, 0.0f, 0.0f,
-					0.0f, 0.0f, 0.0f, 0.0f, 
+					0.0f, 0.0f, 0.0f, 0.0f,
 					0.0f, 0.0f, 0.0f, 0.0f)
 	{
 	}
@@ -97,7 +99,7 @@ struct Mat4X4
 	Mat4X4(const float* data): Mat4X4(data[0], data[1], data[2], data[3],
 									data[4], data[5], data[6], data[7],
 									data[8], data[9], data[10], data[11],
-									data[12], data[13], data[14], data[15]) 
+									data[12], data[13], data[14], data[15])
 	{}
 
 	union

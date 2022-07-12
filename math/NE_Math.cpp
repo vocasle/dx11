@@ -194,37 +194,37 @@ Mat4X4 MathMat4X4MultMat4X4ByMat4X4(const Mat4X4* mat1, const Mat4X4* mat2)
 
 	res.A00 = x * mat2->A00 + y * mat2->A10 + z * mat2->A20 + w * mat2->A30;
 	res.A01 = x * mat2->A01 + y * mat2->A11 + z * mat2->A21 + w * mat2->A31;
-	res.A02 = x * mat2->A02 + y * mat2->A12 + z * mat2->A22 + w * mat2->A32; 
+	res.A02 = x * mat2->A02 + y * mat2->A12 + z * mat2->A22 + w * mat2->A32;
 	res.A03 = x * mat2->A03 + y * mat2->A13 + z * mat2->A23 + w * mat2->A33;
 
 	x = mat1->A10;
 	y = mat1->A11;
 	z = mat1->A12;
 	w = mat1->A13;
-	
+
 	res.A10 = x * mat2->A00 + y * mat2->A10 + z * mat2->A20 + w * mat2->A30;
 	res.A11 = x * mat2->A01 + y * mat2->A11 + z * mat2->A21 + w * mat2->A31;
-	res.A12 = x * mat2->A02 + y * mat2->A12 + z * mat2->A22 + w * mat2->A32; 
+	res.A12 = x * mat2->A02 + y * mat2->A12 + z * mat2->A22 + w * mat2->A32;
 	res.A13 = x * mat2->A03 + y * mat2->A13 + z * mat2->A23 + w * mat2->A33;
-	
+
 	x = mat1->A20;
 	y = mat1->A21;
 	z = mat1->A22;
 	w = mat1->A23;
-	
+
 	res.A20 = x * mat2->A00 + y * mat2->A10 + z * mat2->A20 + w * mat2->A30;
 	res.A21 = x * mat2->A01 + y * mat2->A11 + z * mat2->A21 + w * mat2->A31;
-	res.A22 = x * mat2->A02 + y * mat2->A12 + z * mat2->A22 + w * mat2->A32; 
+	res.A22 = x * mat2->A02 + y * mat2->A12 + z * mat2->A22 + w * mat2->A32;
 	res.A23 = x * mat2->A03 + y * mat2->A13 + z * mat2->A23 + w * mat2->A33;
 
 	x = mat1->A30;
 	y = mat1->A31;
 	z = mat1->A32;
 	w = mat1->A33;
-	
+
 	res.A30 = x * mat2->A00 + y * mat2->A10 + z * mat2->A20 + w * mat2->A30;
 	res.A31 = x * mat2->A01 + y * mat2->A11 + z * mat2->A21 + w * mat2->A31;
-	res.A32 = x * mat2->A02 + y * mat2->A12 + z * mat2->A22 + w * mat2->A32; 
+	res.A32 = x * mat2->A02 + y * mat2->A12 + z * mat2->A22 + w * mat2->A32;
 	res.A33 = x * mat2->A03 + y * mat2->A13 + z * mat2->A23 + w * mat2->A33;
 
 	return res;
@@ -271,7 +271,7 @@ Mat4X4 MathMat4X4RotateFromVec3D(const Vec3D* angles)
 	const float sr = sinf(angles->Z);
 
 	Mat4X4 out = MathMat4X4Identity();
-	
+
 	out.A[0][0] = cr * cy + sr * sp * sy;
 	out.A[0][1] = sr * cp;
 	out.A[0][2] = sr * sp * cy - cr * sy;
@@ -404,11 +404,11 @@ Mat4X4 MathMat4X4PerspectiveFov(float fovAngleY, float aspectRatio, float nearZ,
 	return res;
 }
 
-Mat4X4 MathMat4X4OrthographicOffCenter(float viewLeft, 
-	float viewRight, 
-	float viewBottom, 
-	float viewTop, 
-	float nearZ, 
+Mat4X4 MathMat4X4OrthographicOffCenter(float viewLeft,
+	float viewRight,
+	float viewBottom,
+	float viewTop,
+	float nearZ,
 	float farZ)
 {
 	assert(!MathNearlyEqual(viewRight, viewLeft));
@@ -447,116 +447,116 @@ bool gluInvertMatrix(const float m[16], float invOut[16])
     float inv[16], det;
     int i;
 
-    inv[0] = m[5]  * m[10] * m[15] - 
-             m[5]  * m[11] * m[14] - 
-             m[9]  * m[6]  * m[15] + 
+    inv[0] = m[5]  * m[10] * m[15] -
+             m[5]  * m[11] * m[14] -
+             m[9]  * m[6]  * m[15] +
              m[9]  * m[7]  * m[14] +
-             m[13] * m[6]  * m[11] - 
+             m[13] * m[6]  * m[11] -
              m[13] * m[7]  * m[10];
 
-    inv[4] = -m[4]  * m[10] * m[15] + 
-              m[4]  * m[11] * m[14] + 
-              m[8]  * m[6]  * m[15] - 
-              m[8]  * m[7]  * m[14] - 
-              m[12] * m[6]  * m[11] + 
+    inv[4] = -m[4]  * m[10] * m[15] +
+              m[4]  * m[11] * m[14] +
+              m[8]  * m[6]  * m[15] -
+              m[8]  * m[7]  * m[14] -
+              m[12] * m[6]  * m[11] +
               m[12] * m[7]  * m[10];
 
-    inv[8] = m[4]  * m[9] * m[15] - 
-             m[4]  * m[11] * m[13] - 
-             m[8]  * m[5] * m[15] + 
-             m[8]  * m[7] * m[13] + 
-             m[12] * m[5] * m[11] - 
+    inv[8] = m[4]  * m[9] * m[15] -
+             m[4]  * m[11] * m[13] -
+             m[8]  * m[5] * m[15] +
+             m[8]  * m[7] * m[13] +
+             m[12] * m[5] * m[11] -
              m[12] * m[7] * m[9];
 
-    inv[12] = -m[4]  * m[9] * m[14] + 
+    inv[12] = -m[4]  * m[9] * m[14] +
                m[4]  * m[10] * m[13] +
-               m[8]  * m[5] * m[14] - 
-               m[8]  * m[6] * m[13] - 
-               m[12] * m[5] * m[10] + 
+               m[8]  * m[5] * m[14] -
+               m[8]  * m[6] * m[13] -
+               m[12] * m[5] * m[10] +
                m[12] * m[6] * m[9];
 
-    inv[1] = -m[1]  * m[10] * m[15] + 
-              m[1]  * m[11] * m[14] + 
-              m[9]  * m[2] * m[15] - 
-              m[9]  * m[3] * m[14] - 
-              m[13] * m[2] * m[11] + 
+    inv[1] = -m[1]  * m[10] * m[15] +
+              m[1]  * m[11] * m[14] +
+              m[9]  * m[2] * m[15] -
+              m[9]  * m[3] * m[14] -
+              m[13] * m[2] * m[11] +
               m[13] * m[3] * m[10];
 
-    inv[5] = m[0]  * m[10] * m[15] - 
-             m[0]  * m[11] * m[14] - 
-             m[8]  * m[2] * m[15] + 
-             m[8]  * m[3] * m[14] + 
-             m[12] * m[2] * m[11] - 
+    inv[5] = m[0]  * m[10] * m[15] -
+             m[0]  * m[11] * m[14] -
+             m[8]  * m[2] * m[15] +
+             m[8]  * m[3] * m[14] +
+             m[12] * m[2] * m[11] -
              m[12] * m[3] * m[10];
 
-    inv[9] = -m[0]  * m[9] * m[15] + 
-              m[0]  * m[11] * m[13] + 
-              m[8]  * m[1] * m[15] - 
-              m[8]  * m[3] * m[13] - 
-              m[12] * m[1] * m[11] + 
+    inv[9] = -m[0]  * m[9] * m[15] +
+              m[0]  * m[11] * m[13] +
+              m[8]  * m[1] * m[15] -
+              m[8]  * m[3] * m[13] -
+              m[12] * m[1] * m[11] +
               m[12] * m[3] * m[9];
 
-    inv[13] = m[0]  * m[9] * m[14] - 
-              m[0]  * m[10] * m[13] - 
-              m[8]  * m[1] * m[14] + 
-              m[8]  * m[2] * m[13] + 
-              m[12] * m[1] * m[10] - 
+    inv[13] = m[0]  * m[9] * m[14] -
+              m[0]  * m[10] * m[13] -
+              m[8]  * m[1] * m[14] +
+              m[8]  * m[2] * m[13] +
+              m[12] * m[1] * m[10] -
               m[12] * m[2] * m[9];
 
-    inv[2] = m[1]  * m[6] * m[15] - 
-             m[1]  * m[7] * m[14] - 
-             m[5]  * m[2] * m[15] + 
-             m[5]  * m[3] * m[14] + 
-             m[13] * m[2] * m[7] - 
+    inv[2] = m[1]  * m[6] * m[15] -
+             m[1]  * m[7] * m[14] -
+             m[5]  * m[2] * m[15] +
+             m[5]  * m[3] * m[14] +
+             m[13] * m[2] * m[7] -
              m[13] * m[3] * m[6];
 
-    inv[6] = -m[0]  * m[6] * m[15] + 
-              m[0]  * m[7] * m[14] + 
-              m[4]  * m[2] * m[15] - 
-              m[4]  * m[3] * m[14] - 
-              m[12] * m[2] * m[7] + 
+    inv[6] = -m[0]  * m[6] * m[15] +
+              m[0]  * m[7] * m[14] +
+              m[4]  * m[2] * m[15] -
+              m[4]  * m[3] * m[14] -
+              m[12] * m[2] * m[7] +
               m[12] * m[3] * m[6];
 
-    inv[10] = m[0]  * m[5] * m[15] - 
-              m[0]  * m[7] * m[13] - 
-              m[4]  * m[1] * m[15] + 
-              m[4]  * m[3] * m[13] + 
-              m[12] * m[1] * m[7] - 
+    inv[10] = m[0]  * m[5] * m[15] -
+              m[0]  * m[7] * m[13] -
+              m[4]  * m[1] * m[15] +
+              m[4]  * m[3] * m[13] +
+              m[12] * m[1] * m[7] -
               m[12] * m[3] * m[5];
 
-    inv[14] = -m[0]  * m[5] * m[14] + 
-               m[0]  * m[6] * m[13] + 
-               m[4]  * m[1] * m[14] - 
-               m[4]  * m[2] * m[13] - 
-               m[12] * m[1] * m[6] + 
+    inv[14] = -m[0]  * m[5] * m[14] +
+               m[0]  * m[6] * m[13] +
+               m[4]  * m[1] * m[14] -
+               m[4]  * m[2] * m[13] -
+               m[12] * m[1] * m[6] +
                m[12] * m[2] * m[5];
 
-    inv[3] = -m[1] * m[6] * m[11] + 
-              m[1] * m[7] * m[10] + 
-              m[5] * m[2] * m[11] - 
-              m[5] * m[3] * m[10] - 
-              m[9] * m[2] * m[7] + 
+    inv[3] = -m[1] * m[6] * m[11] +
+              m[1] * m[7] * m[10] +
+              m[5] * m[2] * m[11] -
+              m[5] * m[3] * m[10] -
+              m[9] * m[2] * m[7] +
               m[9] * m[3] * m[6];
 
-    inv[7] = m[0] * m[6] * m[11] - 
-             m[0] * m[7] * m[10] - 
-             m[4] * m[2] * m[11] + 
-             m[4] * m[3] * m[10] + 
-             m[8] * m[2] * m[7] - 
+    inv[7] = m[0] * m[6] * m[11] -
+             m[0] * m[7] * m[10] -
+             m[4] * m[2] * m[11] +
+             m[4] * m[3] * m[10] +
+             m[8] * m[2] * m[7] -
              m[8] * m[3] * m[6];
 
-    inv[11] = -m[0] * m[5] * m[11] + 
-               m[0] * m[7] * m[9] + 
-               m[4] * m[1] * m[11] - 
-               m[4] * m[3] * m[9] - 
-               m[8] * m[1] * m[7] + 
+    inv[11] = -m[0] * m[5] * m[11] +
+               m[0] * m[7] * m[9] +
+               m[4] * m[1] * m[11] -
+               m[4] * m[3] * m[9] -
+               m[8] * m[1] * m[7] +
                m[8] * m[3] * m[5];
 
-    inv[15] = m[0] * m[5] * m[10] - 
-              m[0] * m[6] * m[9] - 
-              m[4] * m[1] * m[10] + 
-              m[4] * m[2] * m[9] + 
-              m[8] * m[1] * m[6] - 
+    inv[15] = m[0] * m[5] * m[10] -
+              m[0] * m[6] * m[9] -
+              m[4] * m[1] * m[10] +
+              m[4] * m[2] * m[9] +
+              m[8] * m[1] * m[6] -
               m[8] * m[2] * m[5];
 
     det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
@@ -1125,5 +1125,17 @@ float Vec3D::Length() const
 void Vec3D::Normalize()
 {
 	MathVec3DNormalize(this);
+}
+
+
+Vec4D& Vec4D::operator*(const float scalar)
+{
+    MathVec4DModulateByScalar(this, scalar, this);
+    return *this;
+}
+
+Vec4D& Vec4D::operator/(const float scalar)
+{
+    return *this * (1 / scalar);
 }
 #endif
