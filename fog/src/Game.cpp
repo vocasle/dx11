@@ -172,8 +172,8 @@ void Game::UpdateImgui()
 
     if (ImGui::CollapsingHeader("Fog settings"))
     {
-        ImGui::SliderFloat("Fog end", &m_PerSceneData.fogEnd, 0.0f, 100.0f);
-        ImGui::SliderFloat("Fog start", &m_PerSceneData.fogStart, -10.0f, 10.0f);
+        ImGui::SliderFloat("Fog end", &m_PerSceneData.fogEnd, -50.0f, 50.0f);
+        ImGui::SliderFloat("Fog start", &m_PerSceneData.fogStart, -20.0f, 20.0f);
         ImGui::ColorPicker4("Fog color", reinterpret_cast<float*>(&m_PerSceneData.fogColor));
 	g_FogCBuf->SetValue("fogEnd", m_PerSceneData.fogEnd);
 	g_FogCBuf->SetValue("fogStart", m_PerSceneData.fogStart);
@@ -351,7 +351,14 @@ void Game::Update()
 
 	g_FogCBuf->SetValue("viewInverse", MathMat4X4Inverse(m_Camera.GetViewMat()));
 	g_FogCBuf->SetValue("projInverse", MathMat4X4Inverse(m_Camera.GetProjMat()));
-	g_FogCBuf->SetValue("cameraPos", m_Camera.GetPos());
+    Vec4D camPos = {m_Camera.GetPos(), 1};
+    const Mat4X4 vp = m_Camera.GetViewMat() * m_Camera.GetProjMat();
+    camPos = MathMat4X4MultVec4DByMat4X4(&camPos, &vp);
+    camPos = camPos / camPos.W;
+	g_FogCBuf->SetValue("cameraPos", Vec3D(camPos.X, camPos.Y, camPos.Z));
+    g_FogCBuf->SetValue("fogColor", *reinterpret_cast<Vec4D*>(&m_PerSceneData.fogColor));
+    g_FogCBuf->SetValue("fogEnd", m_PerSceneData.fogEnd);
+    g_FogCBuf->SetValue("fogStart", m_PerSceneData.fogStart);
 	g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
 
 #if WITH_IMGUI
@@ -444,6 +451,23 @@ void Game::Render()
 	// draw sky
 	DrawSky();
 
+    m_DR->PIXBeginEvent(L"Depth");
+    {
+        m_Renderer.SetRenderTargets(nullptr, g_OffscreenRTV->GetDSV());
+		Mat4X4 view = m_Camera.GetViewMat();
+		Mat4X4 proj = m_Camera.GetProjMat();
+		m_Renderer.BindPixelShader(nullptr);
+		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ShadowVS"));
+		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+		m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
+		m_PerFrameData.proj = proj;
+		m_PerFrameData.view = view;
+		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+		DrawScene();
+    }
+    m_DR->PIXEndEvent();
+
+
 	m_DR->PIXBeginEvent(L"Fog");
 	{
 		g_FogCBuf->SetValue("world", MathMat4X4RotateX(90.0f));
@@ -454,6 +478,7 @@ void Game::Render()
 		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("FogPS"));
 		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 		m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
+		m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetDepthSRV(), 1);
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_FogCBuf->Get(), 0);
 
@@ -638,6 +663,10 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		g_FogCBuf->SetValue("height", m_DR->GetOutputSize().bottom);
 		g_FogCBuf->CreateConstantBuffer(m_DR->GetDevice());
 	}
+
+    m_PerSceneData.fogColor = {0.8f, 0.8f, 0.8f, 1.0f};
+    m_PerSceneData.fogStart = 100;
+    m_PerSceneData.fogEnd = 0;
 
 #if WITH_IMGUI
 	ImGui::CreateContext();

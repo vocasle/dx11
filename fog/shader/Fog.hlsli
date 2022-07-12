@@ -26,4 +26,5 @@ cbuffer Constants : register(b0)
 };
 
 Texture2D<float4> backBuffer : register(t0);
+Texture2D<float4> depthBuffer : register(t1);
 sampler defaultSampler : register(s0);
