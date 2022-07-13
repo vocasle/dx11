@@ -2,8 +2,6 @@
 
 float4 main(PSIn pin) : SV_TARGET
 {
-    static const float MAX_DEPTH = 1000;
-
     float4 depth = depthBuffer.Sample(defaultSampler, pin.TexCoord);
     float d = depth.x;
 	float4 color =  backBuffer.Sample(defaultSampler, pin.TexCoord);
