@@ -172,16 +172,9 @@ void Game::UpdateImgui()
 
     if (ImGui::CollapsingHeader("Fog settings"))
     {
-        ImGui::SliderFloat("Fog end", &m_PerSceneData.fogEnd, -50.0f, 50.0f);
-        ImGui::SliderFloat("Fog start", &m_PerSceneData.fogStart, -20.0f, 20.0f);
+        ImGui::SliderFloat("Fog end", &m_PerSceneData.fogEnd, 0.0f, 1.0f);
+        ImGui::SliderFloat("Fog start", &m_PerSceneData.fogStart, 0.0f, 1.0f);
         ImGui::ColorPicker4("Fog color", reinterpret_cast<float*>(&m_PerSceneData.fogColor));
-	g_FogCBuf->SetValue("fogEnd", m_PerSceneData.fogEnd);
-	g_FogCBuf->SetValue("fogStart", m_PerSceneData.fogStart);
-	const Vec4D fogColor = { m_PerSceneData.fogColor.R,
-		m_PerSceneData.fogColor.G,
-		m_PerSceneData.fogColor.B,
-		m_PerSceneData.fogColor.A };
-	g_FogCBuf->SetValue("fogColor", m_PerSceneData.fogColor);
     }
 
 	if (ImGui::CollapsingHeader("Rasterizer settings"))
@@ -464,6 +457,7 @@ void Game::Render()
 		m_PerFrameData.view = view;
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 		DrawScene();
+		DrawSky();
     }
     m_DR->PIXEndEvent();
 
@@ -653,20 +647,14 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		desc.AddNode({"cameraPos", NodeType::Float3});
 		desc.AddNode({"_pad1", NodeType::Float});
 		g_FogCBuf = std::make_unique<DynamicConstBuffer>(desc);
-		g_FogCBuf->SetValue("fogEnd", 0.0f);
-		g_FogCBuf->SetValue("fogStart", 0.0f);
-		g_FogCBuf->SetValue("fogColor", Vec4D(0.5f, 0.5f, 0.5f, 1.0f));
-		g_FogCBuf->SetValue("world", MathMat4X4Identity());
-		g_FogCBuf->SetValue("viewInverse", MathMat4X4Identity());
-		g_FogCBuf->SetValue("projInverse", MathMat4X4Identity());
 		g_FogCBuf->SetValue("width", m_DR->GetOutputSize().right);
 		g_FogCBuf->SetValue("height", m_DR->GetOutputSize().bottom);
 		g_FogCBuf->CreateConstantBuffer(m_DR->GetDevice());
 	}
 
     m_PerSceneData.fogColor = {0.8f, 0.8f, 0.8f, 1.0f};
-    m_PerSceneData.fogStart = 100;
-    m_PerSceneData.fogEnd = 0;
+    m_PerSceneData.fogStart = 0;
+    m_PerSceneData.fogEnd = 1;
 
 #if WITH_IMGUI
 	ImGui::CreateContext();
