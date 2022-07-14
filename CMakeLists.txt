@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.15)
 
 project(dx11_junior_roadmap)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_program(FXC_EXE fxc REQUIRED)
 
 file(GLOB_RECURSE models "${PROJECT_SOURCE_DIR}/assets/meshes/*.obj")
 file(GLOB_RECURSE textures "${PROJECT_SOURCE_DIR}/assets/textures/*.png" "${PROJECT_SOURCE_DIR}/assets/textures/*.jpg")
@@ -41,3 +43,4 @@ add_subdirectory(input)
 add_subdirectory(fog)
 add_subdirectory(common)
 add_subdirectory(test)
+add_subdirectory(bloom)

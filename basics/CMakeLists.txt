@@ -49,7 +49,6 @@ target_compile_definitions(${current_target} PUBLIC
 configure_file(BasicsConfig.h.in BasicsConfig.h)
 target_include_directories(${current_target} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	set(FXC_EXE "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.19041.0\\x64\\fxc.exe")
 	# Build HLSL shaders
 	add_custom_target(shaders)
 

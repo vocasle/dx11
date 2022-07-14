@@ -98,7 +98,6 @@ set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_DISABLE_OPTIMIZATI
 set_property(TARGET ${current_target} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$(OutDir)")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	set(FXC_EXE "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.19041.0\\x64\\fxc.exe")
 	# Build HLSL shaders
 	set (shader_target ${current_target}-compile-shaders)
 	add_custom_target(${shader_target})

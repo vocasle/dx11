@@ -1,4 +1,4 @@
-set(current_target fog)
+set(current_target bloom)
 
 message(STATUS "Current build directory: ${CMAKE_CURRENT_BINARY_DIR}")
 
