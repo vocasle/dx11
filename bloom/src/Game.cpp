@@ -550,10 +550,10 @@ void Game::CreateActors()
 		const Vec3D offset = { 0.0f, -1.0f, 0.0f };
 		plane.Translate(offset);
 
-		plane.LoadTexture(UtilsFormatStr("%s/textures/wood_floor_diffuseOriginal.jpg", ASSETS_ROOT).c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		plane.LoadTexture(UtilsFormatStr("%s/textures/wood_floor_normal.jpg", ASSETS_ROOT).c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		plane.LoadTexture(UtilsFormatStr("%s/textures/wood_floor_smoothness.jpg", ASSETS_ROOT).c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
-		plane.LoadTexture(UtilsFormatStr("%s/textures/wood_floor_metallic.jpg", ASSETS_ROOT).c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture(UtilsFormatStr("%s/textures/bricks_diffuse.jpg", ASSETS_ROOT).c_str(), TextureType::Diffuse, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture(UtilsFormatStr("%s/textures/bricks_normal.png", ASSETS_ROOT).c_str(), TextureType::Normal, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture(UtilsFormatStr("%s/textures/bricks_gloss.jpg", ASSETS_ROOT).c_str(), TextureType::Gloss, m_DR->GetDevice(), m_DR->GetDeviceContext());
+		plane.LoadTexture(UtilsFormatStr("%s/textures/bricks_reflection.jpg", ASSETS_ROOT).c_str(), TextureType::Specular, m_DR->GetDevice(), m_DR->GetDeviceContext());
 		plane.SetMaterial(&material);
 		plane.SetIsVisible(true);
 		plane.SetName("Plane");
