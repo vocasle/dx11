@@ -40,7 +40,8 @@ float4 main(VSOut In) : SV_TARGET
 
 	//const float diff = dot(normalize(normal), normalize(dirLight.Position));
 	//return float4(diff, diff, diff, 1.0f);
-	//if (In.ShadowPosH.z > shadowSampled.x)
+
+	//if (In.ShadowPosH.z > shadowSampled.x)
 	//{
 	//	shadows[0] = 0.0f;
 	//}
@@ -72,6 +73,6 @@ float4 main(VSOut In) : SV_TARGET
 
 	//fragmentColor += reflColor * material.Reflection;
 
-	float4 color = fragmentColor.Emissive + shadows[0] * (fragmentColor.Diffuse + fragmentColor.Specular);
+	float4 color = fragmentColor.Emissive + /* shadows[0] * */ (fragmentColor.Diffuse + fragmentColor.Specular);
 	return color;
 }

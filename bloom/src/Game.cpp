@@ -381,29 +381,29 @@ void Game::Render()
 	m_Renderer.SetRasterizerState(m_rasterizerState.Get());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 
-	m_DR->PIXBeginEvent(L"Shadow pass");
-	{
-		m_ShadowMap.Bind(m_DR->GetDeviceContext());
-		Mat4X4 view = {};
-		Mat4X4 proj = {};
-		BuildShadowTransform(view, proj);
-		m_Renderer.BindPixelShader(nullptr);
-		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ShadowVS"));
-		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
-		m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
-		m_PerFrameData.proj = proj;
-		m_PerFrameData.view = view;
-		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
-		DrawScene();
-		m_ShadowMap.Unbind(m_DR->GetDeviceContext());
-	}
-	m_DR->PIXEndEvent();
+	// m_DR->PIXBeginEvent(L"Shadow pass");
+	// {
+	// 	m_ShadowMap.Bind(m_DR->GetDeviceContext());
+	// 	Mat4X4 view = {};
+	// 	Mat4X4 proj = {};
+	// 	BuildShadowTransform(view, proj);
+	// 	m_Renderer.BindPixelShader(nullptr);
+	// 	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ShadowVS"));
+	// 	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+	// 	m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
+	// 	m_PerFrameData.proj = proj;
+	// 	m_PerFrameData.view = view;
+	// 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+	// 	DrawScene();
+	// 	m_ShadowMap.Unbind(m_DR->GetDeviceContext());
+	// }
+	// m_DR->PIXEndEvent();
 
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
 	{
 		// draw to offscreen texture
-		m_Renderer.SetRenderTargets(g_OffscreenRTV->GetRTV(), g_OffscreenRTV->GetDSV());
+		// m_Renderer.SetRenderTargets(g_OffscreenRTV->GetRTV(), g_OffscreenRTV->GetDSV());
 		m_Renderer.Clear(nullptr);
 		m_PerFrameData.view = m_Camera.GetViewMat();
 		m_PerFrameData.proj = m_Camera.GetProjMat();
@@ -411,6 +411,8 @@ void Game::Render()
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
 		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ColorVS"));
 		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("PhongPS"));
+		m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
+		m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
 		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_ShadowMap.GetDepthMapSRV(), 4);
 
@@ -444,45 +446,45 @@ void Game::Render()
 	// draw sky
 	DrawSky();
 
-    m_DR->PIXBeginEvent(L"Depth");
-    {
-        m_Renderer.SetRenderTargets(nullptr, g_OffscreenRTV->GetDSV());
-		Mat4X4 view = m_Camera.GetViewMat();
-		Mat4X4 proj = m_Camera.GetProjMat();
-		m_Renderer.BindPixelShader(nullptr);
-		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ShadowVS"));
-		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
-		m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
-		m_PerFrameData.proj = proj;
-		m_PerFrameData.view = view;
-		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
-		DrawScene();
-		DrawSky();
-    }
-    m_DR->PIXEndEvent();
+    // m_DR->PIXBeginEvent(L"Depth");
+    // {
+    //     m_Renderer.SetRenderTargets(nullptr, g_OffscreenRTV->GetDSV());
+	// 	Mat4X4 view = m_Camera.GetViewMat();
+	// 	Mat4X4 proj = m_Camera.GetProjMat();
+	// 	m_Renderer.BindPixelShader(nullptr);
+	// 	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ShadowVS"));
+	// 	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+	// 	m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
+	// 	m_PerFrameData.proj = proj;
+	// 	m_PerFrameData.view = view;
+	// 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
+	// 	DrawScene();
+	// 	DrawSky();
+    // }
+    // m_DR->PIXEndEvent();
 
 
-	m_DR->PIXBeginEvent(L"Fog");
-	{
-		g_FogCBuf->SetValue("world", MathMat4X4RotateX(90.0f));
-		g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+	// m_DR->PIXBeginEvent(L"Fog");
+	// {
+	// 	g_FogCBuf->SetValue("world", MathMat4X4RotateX(90.0f));
+	// 	g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
 
-		m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
-		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("FogVS"));
-		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("FogPS"));
-		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
-		m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
-		m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetDepthSRV(), 1);
-		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
-		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_FogCBuf->Get(), 0);
+	// 	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
+	// 	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("FogVS"));
+	// 	m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("FogPS"));
+	// 	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+	// 	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
+	// 	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetDepthSRV(), 1);
+	// 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
+	// 	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_FogCBuf->Get(), 0);
 
-		const auto fogPlane = FindActorByName("FogPlane");
-		m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(), sizeof(Vertex), 0);
-		m_Renderer.SetIndexBuffer(fogPlane->GetIndexBuffer(), 0);
+	// 	const auto fogPlane = FindActorByName("FogPlane");
+	// 	m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(), sizeof(Vertex), 0);
+	// 	m_Renderer.SetIndexBuffer(fogPlane->GetIndexBuffer(), 0);
 
-		m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
-	}
-	m_DR->PIXEndEvent();
+	// 	m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
+	// }
+	// m_DR->PIXEndEvent();
 
 #if WITH_IMGUI
 	ImGui::Render();
