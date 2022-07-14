@@ -423,7 +423,10 @@ void Game::Render()
 	// Light properties
 	//for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
 	{
-		m_PerObjectData.world = MathMat4X4TranslateFromVec3D(&m_PerSceneData.dirLight.Position);
+		const Vec3D scale = {0.5f, 0.5f, 0.5f};
+		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
+		world = world * MathMat4X4TranslateFromVec3D(&m_PerSceneData.dirLight.Position);
+		m_PerObjectData.world = world;
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
 			sizeof(PerObjectConstants),
 			&m_PerObjectData,
@@ -432,10 +435,10 @@ void Game::Render()
 		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("LightPS"));
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
-		const auto sphere = FindActorByName("Sphere");
-		m_Renderer.SetIndexBuffer(sphere->GetIndexBuffer(), 0);
-		m_Renderer.SetVertexBuffer(sphere->GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
-		m_Renderer.DrawIndexed(sphere->GetNumIndices(), 0, 0);
+		const auto lightSource = FindActorByName("Cube");
+		m_Renderer.SetIndexBuffer(lightSource->GetIndexBuffer(), 0);
+		m_Renderer.SetVertexBuffer(lightSource->GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
+		m_Renderer.DrawIndexed(lightSource->GetNumIndices(), 0, 0);
 	}
 	m_DR->PIXEndEvent();
 	//// TODO: Need to have a reflection mechanism to query amount of SRV that is possible to bind to PS
@@ -503,24 +506,6 @@ void Game::Tick()
 
 void Game::CreateActors()
 {
-	// load sphere
-	{
-		Actor actor = Actor(MGCreateSphere(1.0f, 20, 20).get());
-		actor.Translate({ 0.0f, 1.0f, 0.0f });
-		actor.CreateIndexBuffer(m_DR->GetDevice());
-		actor.CreateVertexBuffer(m_DR->GetDevice());
-		Material material(
-			{ 0.23125f,0.23125f,0.23125f,1.0f },
-			{ 0.2775f,0.2775f,0.2775f,1.0f },
-			{ 0.773911f,0.773911f,0.773911f,89.6f },
-			{ 0.5f,0.5f,0.5f,1.0f }
-		);
-		actor.SetMaterial(&material);
-		actor.SetName("Sphere");
-		actor.SetIsVisible(false);
-		m_Actors.emplace_back(actor);
-	}
-
 	const Material material = {
 			{0.24725f, 0.1995f, 0.0745f, 1.0f},
 			{0.75164f, 0.60648f, 0.22648f, 1.0f},
