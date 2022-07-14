@@ -18,10 +18,11 @@ std::unique_ptr<Mesh> MGGeneratePlane(const Vec3D* origin, const float width, co
     mesh->Normals.emplace_back(0.0f, 1.0f, 0.0f);
 
     mesh->TexCoords.reserve(4);
-    mesh->TexCoords.emplace_back(1.0f, 1.0f);
-    mesh->TexCoords.emplace_back(0.0f, 1.0f);
+    const float multiplier = width > 10.0f ? width / 10.0f : 1.0f;
+    mesh->TexCoords.emplace_back(1.0f * multiplier, 1.0f * multiplier);
+    mesh->TexCoords.emplace_back(0.0f, 1.0f * multiplier);
     mesh->TexCoords.emplace_back(0.0f, 0.0f);
-    mesh->TexCoords.emplace_back(1.0f, 0.0f);
+    mesh->TexCoords.emplace_back(1.0f * multiplier, 0.0f);
 
     mesh->Faces.reserve(6);
     mesh->Faces.emplace_back(0, 0, 0);
