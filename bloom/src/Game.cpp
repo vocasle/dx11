@@ -24,22 +24,22 @@ namespace
 {
 	Vec3D cubePositions[] =
 	{
-		{0.0f, 0.0f, 0.0f},
-		{1.0f, 1.0f, 1.0f},
-		{-1.0f, 0.0f, -1.0f},
+		{2.794f, 0.441f, 0.294f},
+		{-0.735f, 1.324f, 3.088f},
+		{-1.0f, -1.324f, -1.765f},
 	};
 
 	Vec3D cubeRotations[] =
 	{
-		{0.0f, 0.0f, 0.0f},
+		{MathToRadians(-42.0f), MathToRadians(53.0f), 0.0f},
 		{MathToRadians(45.0f), 0.0f, MathToRadians(45.0f)},
-		{MathToRadians(15.0f), MathToRadians(15.0f), MathToRadians(15.0f)},
+		{MathToRadians(11.0f), MathToRadians(-37.0f), MathToRadians(15.0f)},
 	};
 
 	float cubeScales[] = {
-		0.5f,
-		0.5f,
-		0.5f,
+		0.854f,
+		0.8f,
+		1.357f,
 	};
 
 	D3D11_RASTERIZER_DESC g_rasterizerDesc = {CD3D11_RASTERIZER_DESC{CD3D11_DEFAULT{}}};
@@ -528,7 +528,7 @@ void Game::CreateActors()
 	// load plane
 	{
 		const Vec3D origin = { 0.0f, 0.0f, 0.0f };
-		std::unique_ptr<Mesh> mesh = MGGeneratePlane(&origin, 10.0f, 10.0f);
+		std::unique_ptr<Mesh> mesh = MGGeneratePlane(&origin, 500.0f, 500.0f);
 		Actor plane = Actor(mesh.get());
 		plane.CreateIndexBuffer(m_DR->GetDevice());
 		plane.CreateVertexBuffer(m_DR->GetDevice());
