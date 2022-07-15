@@ -45,7 +45,7 @@ float4 main(VSOut In) : SV_TARGET
 	//{
 	//	shadows[0] = 0.0f;
 	//}
-		shadows[0] = CalcShadowFactor(shadowSampler, shadowTexture, In.ShadowPosH);
+	shadows[0] = CalcShadowFactor(shadowSampler, shadowTexture, In.ShadowPosH);
 
 	//return float4(shadowSampled.xyz /** 2.0f - 1.0f*/, 1.0f);
 

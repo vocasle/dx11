@@ -42,10 +42,18 @@ namespace
 		1.357f,
 	};
 
+	Vec4D g_PointLightColors[] = {
+		{1, 0, 0, 1},
+		{0, 1, 0, 1},
+		{0, 0, 1, 1},
+		{1, 1, 0, 1}
+	};
+
 	D3D11_RASTERIZER_DESC g_rasterizerDesc = {CD3D11_RASTERIZER_DESC{CD3D11_DEFAULT{}}};
 
 	std::unique_ptr<Texture> g_OffscreenRTV;
 	std::unique_ptr<DynamicConstBuffer> g_FogCBuf;
+	std::unique_ptr<DynamicConstBuffer> g_LightCBuf;
 };
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -419,9 +427,34 @@ void Game::Render()
 		DrawScene();
 	}
 	m_DR->PIXEndEvent();
-	m_DR->PIXBeginEvent(L"Light source pass");
+	m_DR->PIXBeginEvent(L"Light");
 	// Light properties
-	//for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
+	for (uint32_t i = 0; i < _countof(m_PerSceneData.pointLights); ++i)
+	{
+		const Vec3D scale = {0.5f, 0.5f, 0.5f};
+		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
+		world = world * MathMat4X4TranslateFromVec3D(&m_PerSceneData.pointLights[i].Position);
+		m_PerObjectData.world = world;
+		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
+			sizeof(PerObjectConstants),
+			&m_PerObjectData,
+			m_PerObjectCB.Get());
+
+		g_LightCBuf->SetValue("color", g_PointLightColors[i]);
+		g_LightCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_LightCBuf->Get(), 0);
+		// m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("LightVS"));
+		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("LightPS"));
+		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
+		// m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+		const auto lightSource = FindActorByName("Cube");
+		m_Renderer.SetIndexBuffer(lightSource->GetIndexBuffer(), 0);
+		m_Renderer.SetVertexBuffer(lightSource->GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
+		m_Renderer.DrawIndexed(lightSource->GetNumIndices(), 0, 0);
+	}
+
+
 	{
 		const Vec3D scale = {0.5f, 0.5f, 0.5f};
 		Mat4X4 world = MathMat4X4ScaleFromVec3D(&scale);
@@ -637,6 +670,16 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		g_FogCBuf->SetValue("width", m_DR->GetOutputSize().right);
 		g_FogCBuf->SetValue("height", m_DR->GetOutputSize().bottom);
 		g_FogCBuf->CreateConstantBuffer(m_DR->GetDevice());
+	}
+
+	{
+		DynamicConstBufferDesc desc = {};
+		desc.AddNode({"color", NodeType::Float4});
+		// desc.AddNode({"world", NodeType::Float4X4});
+		// desc.AddNode({"view", NodeType::Float4X4});
+		// desc.AddNode({"projection", NodeType::Float4X4});
+		g_LightCBuf = std::make_unique<DynamicConstBuffer>(desc);
+		g_LightCBuf->CreateConstantBuffer(m_DR->GetDevice());
 	}
 
     m_PerSceneData.fogColor = {0.8f, 0.8f, 0.8f, 1.0f};

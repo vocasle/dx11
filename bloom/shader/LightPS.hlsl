@@ -1,7 +1,15 @@
-#include "Common.hlsli"
-
-float4 main() : SV_TARGET
+struct PSIn
 {
-	float4 color = /*PL.Ambient + PL.Diffuse*/float4(1.0f, 1.0f, 1.0f, 1.0f);
+    float4 PositionH : SV_POSITION;
+    float4 Color : COLOR;
+};
+
+cbuffer Constants : register(b0)
+{
+	float4 color;
+};
+
+float4 main(PSIn pin) : SV_TARGET
+{
 	return color;
 }
