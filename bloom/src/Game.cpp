@@ -465,9 +465,13 @@ void Game::Render()
 			&m_PerObjectData,
 			m_PerObjectCB.Get());
 
+
+		g_LightCBuf->SetValue("color", Vec4D(1.0f, 1.0f, 1.0f, 1.0f));
+        g_LightCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+        m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_LightCBuf->Get(), 0);
 		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("LightPS"));
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
+//		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
 		const auto lightSource = FindActorByName("Cube");
 		m_Renderer.SetIndexBuffer(lightSource->GetIndexBuffer(), 0);
 		m_Renderer.SetVertexBuffer(lightSource->GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
