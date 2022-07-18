@@ -45,7 +45,7 @@ namespace
 	Vec4D g_PointLightColors[] = {
 		{1, 0, 0, 1},
 		{0, 1, 0, 1},
-		{0, 0, 1, 1},
+		{1, 0, 1, 1},
 		{1, 1, 0, 1}
 	};
 
@@ -260,14 +260,14 @@ void Game::InitPerSceneConstants()
 		{-4.0f, 0.4f, -4.0f},
 		{-4.0f, 1.5f, 4.0f},
 		{4.0f, 1.5f, 4.0f},
-		{4.0f, 1.5f, -4.0f},
+		{4.0f, 0.5f, -4.0f},
 	};
 
 	for (uint32_t i = 0; i < 4; ++i)
 	{
 		pl.Position = positions[i];
 		pl.Ambient = ColorFromRGBA(0.03f, 0.03f, 0.03f, 1.0f);
-		pl.Diffuse = ColorFromRGBA(0.2f, 0.2f, 0.2f, 1.0f);
+		pl.Diffuse = *reinterpret_cast<Color*>(&g_PointLightColors[i]);
 		pl.Specular = ColorFromRGBA(0.2f, 0.2f, 0.2f, 1.0f);
 		pl.Att = MathVec3DFromXYZ(1.0f, 0.09f, 0.032f);
 		pl.Range = 5.0f;
@@ -440,7 +440,7 @@ void Game::Render()
 			&m_PerObjectData,
 			m_PerObjectCB.Get());
 
-		g_LightCBuf->SetValue("color", g_PointLightColors[i]);
+		g_LightCBuf->SetValue("color", m_PerSceneData.pointLights[i].Diffuse);
 		g_LightCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_LightCBuf->Get(), 0);
 		// m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("LightVS"));

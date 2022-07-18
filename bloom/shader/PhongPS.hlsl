@@ -34,7 +34,7 @@ float4 main(VSOut In) : SV_TARGET
 		intensities[1 + i] = PointLightIntensity(pointLights[i], normal, In.PosW, viewDir);
 	}
 
-	intensities[5] = SpotLightIntensity(spotLights[0], normal, In.PosW, viewDir);
+//	intensities[5] = SpotLightIntensity(spotLights[0], normal, In.PosW, viewDir);
 	float shadows[MAX_LIGHTS] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 	//shadows[0] = CalcShadowFactor(shadowSampler, shadowTexture, In.ShadowPosH);
 
@@ -63,7 +63,7 @@ float4 main(VSOut In) : SV_TARGET
 		material.Specular.a,
 		normal,
 		intensities,
-		1
+		5
 	);
 
 	// calculate reflections
