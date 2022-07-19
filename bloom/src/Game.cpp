@@ -52,6 +52,7 @@ namespace
 	D3D11_RASTERIZER_DESC g_rasterizerDesc = {CD3D11_RASTERIZER_DESC{CD3D11_DEFAULT{}}};
 
 	std::unique_ptr<Texture> g_OffscreenRTV;
+    std::unique_ptr<Texture> g_BrightessRTV;
 	std::unique_ptr<DynamicConstBuffer> g_FogCBuf;
 	std::unique_ptr<DynamicConstBuffer> g_LightCBuf;
 };
@@ -380,7 +381,10 @@ void Game::Render()
 	UpdateImgui();
 #endif
 
-	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
+    static constexpr float BLACK_COLOR[] = { 0,0,0,1 };
+    ID3D11RenderTargetView* nullRTVs[] = { nullptr, nullptr };
+//    m_Renderer.SetRenderTargets(nullRTVs, 2, nullptr);
+//	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
 	m_Renderer.SetViewport(m_DR->GetViewport());
 	m_Renderer.Clear(nullptr);
 	m_Renderer.SetBlendState(nullptr);
@@ -411,7 +415,10 @@ void Game::Render()
 	// reset view proj matrix back to camera
 	{
 		// draw to offscreen texture
-		// m_Renderer.SetRenderTargets(g_OffscreenRTV->GetRTV(), g_OffscreenRTV->GetDSV());
+        ID3D11RenderTargetView* rtvs[] = { g_OffscreenRTV->GetRTV(), g_BrightessRTV->GetRTV() };
+		m_Renderer.SetRenderTargets(rtvs, 2, g_OffscreenRTV->GetDSV());
+        m_Renderer.ClearRenderTargetView(g_OffscreenRTV->GetRTV(), BLACK_COLOR);
+        m_Renderer.ClearRenderTargetView(g_BrightessRTV->GetRTV(), BLACK_COLOR);
 		m_Renderer.Clear(nullptr);
 		m_PerFrameData.view = m_Camera.GetViewMat();
 		m_PerFrameData.proj = m_Camera.GetProjMat();
@@ -478,6 +485,10 @@ void Game::Render()
 		m_Renderer.DrawIndexed(lightSource->GetNumIndices(), 0, 0);
 	}
 	m_DR->PIXEndEvent();
+
+    // unbind offscreen rtv
+    m_Renderer.SetRenderTargets(nullRTVs, 2, nullptr);
+    m_Renderer.SetRenderTargets(g_OffscreenRTV->GetRTV(), g_OffscreenRTV->GetDSV());
 	//// TODO: Need to have a reflection mechanism to query amount of SRV that is possible to bind to PS
 	//// After this this clear code could be placed to Renderer::Clear
 	//ID3D11ShaderResourceView* nullSRVs[7] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
@@ -503,28 +514,56 @@ void Game::Render()
     // }
     // m_DR->PIXEndEvent();
 
+	 //m_DR->PIXBeginEvent(L"Fog");
+	 //{
+	 //	g_FogCBuf->SetValue("world", MathMat4X4RotateX(90.0f));
+	 //	g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
 
-	// m_DR->PIXBeginEvent(L"Fog");
-	// {
-	// 	g_FogCBuf->SetValue("world", MathMat4X4RotateX(90.0f));
-	// 	g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+	 //	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
+	 //	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("FogVS"));
+	 //	m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("FogPS"));
+	 //	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+	 //	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
+	 //	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetDepthSRV(), 1);
+	 //	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
+	 //	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_FogCBuf->Get(), 0);
 
-	// 	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
-	// 	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("FogVS"));
-	// 	m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("FogPS"));
-	// 	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
-	// 	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
-	// 	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetDepthSRV(), 1);
-	// 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
-	// 	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_FogCBuf->Get(), 0);
+	 //	const auto fogPlane = FindActorByName("FogPlane");
+	 //	m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(), sizeof(Vertex), 0);
+	 //	m_Renderer.SetIndexBuffer(fogPlane->GetIndexBuffer(), 0);
 
-	// 	const auto fogPlane = FindActorByName("FogPlane");
-	// 	m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(), sizeof(Vertex), 0);
-	// 	m_Renderer.SetIndexBuffer(fogPlane->GetIndexBuffer(), 0);
+	 //	m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
+	 //}
+	 //m_DR->PIXEndEvent();
 
-	// 	m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
-	// }
-	// m_DR->PIXEndEvent();
+    m_DR->PIXBeginEvent(L"Bloom");
+	 {
+	 	g_FogCBuf->SetValue("world", MathMat4X4RotateX(90.0f));
+	 	g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+		m_Renderer.SetRenderTargets(nullRTVs, 2, nullptr);
+	 	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
+	 	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("FogVS"));
+	 	m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("BloomPS"));
+	 	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+	 	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
+	 	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetDepthSRV(), 1);
+        m_Renderer.BindShaderResource(BindTargets::PixelShader, g_BrightessRTV->GetSRV(), 2);
+	 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
+//	 	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_FogCBuf->Get(), 0);
+
+	 	const auto fogPlane = FindActorByName("FogPlane");
+	 	m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(), sizeof(Vertex), 0);
+	 	m_Renderer.SetIndexBuffer(fogPlane->GetIndexBuffer(), 0);
+
+	 	m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
+
+		// unbind resources
+		m_Renderer.BindShaderResource(BindTargets::PixelShader, nullptr, 0);
+		m_Renderer.BindShaderResource(BindTargets::PixelShader, nullptr, 1);
+		m_Renderer.BindShaderResource(BindTargets::PixelShader, nullptr, 2);
+	 }
+	 m_DR->PIXEndEvent();
+
 
 #if WITH_IMGUI
 	ImGui::Render();
@@ -657,6 +696,9 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 
 	g_OffscreenRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
 			m_DR->GetOutputSize().right, m_DR->GetOutputSize().bottom, m_DR->GetDevice());
+
+    g_BrightessRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
+            m_DR->GetOutputSize().right, m_DR->GetOutputSize().bottom, m_DR->GetDevice());
 
 	{
 		DynamicConstBufferDesc desc = {};
