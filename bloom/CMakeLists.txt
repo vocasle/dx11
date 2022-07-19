@@ -28,7 +28,8 @@ set(pixel_shader_files
 	shader/DefaultPS.hlsl
 	shader/SkyPS.hlsl
 	shader/ParticlePS.hlsl
-	shader/FogPS.hlsl)
+	shader/FogPS.hlsl
+    shader/BloomPS.hlsl)
 
 set(vertex_shader_files
 	shader/ShadowVS.hlsl
@@ -42,7 +43,8 @@ set(shader_header_files
 	shader/LightingHelper.hlsli
 	shader/Common.hlsli
 	shader/Particle.hlsli
-	shader/Fog.hlsli)
+	shader/Fog.hlsli
+    shader/Bloom.hlsli)
 
 add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_shader_files} ${vertex_shader_files} ${shader_header_files})
 
