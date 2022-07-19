@@ -1,7 +1,8 @@
+#include "Bloom.hlsli"
+
 struct PSIn
 {
     float4 PositionH : SV_POSITION;
-    float4 Color : COLOR;
 };
 
 cbuffer Constants : register(b0)
@@ -9,7 +10,10 @@ cbuffer Constants : register(b0)
 	float4 color;
 };
 
-float4 main(PSIn pin) : SV_TARGET
+PSOut main(PSIn pin)
 {
-	return color;
+    PSOut pout;
+    pout.Color = color;
+    pout.Brightness = saturatePixel(color);
+    return pout;
 }

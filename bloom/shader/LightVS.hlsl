@@ -17,10 +17,10 @@ cbuffer Constants : register(b0)
     float4x4 projection;
 };
 
-PSIn main(VSin vin)
+PSIn main(VSIn vin)
 {
     PSIn vout;
-    float4 posH = mul(projection, float(vin.Position, 1.0f));
+    float4 posH = mul(projection, float4(vin.Position, 1.0f));
     posH = mul(view, posH);
     posH = mul(world, posH);
     vout.PositionH = posH;
