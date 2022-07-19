@@ -26,7 +26,7 @@ float4 main(PSIn pin) : SV_TARGET
 
     float4 result = {0,0,0,0};
 
-    static const int r = 10;
+    static const int r = 3;
     static const float divisor = (2 * r + 1) * (2 * r + 1);
 
     for (int y = -r; y <= r; ++y)
