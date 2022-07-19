@@ -55,6 +55,7 @@ namespace
     std::unique_ptr<Texture> g_BrightessRTV;
 	std::unique_ptr<DynamicConstBuffer> g_FogCBuf;
 	std::unique_ptr<DynamicConstBuffer> g_LightCBuf;
+    std::unique_ptr<DynamicConstBuffer> g_BloomCBuf;
 };
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -549,7 +550,12 @@ void Game::Render()
 	 	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetDepthSRV(), 1);
         m_Renderer.BindShaderResource(BindTargets::PixelShader, g_BrightessRTV->GetSRV(), 2);
 	 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
-//	 	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_FogCBuf->Get(), 0);
+        {
+            g_BloomCBuf->SetValue("width", static_cast<float>(m_DR->GetOutputSize().right));
+            g_BloomCBuf->SetValue("height", static_cast<float>(m_DR->GetOutputSize().bottom));
+            g_BloomCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+        }
+	 	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_BloomCBuf->Get(), 0);
 
 	 	const auto fogPlane = FindActorByName("FogPlane");
 	 	m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(), sizeof(Vertex), 0);
@@ -727,6 +733,15 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		g_LightCBuf = std::make_unique<DynamicConstBuffer>(desc);
 		g_LightCBuf->CreateConstantBuffer(m_DR->GetDevice());
 	}
+
+    {
+        DynamicConstBufferDesc desc = {};
+        desc.AddNode({"width", NodeType::Float});
+        desc.AddNode({"height", NodeType::Float});
+        desc.AddNode({"pad", NodeType::Float2});
+        g_BloomCBuf = std::make_unique<DynamicConstBuffer>(desc);
+        g_BloomCBuf->CreateConstantBuffer(m_DR->GetDevice());
+    }
 
     m_PerSceneData.fogColor = {0.8f, 0.8f, 0.8f, 1.0f};
     m_PerSceneData.fogStart = 0;
