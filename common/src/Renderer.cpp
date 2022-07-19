@@ -73,6 +73,13 @@ void Renderer::SetRenderTargets(ID3D11RenderTargetView* rtv, ID3D11DepthStencilV
 	m_DR->GetDeviceContext()->OMSetRenderTargets(1, &rtv, dsv);
 }
 
+void Renderer::SetRenderTargets(ID3D11RenderTargetView** rtvs, uint32_t numRtvs,
+        ID3D11DepthStencilView* dsv)
+{
+	m_DR->GetDeviceContext()->OMSetRenderTargets(numRtvs, rtvs, dsv);
+}
+
+
 void Renderer::SetBlendState(ID3D11BlendState* blendState)
 {
 	unsigned int sampleMask = 0xffffffff;
@@ -154,7 +161,7 @@ void Renderer::Clear(const float* color)
 
 	ctx->ClearRenderTargetView(rtv.Get(), color ? color : CLEAR_COLOR);
 	ctx->ClearDepthStencilView(dsv.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	ctx->OMSetRenderTargets(1, rtv.GetAddressOf(), dsv.Get());
+//	ctx->OMSetRenderTargets(1, rtv.GetAddressOf(), dsv.Get());
 	ctx->RSSetViewports(1, &viewport);
 }
 

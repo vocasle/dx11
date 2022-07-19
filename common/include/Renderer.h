@@ -33,6 +33,8 @@ public:
 	void SetDepthStencilState(ID3D11DepthStencilState* depthStencilState);
 	void SetViewport(D3D11_VIEWPORT viewport);
 	void SetRenderTargets(ID3D11RenderTargetView* rtv, ID3D11DepthStencilView* dsv);
+    void SetRenderTargets(ID3D11RenderTargetView** rtvs, uint32_t numRtvs,
+            ID3D11DepthStencilView* dsv);
 	void SetBlendState(ID3D11BlendState* blendState);
 
 	void BindPixelShader(ID3D11PixelShader* shader);
