@@ -16,6 +16,7 @@ enum class NodeType
 {
     Struct,
     Array,
+    Bool = sizeof(float),
     Float = sizeof(float),
     Float2 = sizeof(float) * 2,
     Float3 = sizeof(float) * 3,
