@@ -145,12 +145,12 @@ void Renderer::Clear(const float* color)
 
 	if (!rtv)
 	{
-		UtilsDebugPrint("WARN: render target view is not set!\n");
+		//UtilsDebugPrint("WARN: render target view is not set!\n");
 		return;
 	}
 	if (!dsv)
 	{
-		UtilsDebugPrint("WARN: depth stencil view is not set!\n");
+		//UtilsDebugPrint("WARN: depth stencil view is not set!\n");
 		return;
 	}
 
