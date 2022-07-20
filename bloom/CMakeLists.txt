@@ -29,7 +29,9 @@ set(pixel_shader_files
 	shader/SkyPS.hlsl
 	shader/ParticlePS.hlsl
 	shader/FogPS.hlsl
-    shader/BloomPS.hlsl)
+    shader/BloomPS.hlsl
+    shader/BrightPS.hlsl
+    shader/BlurPS.hlsl)
 
 set(vertex_shader_files
 	shader/ShadowVS.hlsl
@@ -98,6 +100,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 		  get_source_file_property(shadermodel ${FILE} VS_SHADER_MODEL)
 		  add_custom_command(TARGET ${shader_target}
 			  COMMAND ${FXC_EXE} /nologo
+                        /WX
 						/Fh ${CMAKE_CURRENT_BINARY_DIR}/${FILE_WE}.h
 						/Emain
 						/T${shadertype}_${shadermodel}

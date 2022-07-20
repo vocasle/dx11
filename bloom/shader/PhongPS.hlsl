@@ -1,9 +1,8 @@
 #include "Common.hlsli"
-#include "Bloom.hlsli"
 
 static const float4 AMBIENT = float4(0.4f, 0.4f, 0.4f, 1.0f);
 
-PSOut main(VSOut In)
+float4 main(VSOut In) : SV_TARGET
 {
 	const float4 diffuseSampled = diffuseTexture.Sample(defaultSampler, In.TexCoords);
 	const float4 specularSampled = specularTexture.Sample(defaultSampler, In.TexCoords);
@@ -76,8 +75,5 @@ PSOut main(VSOut In)
 
 	float4 color = fragmentColor.Emissive + /* shadows[0] * */ (fragmentColor.Diffuse + fragmentColor.Specular);
 
-    PSOut pout;
-    pout.Color = color;
-    pout.Brightness = saturatePixel(color);
-    return pout;
+    return color;
 }

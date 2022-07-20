@@ -383,9 +383,7 @@ void Game::Render()
 #endif
 
     static constexpr float BLACK_COLOR[] = { 0,0,0,1 };
-    ID3D11RenderTargetView* nullRTVs[] = { nullptr, nullptr };
-//    m_Renderer.SetRenderTargets(nullRTVs, 2, nullptr);
-//	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
+	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
 	m_Renderer.SetViewport(m_DR->GetViewport());
 	m_Renderer.Clear(nullptr);
 	m_Renderer.SetBlendState(nullptr);
@@ -394,32 +392,11 @@ void Game::Render()
 	m_Renderer.SetRasterizerState(m_rasterizerState.Get());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 
-	// m_DR->PIXBeginEvent(L"Shadow pass");
-	// {
-	// 	m_ShadowMap.Bind(m_DR->GetDeviceContext());
-	// 	Mat4X4 view = {};
-	// 	Mat4X4 proj = {};
-	// 	BuildShadowTransform(view, proj);
-	// 	m_Renderer.BindPixelShader(nullptr);
-	// 	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ShadowVS"));
-	// 	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
-	// 	m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
-	// 	m_PerFrameData.proj = proj;
-	// 	m_PerFrameData.view = view;
-	// 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
-	// 	DrawScene();
-	// 	m_ShadowMap.Unbind(m_DR->GetDeviceContext());
-	// }
-	// m_DR->PIXEndEvent();
-
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
 	{
 		// draw to offscreen texture
-        ID3D11RenderTargetView* rtvs[] = { g_OffscreenRTV->GetRTV(), g_BrightessRTV->GetRTV() };
-		m_Renderer.SetRenderTargets(rtvs, 2, g_OffscreenRTV->GetDSV());
-        m_Renderer.ClearRenderTargetView(g_OffscreenRTV->GetRTV(), BLACK_COLOR);
-        m_Renderer.ClearRenderTargetView(g_BrightessRTV->GetRTV(), BLACK_COLOR);
+		m_Renderer.SetRenderTargets(g_OffscreenRTV->GetRTV(), g_OffscreenRTV->GetDSV());
 		m_Renderer.Clear(nullptr);
 		m_PerFrameData.view = m_Camera.GetViewMat();
 		m_PerFrameData.proj = m_Camera.GetProjMat();
@@ -451,10 +428,8 @@ void Game::Render()
 		g_LightCBuf->SetValue("color", m_PerSceneData.pointLights[i].Diffuse);
 		g_LightCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_LightCBuf->Get(), 0);
-		// m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("LightVS"));
 		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("LightPS"));
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-		// m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
 		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 		const auto lightSource = FindActorByName("Cube");
 		m_Renderer.SetIndexBuffer(lightSource->GetIndexBuffer(), 0);
@@ -479,7 +454,6 @@ void Game::Render()
         m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_LightCBuf->Get(), 0);
 		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("LightPS"));
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
-//		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
 		const auto lightSource = FindActorByName("Cube");
 		m_Renderer.SetIndexBuffer(lightSource->GetIndexBuffer(), 0);
 		m_Renderer.SetVertexBuffer(lightSource->GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
@@ -487,75 +461,50 @@ void Game::Render()
 	}
 	m_DR->PIXEndEvent();
 
-    // unbind offscreen rtv
-    m_Renderer.SetRenderTargets(nullRTVs, 2, nullptr);
-    m_Renderer.SetRenderTargets(g_OffscreenRTV->GetRTV(), g_OffscreenRTV->GetDSV());
-	//// TODO: Need to have a reflection mechanism to query amount of SRV that is possible to bind to PS
-	//// After this this clear code could be placed to Renderer::Clear
-	//ID3D11ShaderResourceView* nullSRVs[7] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
-	//m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 7);
-
 	// draw sky
 	DrawSky();
 
-    // m_DR->PIXBeginEvent(L"Depth");
-    // {
-    //     m_Renderer.SetRenderTargets(nullptr, g_OffscreenRTV->GetDSV());
-	// 	Mat4X4 view = m_Camera.GetViewMat();
-	// 	Mat4X4 proj = m_Camera.GetProjMat();
-	// 	m_Renderer.BindPixelShader(nullptr);
-	// 	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ShadowVS"));
-	// 	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
-	// 	m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
-	// 	m_PerFrameData.proj = proj;
-	// 	m_PerFrameData.view = view;
-	// 	GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
-	// 	DrawScene();
-	// 	DrawSky();
-    // }
-    // m_DR->PIXEndEvent();
-
-	 //m_DR->PIXBeginEvent(L"Fog");
-	 //{
-	 //	g_FogCBuf->SetValue("world", MathMat4X4RotateX(90.0f));
-	 //	g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
-
-	 //	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
-	 //	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("FogVS"));
-	 //	m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("FogPS"));
-	 //	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
-	 //	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
-	 //	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetDepthSRV(), 1);
-	 //	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
-	 //	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_FogCBuf->Get(), 0);
-
-	 //	const auto fogPlane = FindActorByName("FogPlane");
-	 //	m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(), sizeof(Vertex), 0);
-	 //	m_Renderer.SetIndexBuffer(fogPlane->GetIndexBuffer(), 0);
-
-	 //	m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
-	 //}
-	 //m_DR->PIXEndEvent();
-
-    m_DR->PIXBeginEvent(L"Bloom");
-	 {
-	 	g_FogCBuf->SetValue("world", MathMat4X4RotateX(90.0f));
-	 	g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
-		m_Renderer.SetRenderTargets(nullRTVs, 2, nullptr);
-	 	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
-	 	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("FogVS"));
-	 	m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("BloomPS"));
-	 	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
-	 	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
-	 	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetDepthSRV(), 1);
-        m_Renderer.BindShaderResource(BindTargets::PixelShader, g_BrightessRTV->GetSRV(), 2);
-	 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
-        {
+    // Brightness pass
+    m_DR->PIXBeginEvent(L"Brightness");
+    {
+         {
             g_BloomCBuf->SetValue("width", static_cast<float>(m_DR->GetOutputSize().right));
             g_BloomCBuf->SetValue("height", static_cast<float>(m_DR->GetOutputSize().bottom));
             g_BloomCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
         }
 	 	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_BloomCBuf->Get(), 0);
+        m_Renderer.SetRenderTargets(g_BrightessRTV->GetRTV(), nullptr);
+        m_Renderer.Clear(BLACK_COLOR);
+        m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("FogVS"));
+        m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("BrightPS"));
+        m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+        m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
+        m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
+
+	 	const auto fogPlane = FindActorByName("FogPlane");
+	 	m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(), sizeof(Vertex), 0);
+	 	m_Renderer.SetIndexBuffer(fogPlane->GetIndexBuffer(), 0);
+	 	m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
+
+
+    }
+    m_DR->PIXEndEvent();
+
+    // Blur pass
+    m_DR->PIXBeginEvent(L"Blur");
+    m_DR->PIXEndEvent();
+
+    m_DR->PIXBeginEvent(L"Bloom");
+	 {
+	 	g_FogCBuf->SetValue("world", MathMat4X4RotateX(90.0f));
+	 	g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+	 	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
+	 	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("FogVS"));
+	 	m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("BloomPS"));
+	 	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+	 	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
+        m_Renderer.BindShaderResource(BindTargets::PixelShader, g_BrightessRTV->GetSRV(), 1);
+	 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
 
 	 	const auto fogPlane = FindActorByName("FogPlane");
 	 	m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(), sizeof(Vertex), 0);
@@ -738,7 +687,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
         DynamicConstBufferDesc desc = {};
         desc.AddNode({"width", NodeType::Float});
         desc.AddNode({"height", NodeType::Float});
-        desc.AddNode({"pad", NodeType::Float2});
+        desc.AddNode({"isHorizontal", NodeType::Bool});
+        desc.AddNode({"pad", NodeType::Float});
         g_BloomCBuf = std::make_unique<DynamicConstBuffer>(desc);
         g_BloomCBuf->CreateConstantBuffer(m_DR->GetDevice());
     }
