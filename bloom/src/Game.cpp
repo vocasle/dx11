@@ -53,9 +53,22 @@ namespace
 
 	std::unique_ptr<Texture> g_OffscreenRTV;
     std::unique_ptr<Texture> g_BrightessRTV;
+    std::unique_ptr<Texture> g_BlurRTV;
+    std::unique_ptr<Texture> g_BlurRTV2;
 	std::unique_ptr<DynamicConstBuffer> g_FogCBuf;
 	std::unique_ptr<DynamicConstBuffer> g_LightCBuf;
-    std::unique_ptr<DynamicConstBuffer> g_BloomCBuf;
+    std::unique_ptr<DynamicConstBuffer> g_BlurCBuf;
+
+    struct BloomSettings
+    {
+        bool isEnabled;
+        bool isOnlyBrightness;
+        bool isOnlyColor;
+        bool isOnlyBlur;
+        float threshold;
+    };
+
+    BloomSettings g_BloomSettings = { false, false, false, false, 1.0f };
 };
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
@@ -180,11 +193,13 @@ void Game::UpdateImgui()
 		m_Camera.SetZNear(zNear);
 	}
 
-    if (ImGui::CollapsingHeader("Fog settings"))
+    if (ImGui::CollapsingHeader("Bloom settings"))
     {
-        ImGui::SliderFloat("Fog end", &m_PerSceneData.fogEnd, 0.0f, 1.0f);
-        ImGui::SliderFloat("Fog start", &m_PerSceneData.fogStart, 0.0f, 1.0f);
-        ImGui::ColorPicker4("Fog color", reinterpret_cast<float*>(&m_PerSceneData.fogColor));
+        ImGui::Checkbox("Enabled", &g_BloomSettings.isEnabled);
+        ImGui::Checkbox("Only brightness", &g_BloomSettings.isOnlyBrightness);
+        ImGui::Checkbox("Only blur", &g_BloomSettings.isOnlyBlur);
+        ImGui::Checkbox("Only color", &g_BloomSettings.isOnlyColor);
+        ImGui::SliderFloat("Threshold", &g_BloomSettings.threshold, 0.0f, 5.0f);
     }
 
 	if (ImGui::CollapsingHeader("Rasterizer settings"))
@@ -467,12 +482,6 @@ void Game::Render()
     // Brightness pass
     m_DR->PIXBeginEvent(L"Brightness");
     {
-         {
-            g_BloomCBuf->SetValue("width", static_cast<float>(m_DR->GetOutputSize().right));
-            g_BloomCBuf->SetValue("height", static_cast<float>(m_DR->GetOutputSize().bottom));
-            g_BloomCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
-        }
-	 	m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_BloomCBuf->Get(), 0);
         m_Renderer.SetRenderTargets(g_BrightessRTV->GetRTV(), nullptr);
         m_Renderer.Clear(BLACK_COLOR);
         m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("FogVS"));
@@ -485,13 +494,56 @@ void Game::Render()
 	 	m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(), sizeof(Vertex), 0);
 	 	m_Renderer.SetIndexBuffer(fogPlane->GetIndexBuffer(), 0);
 	 	m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
-
-
     }
     m_DR->PIXEndEvent();
 
     // Blur pass
     m_DR->PIXBeginEvent(L"Blur");
+    {
+        m_Renderer.ClearRenderTargetView(g_BlurRTV->GetRTV(), BLACK_COLOR);
+        m_Renderer.ClearRenderTargetView(g_BlurRTV2->GetRTV(), BLACK_COLOR);
+        m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("BlurPS"));
+        const auto fogPlane = FindActorByName("FogPlane");
+	 	m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(), sizeof(Vertex), 0);
+	 	m_Renderer.SetIndexBuffer(fogPlane->GetIndexBuffer(), 0);
+        g_BlurCBuf->SetValue("width", static_cast<float>(m_DR->GetOutputSize().right));
+        g_BlurCBuf->SetValue("height", static_cast<float>(m_DR->GetOutputSize().bottom));
+
+        bool isHorizontal = true;
+        bool isFirstRun = true;
+        for (int i = 0; i < 10; ++i)
+        {
+            g_BlurCBuf->SetValue("isHorizontal", isHorizontal ? 1 : 0);
+            g_BlurCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+            m_Renderer.BindConstantBuffer(BindTargets::PixelShader, g_BlurCBuf->Get(), 0);
+            if (isHorizontal)
+            {
+                m_Renderer.SetRenderTargets(g_BlurRTV->GetRTV(), nullptr);
+                if (isFirstRun)
+                {
+                    isFirstRun = false;
+                    m_Renderer.BindShaderResource(BindTargets::PixelShader,
+                            g_BrightessRTV->GetSRV(), 0);
+                }
+                else
+                {
+                    m_Renderer.BindShaderResource(BindTargets::PixelShader,
+                            g_BlurRTV2->GetSRV(), 0);
+                }
+            }
+            else
+            {
+                m_Renderer.SetRenderTargets(g_BlurRTV2->GetRTV(), nullptr);
+                m_Renderer.BindShaderResource(BindTargets::PixelShader,
+                        g_BlurRTV->GetSRV(), 0);
+
+            }
+            m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
+            m_Renderer.BindShaderResource(BindTargets::PixelShader, nullptr, 0);
+            m_Renderer.SetRenderTargets(nullptr, nullptr);
+            isHorizontal = !isHorizontal;
+        }
+    }
     m_DR->PIXEndEvent();
 
     m_DR->PIXBeginEvent(L"Bloom");
@@ -503,7 +555,8 @@ void Game::Render()
 	 	m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("BloomPS"));
 	 	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 	 	m_Renderer.BindShaderResource(BindTargets::PixelShader, g_OffscreenRTV->GetSRV(), 0);
-        m_Renderer.BindShaderResource(BindTargets::PixelShader, g_BrightessRTV->GetSRV(), 1);
+        m_Renderer.BindShaderResource(BindTargets::PixelShader, g_BlurRTV->GetSRV(), 1);
+        m_Renderer.BindShaderResource(BindTargets::PixelShader, g_BlurRTV2->GetSRV(), 2);
 	 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, g_FogCBuf->Get(), 0);
 
 	 	const auto fogPlane = FindActorByName("FogPlane");
@@ -655,6 +708,12 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
     g_BrightessRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
             m_DR->GetOutputSize().right, m_DR->GetOutputSize().bottom, m_DR->GetDevice());
 
+    g_BlurRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
+            m_DR->GetOutputSize().right, m_DR->GetOutputSize().bottom, m_DR->GetDevice());
+
+    g_BlurRTV2 = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
+            m_DR->GetOutputSize().right, m_DR->GetOutputSize().bottom, m_DR->GetDevice());
+
 	{
 		DynamicConstBufferDesc desc = {};
 		desc.AddNode({"fogEnd", NodeType::Float});
@@ -689,8 +748,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
         desc.AddNode({"height", NodeType::Float});
         desc.AddNode({"isHorizontal", NodeType::Bool});
         desc.AddNode({"pad", NodeType::Float});
-        g_BloomCBuf = std::make_unique<DynamicConstBuffer>(desc);
-        g_BloomCBuf->CreateConstantBuffer(m_DR->GetDevice());
+        g_BlurCBuf = std::make_unique<DynamicConstBuffer>(desc);
+        g_BlurCBuf->CreateConstantBuffer(m_DR->GetDevice());
     }
 
     m_PerSceneData.fogColor = {0.8f, 0.8f, 0.8f, 1.0f};

@@ -17,8 +17,8 @@ struct VSOut
 
 float4 main(VSOut pin) : SV_TARGET
 {
-    const float dx = 1.0f / width;
-    const float dy = 1.0f / height;
+    const float dx = 1 * (1.0f / width);
+    const float dy = 1 * (1.0f / height);
 
     static float weight[5] = { 0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216 };
 
