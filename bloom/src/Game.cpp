@@ -16,8 +16,6 @@
 #include <backends/imgui_impl_win32.h>
 #endif
 
-#include <sstream>
-
 using namespace Microsoft::WRL;
 
 namespace
@@ -43,8 +41,8 @@ namespace
 	};
 
 	Vec4D g_PointLightColors[] = {
-		{1, 0, 0, 1},
-		{0, 1, 0, 1},
+		{1, 1, 0, 1},
+		{1, 0, 1, 1},
 		{1, 0, 1, 1},
 		{1, 1, 0, 1}
 	};
@@ -477,7 +475,7 @@ void Game::Render()
 	m_DR->PIXEndEvent();
 
 	// draw sky
-	DrawSky();
+	//DrawSky();
 
     // Brightness pass
     m_DR->PIXBeginEvent(L"Brightness");
