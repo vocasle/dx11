@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Camera.h"
-#include "Math.h"
+#include "NE_Math.h"
 
 #include <d3d11.h>
 #include <wrl/client.h>

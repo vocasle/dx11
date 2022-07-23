@@ -5,7 +5,7 @@
 #include <vector>
 #include <cstdint>
 
-#include "Math.h"
+#include "NE_Math.h"
 #include "Actor.h"
 #include "Camera.h"
 

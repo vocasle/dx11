@@ -5,7 +5,7 @@
 #include <string>
 #include <array>
 
-#include "Math.h"
+#include "NE_Math.h"
 #include "Camera.h"
 
 enum class ParticleType

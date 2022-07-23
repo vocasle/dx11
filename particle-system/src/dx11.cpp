@@ -6,6 +6,9 @@
 
 #include "Game.h"
 #include "Utils.h"
+#include "Mouse.h"
+#include "Keyboard.h"
+
 #include <winuser.h>
 #include <shellapi.h>
 
@@ -24,6 +27,7 @@
 HINSTANCE hInst;                                // current instance
 const char szTitle[MAX_LOADSTRING] = "particle-system";                  // The title bar text
 const char szWindowClass[MAX_LOADSTRING] = "particleSystemWindowClass";            // the main window class name
+FILE* hLog = nullptr;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -58,6 +62,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Initialize global strings
     //LoadStringW(NULL, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     //LoadStringW(NULL, IDC_DX11, szWindowClass, MAX_LOADSTRING);
+    fopen_s(&hLog, "log.txt", "w");
     MyRegisterClass(hInstance);
 
     gGame = std::make_unique<Game>();
@@ -86,6 +91,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             gGame->Tick();
         }
     }
+
+    fclose(hLog);
 
     return (int) msg.wParam;
 }

@@ -2,19 +2,17 @@
 
 #define _CRTDBG_MAP_ALLOC
 #include "DeviceResources.h"
-#include "Math.h"
 #include "Timer.h"
 #include "Camera.h"
 #include "Keyboard.h"
-#include "Mouse.h"
 #include "Renderer.h"
 #include "Actor.h"
 #include "LightHelper.h"
 #include "ShadowMap.h"
 #include "CubeMap.h"
-#include "InputLayout.h"
 #include "DynamicCubeMap.h"
 #include "ParticleSystem.h"
+#include "ShaderManager.h"
 
 #include <vector>
 #include <memory>
@@ -97,14 +95,6 @@ private:
 	BoundingSphere m_sceneBounds;
 
 	std::unique_ptr<DeviceResources> m_DR;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VS;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PS;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PhongPS;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_LightPS;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_SkyVS;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_SkyPS;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_particleVS;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_particlePS;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_DefaultSampler;
 	Timer m_Timer;
 	Camera m_Camera;
@@ -120,7 +110,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_PerSceneCB;
 	ShadowMap m_ShadowMap;
 	CubeMap m_CubeMap;
-	InputLayout m_InputLayout;
 	DynamicCubeMap m_dynamicCubeMap;
 	ParticleSystem m_particleSystem;
+	ShaderManager m_shaderManager;
 };

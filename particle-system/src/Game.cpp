@@ -1,8 +1,10 @@
 #include "Game.h"
 #include "Utils.h"
-#include "Math.h"
+#include "NE_Math.h"
 #include "Camera.h"
 #include "MeshGenerator.h"
+#include "Mouse.h"
+#include "particle-system_config.h"
 
 #if WITH_IMGUI
 #include <imgui.h>
@@ -67,10 +69,9 @@ Actor* Game::FindActorByName(const std::string& name)
 // TODO: Update this to get list of actors to draw
 void Game::DrawScene()
 {
-	m_Renderer.SetInputLayout(m_InputLayout.GetDefaultLayout());
-
-	m_Renderer.BindPixelShader(m_PhongPS.Get());
-	m_Renderer.BindVertexShader(m_VS.Get());
+	m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("PhongPS"));
+	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("VertexShaderVS"));
+	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 
 	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_ShadowMap.GetDepthMapSRV(), 4);
 	m_Renderer.SetSamplerState(m_ShadowMap.GetShadowSampler(), 1);
@@ -98,7 +99,7 @@ void Game::DrawScene()
 			m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
 
 			m_Renderer.SetIndexBuffer(actor.GetIndexBuffer(), 0);
-			m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
+			m_Renderer.SetVertexBuffer(actor.GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
 
 			m_Renderer.DrawIndexed(actor.GetNumIndices(), 0, 0);
 		}
@@ -110,12 +111,12 @@ void Game::DrawSky()
 	m_DR->PIXBeginEvent(L"Draw sky");
 	m_Renderer.SetRasterizerState(m_CubeMap.GetRasterizerState());
 	m_Renderer.SetDepthStencilState(m_CubeMap.GetDepthStencilState());
-	m_Renderer.SetInputLayout(m_InputLayout.GetSkyLayout());
-	m_Renderer.BindVertexShader(m_SkyVS.Get());
-	m_Renderer.BindPixelShader(m_SkyPS.Get());
+	m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("SkyVS"));
+	m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("SkyPS"));
+	m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 	m_Renderer.BindShaderResource(BindTargets::PixelShader, m_CubeMap.GetCubeMap(), 0);
 	m_Renderer.SetSamplerState(m_CubeMap.GetCubeMapSampler(), 0);
-	m_Renderer.SetVertexBuffer(m_CubeMap.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Sky), 0);
+	m_Renderer.SetVertexBuffer(m_CubeMap.GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
 	m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 1);
 	m_Renderer.SetIndexBuffer(m_CubeMap.GetIndexBuffer(), 0);
@@ -248,7 +249,7 @@ void Game::Clear()
 
 void Game::Update()
 {
-	m_Camera.UpdatePos(m_Timer.DeltaMillis);
+	m_Camera.ProcessKeyboard(m_Timer.DeltaMillis);
 	m_Camera.ProcessMouse(m_Timer.DeltaMillis);
 
 	m_PerFrameData.view = m_Camera.GetViewMat();
@@ -314,54 +315,14 @@ void Game::Render()
 	UpdateImgui();
 #endif
 
-	m_Renderer.Clear();
 	m_Renderer.SetBlendState(nullptr);
 	m_Renderer.SetDepthStencilState(nullptr);
 	m_Renderer.SetPrimitiveTopology(R_DEFAULT_PRIMTIVE_TOPOLOGY);
 	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
+	m_Renderer.SetViewport(m_DR->GetViewport());
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
-
-	//m_DR->PIXBeginEvent(L"Dynamic Cube Map pass");
-	//{
-	//	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
-	//	m_Renderer.SetDepthStencilState(nullptr);
-	//	m_Renderer.SetViewport(m_dynamicCubeMap.GetViewport());
-	//	FindActorByName("Sphere")->SetIsVisible(false);
-	//	for (int i = 0; i < 6; ++i)
-	//	{
-	//		// Clear cube map face and depth buffer.
-	//		static const float BLACK_COLOR[4] = { 0.0f,0.0f,0.0f, 1.0f };
-	//		m_Renderer.ClearRenderTargetView(
-	//			m_dynamicCubeMap.GetRTV(i),
-	//			BLACK_COLOR);
-	//		m_Renderer.ClearDepthStencilView(
-	//			m_dynamicCubeMap.GetDSV(),
-	//			D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	//		// Bind cube map face as render target.
-	//		//m_Renderer.
-	//		m_Renderer.SetRenderTargets(m_dynamicCubeMap.GetRTV(i), m_dynamicCubeMap.GetDSV());
-
-	//		m_PerFrameData.cameraPosW = m_dynamicCubeMap.GetCamera(i).GetPos();
-	//		m_PerFrameData.view = m_dynamicCubeMap.GetCamera(i).GetViewMat();
-	//		m_PerFrameData.proj = m_dynamicCubeMap.GetCamera(i).GetProjMat();
-	//		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerFrameConstants), &m_PerFrameData, m_PerFrameCB.Get());
-
-	//		// Draw the scene with the exception of the
-	//		// center sphere, to this cube map face.
-	//		DrawScene();
-	//		DrawSky();
-
-	//		m_Renderer.SetDepthStencilState(nullptr);
-	//	}
-
-	//	// reset viewport
-	//	m_Renderer.SetViewport(m_DR->GetViewport());
-	//	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
-	//	FindActorByName("Sphere")->SetIsVisible(true);
-	//	m_Renderer.SetRasterizerState(m_DR->GetRasterizerState());
-	//	m_Renderer.SetDepthStencilState(nullptr);
-	//}
-	//m_DR->PIXEndEvent();
+	m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(), m_DR->GetDepthStencilView());
+	m_Renderer.Clear(nullptr);
 
 	m_DR->PIXBeginEvent(L"Color pass");
 	// reset view proj matrix back to camera
@@ -384,12 +345,12 @@ void Game::Render()
 			&m_PerObjectData,
 			m_PerObjectCB.Get());
 
-		m_Renderer.BindPixelShader(m_LightPS.Get());
+		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("LightPS"));
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerObjectCB.Get(), 0);
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader, m_PerObjectCB.Get(), 0);
 		const auto sphere = FindActorByName("Sphere");
 		m_Renderer.SetIndexBuffer(sphere->GetIndexBuffer(), 0);
-		m_Renderer.SetVertexBuffer(sphere->GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Default), 0);
+		m_Renderer.SetVertexBuffer(sphere->GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
 
 		m_Renderer.DrawIndexed(sphere->GetNumIndices(), 0, 0);
 	}
@@ -403,11 +364,11 @@ void Game::Render()
 	{
 		m_Renderer.SetBlendState(m_particleSystem.GetBlendState());
 		m_Renderer.SetDepthStencilState(m_particleSystem.GetDepthStencilState());
-		m_Renderer.SetVertexBuffer(m_particleSystem.GetVertexBuffer(), m_InputLayout.GetVertexSize(InputLayout::VertexType::Particle), 0);
+		m_Renderer.SetVertexBuffer(m_particleSystem.GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
 		m_Renderer.SetIndexBuffer(m_particleSystem.GetIndexBuffer(), 0);
-		m_Renderer.SetInputLayout(m_InputLayout.GetParticleLayout());
-		m_Renderer.BindVertexShader(m_particleVS.Get());
-		m_Renderer.BindPixelShader(m_particlePS.Get());
+		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ParticleVS"));
+		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("ParticlePS"));
+		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 0);
 		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_particleSystem.GetSRV(), 0);
 		m_Renderer.SetSamplerState(m_particleSystem.GetSamplerState(), 0);
@@ -530,17 +491,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_CubeMap.CreateCube(*FindActorByName("Cube"), device);
 	InitPerSceneConstants();
 
-	CreatePixelShader("PixelShader.cso", device, m_PS.ReleaseAndGetAddressOf());
-	CreatePixelShader("PhongPS.cso", device, m_PhongPS.ReleaseAndGetAddressOf());
-	CreatePixelShader("LightPS.cso", device, m_LightPS.ReleaseAndGetAddressOf());
-	CreatePixelShader("SkyPS.cso", device, m_SkyPS.ReleaseAndGetAddressOf());
-	CreatePixelShader("ParticlePS.cso", device, m_particlePS.ReleaseAndGetAddressOf());
-	auto bytes = CreateVertexShader("VertexShader.cso", device, m_VS.ReleaseAndGetAddressOf());
-	m_InputLayout.CreateDefaultLayout(device, &bytes[0], bytes.size());
-	bytes = CreateVertexShader("SkyVS.cso", device, m_SkyVS.ReleaseAndGetAddressOf());
-	m_InputLayout.CreateSkyLayout(device, &bytes[0], bytes.size());
-	bytes = CreateVertexShader("ParticleVS.cso", device, m_particleVS.ReleaseAndGetAddressOf());
-	m_InputLayout.CreateParticleLayout(device, &bytes[0], bytes.size());
+	m_shaderManager.Initialize(device, SHADERS_ROOT,
+		UtilsFormatStr("%s/shader", SRC_ROOT));
 
 	GameCreateConstantBuffer(device, sizeof(PerSceneConstants), &m_PerSceneCB);
 	GameCreateConstantBuffer(device, sizeof(PerObjectConstants), &m_PerObjectCB);

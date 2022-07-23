@@ -1,93 +1,108 @@
 set(current_target particle-system)
 
 set(source_files
-	Actor.cpp
-	Camera.cpp
-	CubeMap.cpp
-	DeviceResources.cpp
-	Game.cpp
-	InputLayout.cpp
-	Keyboard.cpp
-	Math.cpp
-	MeshGenerator.cpp
-	Mouse.cpp
-	Renderer.cpp
-	ShadowMap.cpp
-	Utils.cpp
-	dx11.cpp
-	objloader.cpp
-	stb_image.cpp
-	DynamicCubeMap.cpp
-	ParticleSystem.cpp
+	src/CubeMap.cpp
+	src/Game.cpp
+	src/ShadowMap.cpp
+	src/dx11.cpp
+	src/stb_image.cpp
+	src/DynamicCubeMap.cpp
+	src/ParticleSystem.cpp
 	)
 
 set(header_files
-	Actor.h
-	Camera.h
-	CubeMap.h
-	DeviceResources.h
-	Game.h
-	InputLayout.h
-	Keyboard.h
-	LightHelper.h
-	Math.h
-	MeshGenerator.h
-	Mouse.h
-	Renderer.h
-	Resource.h
-	ShadowMap.h
-	Timer.h
-	Utils.h
-	dx11.h
-	framework.h
-	objloader.h
-	stb_image.h
-	targetver.h
-	DynamicCubeMap.h
-	ParticleSystem.h
-	Image.h
+	"include/CubeMap.h"
+	include/Game.h
+	include/Resource.h
+	"include/ShadowMap.h"
+	"include/Timer.h"
+	include/dx11.h
+	include/framework.h
+	"include/stb_image.h"
+	include/targetver.h
+	"include/DynamicCubeMap.h"
+	"include/ParticleSystem.h"
+	include/Image.h
 	)
 
 set(pixel_shader_files
-	LightPS.hlsl
-	PhongPS.hlsl
-	PixelShader.hlsl
-	SkyPS.hlsl
-	ParticlePS.hlsl)
+	shader/LightPS.hlsl
+	shader/PhongPS.hlsl
+	shader/PixelShader.hlsl
+	shader/SkyPS.hlsl
+	shader/ParticlePS.hlsl)
 
 set(vertex_shader_files
-	SkyVS.hlsl
-	VertexShader.hlsl
-	ParticleVS.hlsl)
+	shader/SkyVS.hlsl
+	shader/VertexShaderVS.hlsl
+	shader/ParticleVS.hlsl)
 
 set(shader_header_files
-	Sky.hlsli
-	LightingHelper.hlsli
-	Common.hlsli
-	Particle.hlsli)
+	shader/Sky.hlsli
+	shader/LightingHelper.hlsli
+	shader/Common.hlsli
+	shader/Particle.hlsli)
 
 add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_shader_files} ${vertex_shader_files} ${shader_header_files})
 
-target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui)
+target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui 
+	ne_utils
+	ne_objloader
+	ne_common
+	ne_math
+	ne_input)
+
+configure_file("include/${current_target}_config.h.in" "${current_target}_config.h")
+
+target_include_directories(${current_target} PRIVATE
+	${CMAKE_CURRENT_BINARY_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_compile_definitions(${current_target} PUBLIC 
-	ASSETS_ROOT="${assets_root}"
 	NOMINMAX=1
-	WITH_IMGUI=1
-	SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/Debug") # temporary hack, will fail on other build configurations
+	WITH_IMGUI=1)
 
-set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_TYPE Pixel)
+set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_TYPE ps)
 set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_ENTRYPOINT main)
-set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_MODEL 5.0)
+set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_MODEL 5_0)
 set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_FLAGS $<1:/DFLAGS_ADDED>)
 set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_ENABLE_DEBUG true)
 set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_DISABLE_OPTIMIZATIONS true)
 
-set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_TYPE Vertex)
+set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_TYPE vs)
 set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_ENTRYPOINT main)
-set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_MODEL 5.0)
+set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_MODEL 5_0)
 set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_FLAGS $<1:/DFLAGS_ADDED>)
 set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_ENABLE_DEBUG true)
 set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_DISABLE_OPTIMIZATIONS true)
 
-set_property(TARGET ${current_target} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$(OutDir)")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	# Build HLSL shaders
+	set (shader_target ${current_target}-compile-shaders)
+	add_custom_target(${shader_target})
+
+	set(HLSL_SHADER_FILES ${vertex_shader_files} ${pixel_shader_files})
+
+	foreach(FILE ${HLSL_SHADER_FILES})
+		  get_filename_component(FILE_WE ${FILE} NAME_WE)
+		  get_source_file_property(shadertype ${FILE} VS_SHADER_TYPE)
+		  get_source_file_property(shadermodel ${FILE} VS_SHADER_MODEL)
+		  add_custom_command(TARGET ${shader_target}
+			  COMMAND ${FXC_EXE} /nologo
+                        /WX
+						/Fh ${CMAKE_CURRENT_BINARY_DIR}/${FILE_WE}.h
+						/Emain
+						/T${shadertype}_${shadermodel}
+						$<IF:$<CONFIG:DEBUG>,/Od,/O1>
+						/Zi
+						/Fo ${CMAKE_CURRENT_BINARY_DIR}/${FILE_WE}.cso
+						/Fd ${CMAKE_CURRENT_BINARY_DIR}/${FILE_WE}.pdb
+						${FILE}
+				     MAIN_DEPENDENCY ${FILE}
+				     COMMENT "HLSL ${FILE}"
+				     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+				     VERBATIM)
+	endforeach(FILE)
+
+	add_dependencies(${current_target} ${shader_target})
+endif()
