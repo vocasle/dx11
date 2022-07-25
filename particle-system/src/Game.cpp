@@ -364,9 +364,9 @@ void Game::Render()
 	{
 		m_Renderer.SetBlendState(m_particleSystem.GetBlendState());
 		m_Renderer.SetDepthStencilState(m_particleSystem.GetDepthStencilState());
+		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ParticleVS"));
 		m_Renderer.SetVertexBuffer(m_particleSystem.GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
 		m_Renderer.SetIndexBuffer(m_particleSystem.GetIndexBuffer(), 0);
-		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ParticleVS"));
 		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("ParticlePS"));
 		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 0);
@@ -377,7 +377,7 @@ void Game::Render()
 	m_DR->PIXEndEvent();
 
 	// draw sky
-	//DrawSky();
+	DrawSky();
 
 #if WITH_IMGUI
 	ImGui::Render();
