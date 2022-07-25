@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Math.h"
 #include "Keyboard.h"
+#include "Math.h"
 #include "Mouse.h"
 
 #include <stdint.h>
@@ -11,24 +11,22 @@
 
 struct Camera
 {
-	float Pitch;
-	float Yaw;
-	Vec3D CameraPos;
-	Vec3D FocusPoint;
-	Vec3D Right;
-	Vec3D Up;
-	const struct Keyboard* Keyboard;
-	const struct Mouse* Mouse;
-	float Speed;
+  float Pitch;
+  float Yaw;
+  Vec3D CameraPos;
+  Vec3D FocusPoint;
+  Vec3D Right;
+  Vec3D Up;
+  const struct Keyboard *Keyboard;
+  const struct Mouse *Mouse;
+  float Speed;
 };
 
-void CameraInit(struct Camera* camera,
-	const Vec3D* cameraPos,
-	const struct Keyboard* keyboard,
-	const struct Mouse* mouse);
+void CameraInit (struct Camera *camera, const Vec3D *cameraPos,
+                 const struct Keyboard *keyboard, const struct Mouse *mouse);
 
-Mat4X4 CameraGetViewMat(struct Camera* camera);
+Mat4X4 CameraGetViewMat (struct Camera *camera);
 
-void CameraUpdatePos(struct Camera* camera, double deltaMillis);
+void CameraUpdatePos (struct Camera *camera, double deltaMillis);
 
-void CameraProcessMouse(struct Camera* camera, double deltaMillis);
+void CameraProcessMouse (struct Camera *camera, double deltaMillis);

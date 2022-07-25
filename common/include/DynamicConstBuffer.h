@@ -1,229 +1,248 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <cassert>
-#include <unordered_map>
 #include <functional>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
-#include <wrl/client.h>
 #include <d3d11.h>
-
+#include <wrl/client.h>
 
 #include "Utils.h"
 
 enum class NodeType
 {
-    Struct,
-    Array,
-    Bool = sizeof(float),
-    Float = sizeof(float),
-    Float2 = sizeof(float) * 2,
-    Float3 = sizeof(float) * 3,
-    Float4 = sizeof(float) * 4,
-    Float3X3 = sizeof(float) * 3 * 3,
-    Float4X4 = sizeof(float) * 4 * 4,
-    None,
+  Struct,
+  Array,
+  Bool = sizeof (float),
+  Float = sizeof (float),
+  Float2 = sizeof (float) * 2,
+  Float3 = sizeof (float) * 3,
+  Float4 = sizeof (float) * 4,
+  Float3X3 = sizeof (float) * 3 * 3,
+  Float4X4 = sizeof (float) * 4 * 4,
+  None,
 };
 
-std::string NodeTypeToString(NodeType inType);
+std::string NodeTypeToString (NodeType inType);
 
 struct Node
 {
-    std::string Name;
-    NodeType Type;
-    std::vector<Node> Children;
+  std::string Name;
+  NodeType Type;
+  std::vector<Node> Children;
 
-    Node(): Node("", NodeType::None) {}
-    Node(const std::string& inName, NodeType inType): Name(inName), Type(inType) {}
+  Node () : Node ("", NodeType::None) {}
+  Node (const std::string &inName, NodeType inType)
+      : Name (inName), Type (inType)
+  {
+  }
 
-    void AddChild(const std::string& inName, NodeType inType)
-    {
-        assert(Type == NodeType::Array || Type == NodeType::Struct
-            && "Only composite types allowed to have children");
-        Node n;
-        n.Name = Type == NodeType::Struct
-            ? UtilsFormatStr("%s.%s", Name.c_str(), inName.c_str())
-            : UtilsFormatStr("s[%lu]", Name.c_str(), Children.size());
-        n.Type = inType;
-        Children.push_back(n);
-    }
+  void
+  AddChild (const std::string &inName, NodeType inType)
+  {
+    assert (Type == NodeType::Array
+            || Type == NodeType::Struct
+                   && "Only composite types allowed to have children");
+    Node n;
+    n.Name = Type == NodeType::Struct
+                 ? UtilsFormatStr ("%s.%s", Name.c_str (), inName.c_str ())
+                 : UtilsFormatStr ("s[%lu]", Name.c_str (), Children.size ());
+    n.Type = inType;
+    Children.push_back (n);
+  }
 
-    void Print() const
-    {
-        UtilsDebugPrint("{ Name: %s, Type: %s }\n", Name.c_str(), NodeTypeToString(Type).c_str());
-        for (const auto& child : Children)
-        {
-            child.Print();
-        }
-    }
+  void
+  Print () const
+  {
+    UtilsDebugPrint ("{ Name: %s, Type: %s }\n", Name.c_str (),
+                     NodeTypeToString (Type).c_str ());
+    for (const auto &child : Children)
+      {
+        child.Print ();
+      }
+  }
 
-    void Visit(std::function<void(const Node& node)> inVisitor) const
-    {
-        inVisitor(*this);
-        for (auto& child : Children)
-        {
-            child.Visit(inVisitor);
-        }
-    }
+  void
+  Visit (std::function<void (const Node &node)> inVisitor) const
+  {
+    inVisitor (*this);
+    for (auto &child : Children)
+      {
+        child.Visit (inVisitor);
+      }
+  }
 };
-
 
 class DynamicConstBufferDesc
 {
 public:
-    void AddNode(const Node& inNode)
-    {
-        mNodes.push_back(inNode);
-    }
+  void
+  AddNode (const Node &inNode)
+  {
+    mNodes.push_back (inNode);
+  }
 
-    void Print() const
-    {
-        for (const auto& node : mNodes)
-        {
-            node.Print();
-        }
-    }
+  void
+  Print () const
+  {
+    for (const auto &node : mNodes)
+      {
+        node.Print ();
+      }
+  }
 
-    const std::vector<Node>& GetNodes() const { return mNodes; }
+  const std::vector<Node> &
+  GetNodes () const
+  {
+    return mNodes;
+  }
 
 private:
-    std::vector<Node> mNodes;
+  std::vector<Node> mNodes;
 };
 
 class DynamicConstBuffer
 {
 public:
-    DynamicConstBuffer(const DynamicConstBufferDesc& inDesc)
-    {
-        size_t sz = 0;
-        for (auto& node : inDesc.GetNodes())
-        {
-            auto visitor = [&sz](const Node& node) -> void
+  DynamicConstBuffer (const DynamicConstBufferDesc &inDesc)
+  {
+    size_t sz = 0;
+    for (auto &node : inDesc.GetNodes ())
+      {
+        auto visitor = [&sz] (const Node &node) -> void {
+          if (node.Type != NodeType::Array && node.Type != NodeType::Struct)
             {
-                if (node.Type != NodeType::Array && node.Type != NodeType::Struct)
-                {
-                    sz += static_cast<size_t>(node.Type);
-                }
-            };
-            node.Visit(visitor);
-        }
-        mBytes.resize(sz);
-
-        size_t offset = 0;
-        for (auto& node : inDesc.GetNodes())
-        {
-            auto visitor = [this, &offset](const Node& node) -> void
-            {
-                if (node.Type != NodeType::Struct && node.Type != NodeType::Array)
-                {
-                    mValues[node.Name] = { node.Type, &mBytes[offset] };
-                    offset += static_cast<size_t>(node.Type);
-                }
-                else
-                {
-                    mValues[node.Name] = { node.Type, &mBytes[offset] };
-                }
-            };
-            node.Visit(visitor);
-        }
-    }
-
-    ID3D11Buffer* Get() const
-    {
-        return mBuffer.Get();
-    }
-
-    template <typename T, typename S>
-    T* operator[](const S& inName)
-    {
-        for (const auto& [key, value] : mValues)
-        {
-            if (key == inName)
-            {
-                return static_cast<T*>(value.Ptr);
+              sz += static_cast<size_t> (node.Type);
             }
-        }
-        return nullptr;
-    }
+        };
+        node.Visit (visitor);
+      }
+    mBytes.resize (sz);
 
-    template <typename T, typename S>
-    T* GetValue(const S& inName) const
-    {
-        for (const auto& [key, value] : mValues)
-        {
-            if (key == inName)
+    size_t offset = 0;
+    for (auto &node : inDesc.GetNodes ())
+      {
+        auto visitor = [this, &offset] (const Node &node) -> void {
+          if (node.Type != NodeType::Struct && node.Type != NodeType::Array)
             {
-                return static_cast<T*>(value.Ptr);
+              mValues[node.Name] = { node.Type, &mBytes[offset] };
+              offset += static_cast<size_t> (node.Type);
             }
-        }
-        return nullptr;
-    }
-
-    template <typename T, typename S>
-    void SetValue(const S& inName, const T& inValue) const
-    {
-	    bool isSet = false;
-        for (const auto& [key, value] : mValues)
-        {
-            if (key == inName)
+          else
             {
-                *static_cast<T*>(value.Ptr) = inValue;
-		isSet = true;
-		break;
+              mValues[node.Name] = { node.Type, &mBytes[offset] };
             }
-        }
+        };
+        node.Visit (visitor);
+      }
+  }
 
-	if (!isSet)
-	{
-		UtilsFormatStr("WARN: key %s does not exist in this cbuffer\n", inName);
-	}
-    }
+  ID3D11Buffer *
+  Get () const
+  {
+    return mBuffer.Get ();
+  }
 
-    void UpdateConstantBuffer(ID3D11DeviceContext* context)
-    {
-	    D3D11_MAPPED_SUBRESOURCE mapped = {};
+  template <typename T, typename S>
+  T *
+  operator[] (const S &inName)
+  {
+    for (const auto &[key, value] : mValues)
+      {
+        if (key == inName)
+          {
+            return static_cast<T *> (value.Ptr);
+          }
+      }
+    return nullptr;
+  }
 
-	    if (FAILED(context->Map(mBuffer.Get(),
-		    0,
-		    D3D11_MAP_WRITE_DISCARD,
-		    0,
-		    &mapped)))
-	    {
-		    UtilsFatalError("ERROR: Failed to map constant buffer\n");
-	    }
-	    memcpy(mapped.pData, mBytes.data(), mBytes.size());
-	    context->Unmap(mBuffer.Get(), 0);
-    }
+  template <typename T, typename S>
+  T *
+  GetValue (const S &inName) const
+  {
+    for (const auto &[key, value] : mValues)
+      {
+        if (key == inName)
+          {
+            return static_cast<T *> (value.Ptr);
+          }
+      }
+    return nullptr;
+  }
 
-    void CreateConstantBuffer(ID3D11Device* device)
-    {
-	    D3D11_BUFFER_DESC bufferDesc = {};
-	    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	    bufferDesc.ByteWidth = mBytes.size();
-	    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+  template <typename T, typename S>
+  void
+  SetValue (const S &inName, const T &inValue) const
+  {
+    bool isSet = false;
+    for (const auto &[key, value] : mValues)
+      {
+        if (key == inName)
+          {
+            *static_cast<T *> (value.Ptr) = inValue;
+            isSet = true;
+            break;
+          }
+      }
 
-	    D3D11_SUBRESOURCE_DATA initData = {};
-	    initData.pSysMem = mBytes.data();
+    if (!isSet)
+      {
+        UtilsFormatStr ("WARN: key %s does not exist in this cbuffer\n",
+                        inName);
+      }
+  }
 
-	    if (FAILED(device->CreateBuffer(&bufferDesc, &initData, mBuffer.ReleaseAndGetAddressOf())))
-	    {
-		    UtilsFatalError("ERROR: Failed to create per frame constants cbuffer\n");
-	    }
-    }
+  void
+  UpdateConstantBuffer (ID3D11DeviceContext *context)
+  {
+    D3D11_MAPPED_SUBRESOURCE mapped = {};
 
-	const std::vector<uint8_t>& GetBytes() const { return mBytes; }
+    if (FAILED (context->Map (mBuffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
+                              &mapped)))
+      {
+        UtilsFatalError ("ERROR: Failed to map constant buffer\n");
+      }
+    memcpy (mapped.pData, mBytes.data (), mBytes.size ());
+    context->Unmap (mBuffer.Get (), 0);
+  }
+
+  void
+  CreateConstantBuffer (ID3D11Device *device)
+  {
+    D3D11_BUFFER_DESC bufferDesc = {};
+    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bufferDesc.ByteWidth = mBytes.size ();
+    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = mBytes.data ();
+
+    if (FAILED (device->CreateBuffer (&bufferDesc, &initData,
+                                      mBuffer.ReleaseAndGetAddressOf ())))
+      {
+        UtilsFatalError (
+            "ERROR: Failed to create per frame constants cbuffer\n");
+      }
+  }
+
+  const std::vector<uint8_t> &
+  GetBytes () const
+  {
+    return mBytes;
+  }
 
 private:
+  struct Value
+  {
+    NodeType Type;
+    void *Ptr;
+  };
 
-    struct Value
-    {
-        NodeType Type;
-        void* Ptr;
-    };
-
-    std::vector<uint8_t> mBytes;
-    std::unordered_map<std::string, Value> mValues;
-    Microsoft::WRL::ComPtr<ID3D11Buffer> mBuffer;
+  std::vector<uint8_t> mBytes;
+  std::unordered_map<std::string, Value> mValues;
+  Microsoft::WRL::ComPtr<ID3D11Buffer> mBuffer;
 };

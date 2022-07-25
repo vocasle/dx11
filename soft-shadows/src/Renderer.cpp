@@ -2,174 +2,207 @@
 
 #include <cassert>
 
+Renderer::Renderer () : m_DR{ nullptr } {}
 
-Renderer::Renderer(): m_DR{nullptr}
+Renderer::~Renderer () {}
+
+void
+Renderer::SetDeviceResources (DeviceResources *dr)
 {
+  m_DR = dr;
 }
 
-Renderer::~Renderer()
+void
+Renderer::SetPrimitiveTopology (D3D11_PRIMITIVE_TOPOLOGY topology)
 {
+  m_DR->GetDeviceContext ()->IASetPrimitiveTopology (topology);
 }
 
-void Renderer::SetDeviceResources(DeviceResources* dr)
+void
+Renderer::SetInputLayout (ID3D11InputLayout *inputLayout)
 {
-	m_DR = dr;
+  m_DR->GetDeviceContext ()->IASetInputLayout (inputLayout);
 }
 
-void Renderer::SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY topology)
+void
+Renderer::SetRasterizerState (ID3D11RasterizerState *rasterizerState)
 {
-	m_DR->GetDeviceContext()->IASetPrimitiveTopology(topology);
+  m_DR->GetDeviceContext ()->RSSetState (rasterizerState);
 }
 
-void Renderer::SetInputLayout(ID3D11InputLayout* inputLayout)
+void
+Renderer::BindPixelShader (ID3D11PixelShader *shader)
 {
-	m_DR->GetDeviceContext()->IASetInputLayout(inputLayout);
+  m_DR->GetDeviceContext ()->PSSetShader (shader, nullptr, 0);
 }
 
-void Renderer::SetRasterizerState(ID3D11RasterizerState* rasterizerState)
+void
+Renderer::BindVertexShader (ID3D11VertexShader *shader)
 {
-	m_DR->GetDeviceContext()->RSSetState(rasterizerState);
+  m_DR->GetDeviceContext ()->VSSetShader (shader, nullptr, 0);
 }
 
-void Renderer::BindPixelShader(ID3D11PixelShader* shader)
+void
+Renderer::SetSamplerState (ID3D11SamplerState *state, uint32_t slot)
 {
-	m_DR->GetDeviceContext()->PSSetShader(shader, nullptr, 0);
+  assert (slot < R_MAX_SAMPLERS);
+  m_DR->GetDeviceContext ()->PSSetSamplers (slot, 1, &state);
 }
 
-void Renderer::BindVertexShader(ID3D11VertexShader* shader)
+void
+Renderer::SetIndexBuffer (ID3D11Buffer *buffer, uint32_t startIndexLocation)
 {
-	m_DR->GetDeviceContext()->VSSetShader(shader, nullptr, 0);
+  m_DR->GetDeviceContext ()->IASetIndexBuffer (buffer, DXGI_FORMAT_R32_UINT,
+                                               startIndexLocation);
 }
 
-void Renderer::SetSamplerState(ID3D11SamplerState* state, uint32_t slot)
+void
+Renderer::SetVertexBuffer (ID3D11Buffer *buffer, uint32_t strides,
+                           uint32_t offsets)
 {
-	assert(slot < R_MAX_SAMPLERS);
-	m_DR->GetDeviceContext()->PSSetSamplers(slot, 1, &state);
+  m_DR->GetDeviceContext ()->IASetVertexBuffers (0, 1, &buffer, &strides,
+                                                 &offsets);
 }
 
-void Renderer::SetIndexBuffer(ID3D11Buffer* buffer, uint32_t startIndexLocation)
+void
+Renderer::SetDepthStencilState (ID3D11DepthStencilState *depthStencilState)
 {
-	m_DR->GetDeviceContext()->IASetIndexBuffer(buffer, DXGI_FORMAT_R32_UINT, startIndexLocation);
+  m_DR->GetDeviceContext ()->OMSetDepthStencilState (depthStencilState, 0);
 }
 
-void Renderer::SetVertexBuffer(ID3D11Buffer* buffer, uint32_t strides, uint32_t offsets)
+void
+Renderer::SetViewport (D3D11_VIEWPORT viewport)
 {
-	m_DR->GetDeviceContext()->IASetVertexBuffers(0, 1, &buffer, &strides, &offsets);
+  m_DR->GetDeviceContext ()->RSSetViewports (1, &viewport);
 }
 
-void Renderer::SetDepthStencilState(ID3D11DepthStencilState* depthStencilState)
+void
+Renderer::SetRenderTargets (ID3D11RenderTargetView *rtv,
+                            ID3D11DepthStencilView *dsv)
 {
-	m_DR->GetDeviceContext()->OMSetDepthStencilState(depthStencilState, 0);
+  m_DR->GetDeviceContext ()->OMSetRenderTargets (1, &rtv, dsv);
 }
 
-void Renderer::SetViewport(D3D11_VIEWPORT viewport)
+void
+Renderer::SetBlendState (ID3D11BlendState *blendState)
 {
-	m_DR->GetDeviceContext()->RSSetViewports(1, &viewport);
+  unsigned int sampleMask = 0xffffffff;
+  m_DR->GetDeviceContext ()->OMSetBlendState (blendState, nullptr, sampleMask);
 }
 
-void Renderer::SetRenderTargets(ID3D11RenderTargetView* rtv, ID3D11DepthStencilView* dsv)
+void
+Renderer::BindShaderResources (enum BindTargets bindTarget,
+                               ID3D11ShaderResourceView **SRVs,
+                               uint32_t numSRVs)
 {
-	m_DR->GetDeviceContext()->OMSetRenderTargets(1, &rtv, dsv);
+  assert (numSRVs <= R_MAX_SRV_NUM && "numSRVs is above limit!");
+  m_DR->GetDeviceContext ()->PSSetShaderResources (0, numSRVs, SRVs);
 }
 
-void Renderer::SetBlendState(ID3D11BlendState* blendState)
+void
+Renderer::BindConstantBuffers (enum BindTargets bindTarget, ID3D11Buffer **CBs,
+                               uint32_t numCBs)
 {
-	unsigned int sampleMask = 0xffffffff;
-	m_DR->GetDeviceContext()->OMSetBlendState(blendState, nullptr, sampleMask);
+  assert (numCBs <= R_MAX_CB_NUM && "numCBs is above limit!");
+  if (bindTarget == BindTargets::PixelShader)
+    {
+      m_DR->GetDeviceContext ()->PSSetConstantBuffers (0, numCBs, CBs);
+    }
+  else
+    {
+      m_DR->GetDeviceContext ()->VSSetConstantBuffers (0, numCBs, CBs);
+    }
 }
 
-void Renderer::BindShaderResources(enum BindTargets bindTarget, ID3D11ShaderResourceView** SRVs, uint32_t numSRVs)
+void
+Renderer::BindShaderResource (enum BindTargets bindTarget,
+                              ID3D11ShaderResourceView *srv, uint32_t slot)
 {
-	assert(numSRVs <= R_MAX_SRV_NUM && "numSRVs is above limit!");
-	m_DR->GetDeviceContext()->PSSetShaderResources(0, numSRVs, SRVs);
+  assert (slot < R_MAX_SRV_NUM);
+  m_DR->GetDeviceContext ()->PSSetShaderResources (slot, 1, &srv);
 }
 
-void Renderer::BindConstantBuffers(enum BindTargets bindTarget, ID3D11Buffer** CBs, uint32_t numCBs)
+void
+Renderer::BindConstantBuffer (enum BindTargets bindTarget, ID3D11Buffer *cb,
+                              uint32_t slot)
 {
-	assert(numCBs <= R_MAX_CB_NUM && "numCBs is above limit!");
-	if (bindTarget == BindTargets::PixelShader)
-	{
-		m_DR->GetDeviceContext()->PSSetConstantBuffers(0, numCBs, CBs);
-	}
-	else
-	{
-		m_DR->GetDeviceContext()->VSSetConstantBuffers(0, numCBs, CBs);
-	}
+  assert (slot < R_MAX_CB_NUM);
+  if (bindTarget == BindTargets::PixelShader)
+    {
+      m_DR->GetDeviceContext ()->PSSetConstantBuffers (slot, 1, &cb);
+    }
+  else
+    {
+      m_DR->GetDeviceContext ()->VSSetConstantBuffers (slot, 1, &cb);
+    }
 }
 
-void Renderer::BindShaderResource(enum BindTargets bindTarget, ID3D11ShaderResourceView* srv, uint32_t slot)
+void
+Renderer::DrawIndexed (uint32_t indexCount, uint32_t startIndexLocation,
+                       uint32_t baseVertexLocation)
 {
-	assert(slot < R_MAX_SRV_NUM);
-	m_DR->GetDeviceContext()->PSSetShaderResources(slot, 1, &srv);
+  m_DR->GetDeviceContext ()->DrawIndexed (indexCount, startIndexLocation,
+                                          baseVertexLocation);
 }
 
-void Renderer::BindConstantBuffer(enum BindTargets bindTarget, ID3D11Buffer* cb, uint32_t slot)
+void
+Renderer::Clear ()
 {
-	assert(slot < R_MAX_CB_NUM);
-	if (bindTarget == BindTargets::PixelShader)
-	{
-		m_DR->GetDeviceContext()->PSSetConstantBuffers(slot, 1, &cb);
-	}
-	else
-	{
-		m_DR->GetDeviceContext()->VSSetConstantBuffers(slot, 1, &cb);
-	}
+  ID3D11DeviceContext *ctx = m_DR->GetDeviceContext ();
+  ID3D11RenderTargetView *rtv = m_DR->GetRenderTargetView ();
+  ID3D11DepthStencilView *dsv = m_DR->GetDepthStencilView ();
+
+  static const float CLEAR_COLOR[4]
+      = { 0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f };
+  static const float BLACK_COLOR[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+  static ID3D11ShaderResourceView *nullSRVs[R_MAX_SRV_NUM]
+      = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+  BindShaderResources (BindTargets::PixelShader, nullSRVs, R_MAX_SRV_NUM);
+
+  ctx->ClearRenderTargetView (rtv, BLACK_COLOR);
+  ctx->ClearDepthStencilView (dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+                              1.0f, 0);
+  ctx->OMSetRenderTargets (1, &rtv, dsv);
+  ctx->RSSetViewports (1, &m_DR->GetViewport ());
 }
 
-void Renderer::DrawIndexed(uint32_t indexCount,
-	uint32_t startIndexLocation,
-	uint32_t baseVertexLocation)
+void
+Renderer::Present ()
 {
-	m_DR->GetDeviceContext()->DrawIndexed(indexCount, startIndexLocation, baseVertexLocation);
+  const HRESULT hr = m_DR->GetSwapChain ()->Present (1, 0);
+
+  ID3D11DeviceContext1 *ctx
+      = reinterpret_cast<ID3D11DeviceContext1 *> (m_DR->GetDeviceContext ());
+  ctx->DiscardView ((ID3D11View *)m_DR->GetRenderTargetView ());
+  if (m_DR->GetDepthStencilView ())
+    {
+      ctx->DiscardView ((ID3D11View *)m_DR->GetDepthStencilView ());
+    }
+
+  if (FAILED (hr))
+    {
+      OutputDebugStringA ("ERROR: Failed to present\n");
+      ExitProcess (EXIT_FAILURE);
+    }
 }
 
-void Renderer::Clear()
+void
+Renderer::ClearRenderTargetView (ID3D11RenderTargetView *rtv,
+                                 const float *color)
 {
-	ID3D11DeviceContext* ctx = m_DR->GetDeviceContext();
-	ID3D11RenderTargetView* rtv = m_DR->GetRenderTargetView();
-	ID3D11DepthStencilView* dsv = m_DR->GetDepthStencilView();
-
-	static const float CLEAR_COLOR[4] = { 0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f };
-	static const float BLACK_COLOR[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-	static ID3D11ShaderResourceView* nullSRVs[R_MAX_SRV_NUM] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
-	BindShaderResources(BindTargets::PixelShader, nullSRVs, R_MAX_SRV_NUM);
-
-	ctx->ClearRenderTargetView(rtv, BLACK_COLOR);
-	ctx->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	ctx->OMSetRenderTargets(1, &rtv, dsv);
-	ctx->RSSetViewports(1, &m_DR->GetViewport());
+  m_DR->GetDeviceContext ()->ClearRenderTargetView (rtv, color);
 }
 
-void Renderer::Present()
+void
+Renderer::ClearDepthStencilView (ID3D11DepthStencilView *dsv, uint32_t mask,
+                                 float depth, uint8_t stencil)
 {
-	const HRESULT hr = m_DR->GetSwapChain()->Present(1, 0);
-
-	ID3D11DeviceContext1* ctx = reinterpret_cast<ID3D11DeviceContext1*>(m_DR->GetDeviceContext());
-	ctx->DiscardView((ID3D11View*)m_DR->GetRenderTargetView());
-	if (m_DR->GetDepthStencilView())
-	{
-		ctx->DiscardView((ID3D11View*)m_DR->GetDepthStencilView());
-	}
-
-	if (FAILED(hr))
-	{
-		OutputDebugStringA("ERROR: Failed to present\n");
-		ExitProcess(EXIT_FAILURE);
-	}
+  m_DR->GetDeviceContext ()->ClearDepthStencilView (dsv, mask, depth, stencil);
 }
 
-void Renderer::ClearRenderTargetView(ID3D11RenderTargetView* rtv, const float* color)
+void
+Renderer::GenerateMips (ID3D11ShaderResourceView *srv)
 {
-	m_DR->GetDeviceContext()->ClearRenderTargetView(rtv, color);
-}
-
-void Renderer::ClearDepthStencilView(ID3D11DepthStencilView* dsv, uint32_t mask, float depth, uint8_t stencil)
-{
-	m_DR->GetDeviceContext()->ClearDepthStencilView(dsv, mask, depth, stencil);
-}
-
-void Renderer::GenerateMips(ID3D11ShaderResourceView* srv)
-{
-	m_DR->GetDeviceContext()->GenerateMips(srv);
+  m_DR->GetDeviceContext ()->GenerateMips (srv);
 }
