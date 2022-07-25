@@ -13,10 +13,10 @@ ParticleSystem::ParticleSystem(const std::string& name, const Vec3D& origin, con
 	m_indices{},
 	m_origin{origin},
 	m_camera{&camera},
-	m_emitter{ ParticleType::Emitter, {}, {}, {}, 0.0f }
+	m_emitter{ ParticleType::Emitter, {}, {}, {}, 0.0f, *this }
 {
-	m_vertices.reserve(MAX_PARTICLES * 4);
-	m_indices.reserve(MAX_PARTICLES * 6);
+	m_vertices.reserve(m_maxParticles * 4);
+	m_indices.reserve(m_maxParticles * 6);
 }
 
 ParticleSystem::~ParticleSystem()
@@ -38,7 +38,7 @@ void ParticleSystem::Tick(const float deltaTime)
 {
 	static float elapsedTime = 0.0f;
 	//elapsedTime += deltaTime;
-	if (m_particles.size()< MAX_PARTICLES /*&& elapsedTime > 0.1f*/)
+	if (m_particles.size()< m_maxParticles /*&& elapsedTime > 0.1f*/)
 	{
 		EmitParticle();
 		//elapsedTime = 0.0f;
@@ -49,7 +49,7 @@ void ParticleSystem::Tick(const float deltaTime)
 		if (p.IsAlive())
 		{
 			p.Tick(deltaTime);
-			p.CreateQuad(PARTICLE_SIZE, PARTICLE_SIZE, m_camera->GetUp(), m_camera->GetRight());
+			p.CreateQuad(m_particleSize.X, m_particleSize.Y, m_camera->GetUp(), m_camera->GetRight());
 		}
 		else
 		{
@@ -140,7 +140,7 @@ void ParticleSystem::CreateVertexBuffer(ID3D11Device* device)
 	subresourceData.pSysMem = &m_vertices[0];
 
 	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(Particle::Vertex) * MAX_PARTICLES * 4;
+	bufferDesc.ByteWidth = sizeof(Particle::Vertex) * m_maxParticles * 4;
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bufferDesc.StructureByteStride = sizeof(Particle::Vertex);
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -155,7 +155,7 @@ void ParticleSystem::CreateIndexBuffer(ID3D11Device* device)
 	subresourceData.pSysMem = &m_indices[0];
 
 	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(uint32_t) * MAX_PARTICLES * 6;
+	bufferDesc.ByteWidth = sizeof(uint32_t) * m_maxParticles * 6;
 	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bufferDesc.StructureByteStride = 0;
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -194,8 +194,7 @@ void ParticleSystem::CreateEmitter()
 	const Vec3D accel = { 0.0f, -9.8f, 0.0f };
 	const Vec3D initVel = {};
 	const Vec3D origin = {};
-	Particle p = {ParticleType::Emitter, accel, initVel, origin, 0.0f};
-	m_emitter = p;
+	m_emitter = { ParticleType::Emitter, accel, initVel, origin, 0.0f, *this };
 	EmitParticle();
 }
 
@@ -207,8 +206,8 @@ void ParticleSystem::EmitParticle()
 	Vec3D initPos = m_emitter.GetInitPos();
 	initPos.X += MathRandom(-0.2f, 0.2f);
 	initPos.Z += MathRandom(-0.2f, 0.2f);
-	Particle p = { ParticleType::Particle, accel, initVel, initPos, 0.0f };
-	p.CreateQuad(PARTICLE_SIZE, PARTICLE_SIZE, m_camera->GetUp(), m_camera->GetRight());
+	Particle p = { ParticleType::Particle, accel, initVel, initPos, 0.0f, *this };
+	p.CreateQuad(m_particleSize.X, m_particleSize.Y, m_camera->GetUp(), m_camera->GetRight());
 	m_particles.push_back(p);
 	m_vertices.insert(m_vertices.end(), p.GetVertices().begin(), p.GetVertices().end());	
 	m_indices.insert(m_indices.end(), p.GetIndices().begin(), p.GetIndices().end());
@@ -230,14 +229,45 @@ void ParticleSystem::UpdateVertexBuffer(ID3D11DeviceContext* context)
 	}
 }
 
-Particle::Particle(ParticleType type, const Vec3D& accel, const Vec3D& initVel, const Vec3D& initPos, const float lifespan):
+Particle::Particle(ParticleType type, const Vec3D& accel, const Vec3D& initVel, const Vec3D& initPos, const float lifespan, const ParticleSystem& ps):
 	m_accel{accel},
 	m_initVel{initVel},
 	m_initPos{initPos},
 	m_pos{},
 	m_lifespan{lifespan},
-	m_type{type}
+	m_type{type},
+	m_particleSystem{&ps}
 {
+}
+
+Particle::Particle(const Particle& rhs)
+{
+	m_accel = rhs.m_accel;
+	m_initVel = rhs.m_initVel;
+	m_initPos = rhs.m_initPos;
+	m_pos = rhs.m_pos;
+	m_lifespan = rhs.m_lifespan;
+	m_type = rhs.m_type;
+	m_vertices = rhs.m_vertices;
+	m_indices = rhs.m_indices;
+	m_particleSystem = rhs.m_particleSystem;
+}
+
+Particle& Particle::operator=(const Particle& rhs)
+{
+	if (this != &rhs)
+	{
+		m_accel = rhs.m_accel;
+		m_initVel = rhs.m_initVel;
+		m_initPos = rhs.m_initPos;
+		m_pos = rhs.m_pos;
+		m_lifespan = rhs.m_lifespan;
+		m_type = rhs.m_type;
+		m_vertices = rhs.m_vertices;
+		m_indices = rhs.m_indices;
+		m_particleSystem = rhs.m_particleSystem;
+	}
+	return *this;
 }
 
 void Particle::CreateQuad(int width, int height, const Vec3D& up, const Vec3D& right)
@@ -284,7 +314,7 @@ void Particle::Tick(const float deltaTime)
 
 bool Particle::IsAlive() const
 {
-	return m_lifespan < static_cast<float>(ParticleSystem::MAX_LIFESPAN);
+	return m_lifespan < static_cast<float>(m_particleSystem->GetLifespan());
 }
 
 void Particle::Reset()
