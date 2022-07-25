@@ -111,6 +111,7 @@ private:
 	ShadowMap m_ShadowMap;
 	CubeMap m_CubeMap;
 	DynamicCubeMap m_dynamicCubeMap;
-	ParticleSystem m_particleSystem;
+	ParticleSystem m_fire;
+	ParticleSystem m_rain;
 	ShaderManager m_shaderManager;
 };

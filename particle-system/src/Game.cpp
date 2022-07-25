@@ -215,7 +215,8 @@ void Game::InitPerSceneConstants()
 
 Game::Game() :
 	m_Camera{ {0.0f, 0.0f, -5.0f} },
-	m_particleSystem{ "Fire", {0.0f, 0.0f, 0.0f}, m_Camera }
+	m_fire{ "Fire", {0.0f, 0.0f, 0.0f}, m_Camera },
+	m_rain{"Rain", {0, 100, 0}, m_Camera}
 {
 	m_DR = std::make_unique<DeviceResources>();
 	m_sceneBounds.Center = { 0.0f, 0.0f, 0.0f };
@@ -260,15 +261,25 @@ void Game::Update()
 
 	BuildShadowTransform();
 
-	m_particleSystem.Tick(static_cast<float>(m_Timer.DeltaMillis / 1000));
-	m_particleSystem.UpdateVertexBuffer(m_DR->GetDeviceContext());
+	m_fire.Tick(static_cast<float>(m_Timer.DeltaMillis / 1000));
+	m_fire.UpdateVertexBuffer(m_DR->GetDeviceContext());
 
-	SetWindowText(m_DR->GetWindow(), 
-		UtilsFormatStr("particle-system -- Total particles: %d", m_particleSystem.GetNumAliveParticles()).c_str());
+	static float elapsedTime = 0.0f;
+	const float deltaSeconds = static_cast<float>(m_Timer.DeltaMillis / 1000.0);
+	elapsedTime += deltaSeconds;
+
+	if (elapsedTime >= 1.0f)
+	{
+		SetWindowText(m_DR->GetWindow(),
+			UtilsFormatStr("Particles -- FPS: %d, frame: %f s, alive particles: %d",
+				static_cast<int>(elapsedTime / deltaSeconds),
+				deltaSeconds,
+				m_fire.GetNumAliveParticles()).c_str());
+		elapsedTime = 0.0f;
+	}
 
 #if WITH_IMGUI
 	// update directional light
-	static float elapsedTime = 0.0f;
 	elapsedTime += (float)m_Timer.DeltaMillis / (1000.0f * 2.0f);
 	if (m_ImguiState.RotateDirLight)
 	{
@@ -362,17 +373,17 @@ void Game::Render()
 
 	m_DR->PIXBeginEvent(L"Draw particles");
 	{
-		m_Renderer.SetBlendState(m_particleSystem.GetBlendState());
-		m_Renderer.SetDepthStencilState(m_particleSystem.GetDepthStencilState());
+		m_Renderer.SetBlendState(m_fire.GetBlendState());
+		m_Renderer.SetDepthStencilState(m_fire.GetDepthStencilState());
 		m_Renderer.BindVertexShader(m_shaderManager.GetVertexShader("ParticleVS"));
-		m_Renderer.SetVertexBuffer(m_particleSystem.GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
-		m_Renderer.SetIndexBuffer(m_particleSystem.GetIndexBuffer(), 0);
+		m_Renderer.SetVertexBuffer(m_fire.GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
+		m_Renderer.SetIndexBuffer(m_fire.GetIndexBuffer(), 0);
 		m_Renderer.BindPixelShader(m_shaderManager.GetPixelShader("ParticlePS"));
 		m_Renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 		m_Renderer.BindConstantBuffer(BindTargets::VertexShader, m_PerFrameCB.Get(), 0);
-		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_particleSystem.GetSRV(), 0);
-		m_Renderer.SetSamplerState(m_particleSystem.GetSamplerState(), 0);
-		m_Renderer.DrawIndexed(m_particleSystem.GetNumIndices(), 0, 0);
+		m_Renderer.BindShaderResource(BindTargets::PixelShader, m_fire.GetSRV(), 0);
+		m_Renderer.SetSamplerState(m_fire.GetSamplerState(), 0);
+		m_Renderer.DrawIndexed(m_fire.GetNumIndices(), 0, 0);
 	}
 	m_DR->PIXEndEvent();
 
@@ -503,7 +514,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 
 	m_Renderer.SetDeviceResources(m_DR.get());
 
-	m_particleSystem.Init(device, m_DR->GetDeviceContext(), 
+	m_fire.Init(device, m_DR->GetDeviceContext(), 
 		UtilsFormatStr("%s/textures/flare0.png", ASSETS_ROOT).c_str());
 
 #if WITH_IMGUI
