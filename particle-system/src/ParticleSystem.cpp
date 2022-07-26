@@ -7,16 +7,22 @@
 using namespace Microsoft::WRL;
 
 ParticleSystem::ParticleSystem(const std::string &name, const Vec3D &origin,
+			       const Vec3D &acceleration, const Vec3D &initVel,
 			       const Camera &camera)
 	: m_name{ name }
 	, m_vertices{}
 	, m_indices{}
 	, m_origin{ origin }
 	, m_camera{ &camera }
-	, m_emitter{ ParticleType::Emitter, {}, {}, {}, 0.0f, *this }
+	, m_emitter{ ParticleType::Emitter,
+		     acceleration,
+		     initVel,
+		     origin,
+		     0.0f,
+		     *this }
 {
-	m_vertices.reserve(m_maxParticles * 4);
-	m_indices.reserve(m_maxParticles * 6);
+	m_vertices.reserve(MAX_PARTICLES * 4);
+	m_indices.reserve(MAX_PARTICLES * 6);
 }
 
 ParticleSystem::~ParticleSystem()
@@ -30,7 +36,8 @@ void ParticleSystem::Init(ID3D11Device *device, ID3D11DeviceContext *context,
 	CreateBlendState(device);
 	CreateDepthStencilState(device);
 	CreateSamplerState(device);
-	CreateEmitter();
+	//	CreateEmitter();
+	EmitParticle();
 	CreateVertexBuffer(device);
 	CreateIndexBuffer(device);
 }
@@ -148,7 +155,7 @@ void ParticleSystem::CreateVertexBuffer(ID3D11Device *device)
 	subresourceData.pSysMem = &m_vertices[0];
 
 	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(Particle::Vertex) * m_maxParticles * 4;
+	bufferDesc.ByteWidth = sizeof(Particle::Vertex) * MAX_PARTICLES * 4;
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bufferDesc.StructureByteStride = sizeof(Particle::Vertex);
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -164,7 +171,7 @@ void ParticleSystem::CreateIndexBuffer(ID3D11Device *device)
 	subresourceData.pSysMem = &m_indices[0];
 
 	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.ByteWidth = sizeof(uint32_t) * m_maxParticles * 6;
+	bufferDesc.ByteWidth = sizeof(uint32_t) * MAX_PARTICLES * 6;
 	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bufferDesc.StructureByteStride = 0;
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -203,17 +210,16 @@ void ParticleSystem::CreateEmitter()
 {
 	const Vec3D accel = { 0.0f, -9.8f, 0.0f };
 	const Vec3D initVel = {};
-	const Vec3D origin = {};
 	m_emitter = {
-		ParticleType::Emitter, accel, initVel, origin, 0.0f, *this
+		ParticleType::Emitter, accel, initVel, m_origin, 0.0f, *this
 	};
 	EmitParticle();
 }
 
 void ParticleSystem::EmitParticle()
 {
-	Vec3D accel = { 0.0f, 1.5f, 0.0f };
-	Vec3D initVel = {};
+	Vec3D accel = { 0, -9.8f, 0 };
+	Vec3D initVel = { 0, 1.5f, 0 };
 	initVel.X = MathRandom(-0.2f, 0.2f);
 	Vec3D initPos = m_emitter.GetInitPos();
 	initPos.X += MathRandom(-0.2f, 0.2f);

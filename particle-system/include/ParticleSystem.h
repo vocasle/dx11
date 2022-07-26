@@ -10,6 +10,8 @@
 
 enum class ParticleType { Particle, Emitter };
 
+#define MAX_PARTICLES 10000
+
 class ParticleSystem;
 class Particle {
     public:
@@ -77,6 +79,7 @@ class Particle {
 class ParticleSystem {
     public:
 	ParticleSystem(const std::string &name, const Vec3D &origin,
+		       const Vec3D &acceleration, const Vec3D &initVel,
 		       const Camera &camera);
 	~ParticleSystem();
 
@@ -141,6 +144,10 @@ class ParticleSystem {
 	Vec2D GetParticleSize() const
 	{
 		return m_particleSize;
+	}
+	Vec3D GetOrigin() const
+	{
+		return m_origin;
 	}
 
     private:
