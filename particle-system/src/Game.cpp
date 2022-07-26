@@ -20,11 +20,13 @@ struct ParticleSystemOptions {
 	float lifespan = 0;
 	int maxParticles = 0;
 	float randomFactor = 1;
+	int burst = 1;
 	ParticleSystemOptions(const ParticleSystem &ps)
 		: origin(ps.GetOrigin())
 		, lifespan(ps.GetLifespan())
 		, maxParticles(ps.GetMaxParticles())
 		, randomFactor(ps.GetRandomFactor())
+		, burst(ps.GetBurst())
 	{
 	}
 };
@@ -188,6 +190,13 @@ void Game::UpdateImgui()
 		ImGui::InputFloat("Fire random factor", &Globals::FireOptions->randomFactor);
 		if (m_fire.GetRandomFactor() != Globals::FireOptions->randomFactor)
 			m_fire.SetRandomFactor(Globals::FireOptions->randomFactor);
+
+		ImGui::InputInt("Fire burst (n per 100 ms)",
+				&Globals::FireOptions->burst);
+		if (m_fire.GetBurst() !=
+		    Globals::FireOptions->burst)
+			m_fire.SetBurst(
+				Globals::FireOptions->burst);
 	}
 	if (ImGui::CollapsingHeader("Rain")) {
 		ImGui::Checkbox("Enable rain",
@@ -207,6 +216,11 @@ void Game::UpdateImgui()
 		ImGui::InputFloat("Rain random factor", &Globals::RainOptions->randomFactor);
 		if (m_rain.GetRandomFactor() != Globals::RainOptions->randomFactor)
 			m_rain.SetRandomFactor(Globals::RainOptions->randomFactor);
+
+		ImGui::InputInt("Rain burst (n per 100 ms)",
+				&Globals::RainOptions->burst);
+		if (m_rain.GetBurst() != Globals::RainOptions->burst)
+			m_rain.SetBurst(Globals::RainOptions->burst);
 	}
 }
 #endif
