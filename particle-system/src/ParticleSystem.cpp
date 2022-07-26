@@ -219,11 +219,14 @@ void ParticleSystem::CreateEmitter()
 
 void ParticleSystem::EmitParticle()
 {
-	Vec3D accel = { 0, -9.8f, 0 };
-	Vec3D initVel = { 0, 1.5f, 0 };
-	initVel.X = MathRandom(-m_randomFactor, m_randomFactor);
+	Vec3D accel = m_accel;
+	Vec3D initVel = m_initVel;
+	initVel.X += MathRandom(-m_randomFactor, m_randomFactor);
+	initVel.Y += MathRandom(-m_randomFactor, m_randomFactor);
+	initVel.Z += MathRandom(-m_randomFactor, m_randomFactor);
 	Vec3D initPos = m_emitter.GetInitPos();
 	initPos.X += MathRandom(-m_randomFactor, m_randomFactor);
+	initPos.Y += MathRandom(-m_randomFactor, m_randomFactor);
 	initPos.Z += MathRandom(-m_randomFactor, m_randomFactor);
 	Particle p = {
 		ParticleType::Particle, accel, initVel, initPos, 0.0f, *this
@@ -385,5 +388,22 @@ void ParticleSystem::SetRandomFactor(float factor)
 void ParticleSystem::SetBurst(int burst)
 {
 	m_burst = burst;
+	ResetParticles();
+}
+
+void ParticleSystem::SetInitVel(const Vec3D& initVel)
+{
+	m_initVel = initVel;
+	ResetParticles();
+}
+void ParticleSystem::SetAccel(const Vec3D& accel)
+{
+	m_accel = accel;
+	ResetParticles();
+}
+void ParticleSystem::SetInitPos(const Vec3D& initPos)
+{
+	m_origin = initPos;
+	m_emitter = Particle(ParticleType::Emitter, m_accel, m_initVel, m_origin, m_lifespan, *this);
 	ResetParticles();
 }

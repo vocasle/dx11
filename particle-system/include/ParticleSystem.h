@@ -92,6 +92,9 @@ class ParticleSystem {
 	void SetParticleSize(float width, float height);
 	void SetRandomFactor(float factor);
 	void SetBurst(int burst);
+	void SetInitVel(const Vec3D& initVel);
+	void SetAccel(const Vec3D& accel);
+	void SetInitPos(const Vec3D& initPos);
 
 	ID3D11BlendState *GetBlendState() const
 	{
@@ -150,6 +153,9 @@ class ParticleSystem {
 	{
 		return m_burst;
 	}
+	Vec3D GetAccel() const { return m_accel; }
+	Vec3D GetInitPos() const { return m_origin; }
+	Vec3D GetInitVel() const { return m_initVel; }
 
     private:
 	void CreateTexture(ID3D11Device *device, ID3D11DeviceContext *context,
@@ -187,4 +193,6 @@ class ParticleSystem {
 	Vec2D m_particleSize = { 1, 1 };
 	float m_randomFactor = 1;
 	int m_burst = 1;
+	Vec3D m_initVel = {0, 0, 0};
+	Vec3D m_accel = {0, 0, 0};
 };
