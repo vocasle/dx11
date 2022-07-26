@@ -19,14 +19,17 @@ struct ParticleSystemOptions {
 	Vec3D origin = {};
 	float lifespan = 0;
 	int maxParticles = 0;
+	float randomFactor = 1;
 	ParticleSystemOptions(const ParticleSystem &ps)
 		: origin(ps.GetOrigin())
 		, lifespan(ps.GetLifespan())
 		, maxParticles(ps.GetMaxParticles())
+		, randomFactor(ps.GetRandomFactor())
 	{
 	}
 };
 
+// std::array<std::unique_ptr<ParticleSystemOptions>, 2> Options;
 std::unique_ptr<ParticleSystemOptions> FireOptions;
 std::unique_ptr<ParticleSystemOptions> RainOptions;
 };
@@ -181,6 +184,10 @@ void Game::UpdateImgui()
 		    Globals::FireOptions->maxParticles)
 			m_fire.SetMaxParticles(
 				Globals::FireOptions->maxParticles);
+
+		ImGui::InputFloat("Fire random factor", &Globals::FireOptions->randomFactor);
+		if (m_fire.GetRandomFactor() != Globals::FireOptions->randomFactor)
+			m_fire.SetRandomFactor(Globals::FireOptions->randomFactor);
 	}
 	if (ImGui::CollapsingHeader("Rain")) {
 		ImGui::Checkbox("Enable rain",
@@ -196,6 +203,10 @@ void Game::UpdateImgui()
 		    Globals::RainOptions->maxParticles)
 			m_rain.SetMaxParticles(
 				Globals::RainOptions->maxParticles);
+
+		ImGui::InputFloat("Rain random factor", &Globals::RainOptions->randomFactor);
+		if (m_rain.GetRandomFactor() != Globals::RainOptions->randomFactor)
+			m_rain.SetRandomFactor(Globals::RainOptions->randomFactor);
 	}
 }
 #endif
@@ -708,7 +719,9 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_rain.Init(
 		device, m_DR->GetDeviceContext(),
 		UtilsFormatStr("%s/textures/trace_01.png", ASSETS_ROOT).c_str());
-	m_rain.SetLifespan(6);
+	m_rain.SetMaxParticles(10000);
+	m_rain.SetRandomFactor(100);
+	m_rain.SetLifespan(5);
 
 	{ // Init globals
 		Globals::FireOptions =
