@@ -352,3 +352,25 @@ void Particle::Reset()
 	m_lifespan = 0.0f;
 	m_pos = {};
 }
+
+void ParticleSystem::ResetParticles()
+{
+	m_particles.clear();
+	EmitParticle();
+}
+
+void ParticleSystem::SetLifespan(float lifespan)
+{
+	m_lifespan = lifespan;
+	ResetParticles();
+}
+void ParticleSystem::SetMaxParticles(int max)
+{
+	m_maxParticles = max;
+	ResetParticles();
+}
+void ParticleSystem::SetParticleSize(float width, float height)
+{
+	m_particleSize = { width, height };
+	ResetParticles();
+}

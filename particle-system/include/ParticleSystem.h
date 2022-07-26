@@ -87,18 +87,9 @@ class ParticleSystem {
 		  const std::string &texFilePath);
 	void Tick(const float deltaTime);
 	void UpdateVertexBuffer(ID3D11DeviceContext *context);
-	void SetLifespan(int lifespan)
-	{
-		m_lifespan = lifespan;
-	}
-	void SetMaxParticles(int max)
-	{
-		m_maxParticles = max;
-	}
-	void SetParticleSize(float width, float height)
-	{
-		m_particleSize = { width, height };
-	}
+	void SetLifespan(float lifespan);
+	void SetMaxParticles(int max);
+	void SetParticleSize(float width, float height);
 
 	ID3D11BlendState *GetBlendState() const
 	{
@@ -133,7 +124,7 @@ class ParticleSystem {
 		return m_sampler.Get();
 	}
 	size_t GetNumAliveParticles() const;
-	int GetLifespan() const
+	float GetLifespan() const
 	{
 		return m_lifespan;
 	}
@@ -161,6 +152,7 @@ class ParticleSystem {
 	void UpdateVertices();
 	void CreateEmitter();
 	void EmitParticle();
+	void ResetParticles();
 
 	Microsoft::WRL::ComPtr<ID3D11BlendState> m_blendState;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_depthStencilState;
@@ -180,7 +172,7 @@ class ParticleSystem {
 	Vec3D m_origin;
 	const Camera *m_camera;
 
-	int m_lifespan = 1;
+	float m_lifespan = 1;
 	int m_maxParticles = 70;
 	Vec2D m_particleSize = { 1, 1 };
 };
