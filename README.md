@@ -18,4 +18,4 @@
 
 - [X] Add fog effect (pixel shader or post-process)
 
-- [ ] Add bloom post-process effect
+- [X] Add bloom post-process effect
