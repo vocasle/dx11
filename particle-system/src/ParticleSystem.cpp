@@ -45,11 +45,12 @@ void ParticleSystem::Init(ID3D11Device *device, ID3D11DeviceContext *context,
 void ParticleSystem::Tick(const float deltaTime)
 {
 	static float elapsedTime = 0.0f;
-	// elapsedTime += deltaTime;
-	if (m_particles.size() <
-	    static_cast<size_t>(m_maxParticles) /*&& elapsedTime > 0.1f*/) {
-		EmitParticle();
-		// elapsedTime = 0.0f;
+	elapsedTime += deltaTime;
+	if (m_particles.size() < static_cast<size_t>(m_maxParticles) &&
+	    elapsedTime > 0.1f) {
+		for (size_t i = 0; i < m_burst; ++i)
+			EmitParticle();
+		elapsedTime = 0.0f;
 	}
 
 	for (Particle &p : m_particles) {
@@ -378,5 +379,11 @@ void ParticleSystem::SetParticleSize(float width, float height)
 void ParticleSystem::SetRandomFactor(float factor)
 {
 	m_randomFactor = factor;
+	ResetParticles();
+}
+
+void ParticleSystem::SetBurst(int burst)
+{
+	m_burst = burst;
 	ResetParticles();
 }

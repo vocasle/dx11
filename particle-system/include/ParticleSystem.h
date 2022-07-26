@@ -91,6 +91,7 @@ class ParticleSystem {
 	void SetMaxParticles(int max);
 	void SetParticleSize(float width, float height);
 	void SetRandomFactor(float factor);
+	void SetBurst(int burst);
 
 	ID3D11BlendState *GetBlendState() const
 	{
@@ -145,6 +146,10 @@ class ParticleSystem {
 	{
 		return m_randomFactor;
 	}
+	int GetBurst() const
+	{
+		return m_burst;
+	}
 
     private:
 	void CreateTexture(ID3D11Device *device, ID3D11DeviceContext *context,
@@ -181,4 +186,5 @@ class ParticleSystem {
 	int m_maxParticles = 70;
 	Vec2D m_particleSize = { 1, 1 };
 	float m_randomFactor = 1;
+	int m_burst = 1;
 };
