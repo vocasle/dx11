@@ -21,12 +21,16 @@ struct ParticleSystemOptions {
 	int maxParticles = 0;
 	float randomFactor = 1;
 	int burst = 1;
+	Vec3D initVel = { 0, 0, 0 };
+	Vec3D accel = { 0, 0, 0 };
 	ParticleSystemOptions(const ParticleSystem &ps)
 		: origin(ps.GetOrigin())
 		, lifespan(ps.GetLifespan())
 		, maxParticles(ps.GetMaxParticles())
 		, randomFactor(ps.GetRandomFactor())
 		, burst(ps.GetBurst())
+		, initVel(ps.GetInitVel())
+		, accel(ps.GetAccel())
 	{
 	}
 };
@@ -178,49 +182,87 @@ void Game::UpdateImgui()
 				&Globals::FireOptions->isEnabled);
 		ImGui::InputFloat("Fire lifespan",
 				  &Globals::FireOptions->lifespan);
-		if (m_fire.GetLifespan() != Globals::FireOptions->lifespan)
-			m_fire.SetLifespan(Globals::FireOptions->lifespan);
+
 		ImGui::InputInt("Fire num particles",
 				&Globals::FireOptions->maxParticles);
+
+		ImGui::InputFloat("Fire random factor",
+				  &Globals::FireOptions->randomFactor);
+
+		ImGui::InputInt("Fire burst (n per 100 ms)",
+				&Globals::FireOptions->burst);
+
+		ImGui::InputFloat3("Fire init vel",
+				   reinterpret_cast<float *>(
+					   &Globals::FireOptions->initVel));
+		ImGui::InputFloat3("Fire accel",
+				   reinterpret_cast<float *>(
+					   &Globals::FireOptions->accel));
+
+		if (m_fire.GetLifespan() != Globals::FireOptions->lifespan)
+			m_fire.SetLifespan(Globals::FireOptions->lifespan);
+
 		if (m_fire.GetMaxParticles() !=
 		    Globals::FireOptions->maxParticles)
 			m_fire.SetMaxParticles(
 				Globals::FireOptions->maxParticles);
 
-		ImGui::InputFloat("Fire random factor", &Globals::FireOptions->randomFactor);
-		if (m_fire.GetRandomFactor() != Globals::FireOptions->randomFactor)
-			m_fire.SetRandomFactor(Globals::FireOptions->randomFactor);
+		if (m_fire.GetRandomFactor() !=
+		    Globals::FireOptions->randomFactor)
+			m_fire.SetRandomFactor(
+				Globals::FireOptions->randomFactor);
 
-		ImGui::InputInt("Fire burst (n per 100 ms)",
-				&Globals::FireOptions->burst);
-		if (m_fire.GetBurst() !=
-		    Globals::FireOptions->burst)
-			m_fire.SetBurst(
-				Globals::FireOptions->burst);
+		if (m_fire.GetBurst() != Globals::FireOptions->burst)
+			m_fire.SetBurst(Globals::FireOptions->burst);
+
+		if (m_fire.GetAccel() != Globals::FireOptions->accel)
+			m_fire.SetAccel(Globals::FireOptions->accel);
+
+		if (m_fire.GetInitVel() != Globals::FireOptions->initVel)
+			m_fire.SetInitVel(Globals::FireOptions->initVel);
 	}
 	if (ImGui::CollapsingHeader("Rain")) {
 		ImGui::Checkbox("Enable rain",
 				&Globals::RainOptions->isEnabled);
 		ImGui::InputFloat("Rain lifespan",
 				  &Globals::RainOptions->lifespan);
-		if (m_rain.GetLifespan() != Globals::RainOptions->lifespan)
-			m_rain.SetLifespan(Globals::RainOptions->lifespan);
 
 		ImGui::InputInt("Rain num particles",
 				&Globals::RainOptions->maxParticles);
+
+		ImGui::InputFloat("Rain random factor",
+				  &Globals::RainOptions->randomFactor);
+
+		ImGui::InputInt("Rain burst (n per 100 ms)",
+				&Globals::RainOptions->burst);
+
+		ImGui::InputFloat3("Rain init vel",
+				   reinterpret_cast<float *>(
+					   &Globals::RainOptions->initVel));
+		ImGui::InputFloat3("Rain accel",
+				   reinterpret_cast<float *>(
+					   &Globals::RainOptions->accel));
+		if (m_rain.GetRandomFactor() !=
+		    Globals::RainOptions->randomFactor)
+			m_rain.SetRandomFactor(
+				Globals::RainOptions->randomFactor);
+
 		if (m_rain.GetMaxParticles() !=
 		    Globals::RainOptions->maxParticles)
 			m_rain.SetMaxParticles(
 				Globals::RainOptions->maxParticles);
 
-		ImGui::InputFloat("Rain random factor", &Globals::RainOptions->randomFactor);
-		if (m_rain.GetRandomFactor() != Globals::RainOptions->randomFactor)
-			m_rain.SetRandomFactor(Globals::RainOptions->randomFactor);
+		if (m_rain.GetLifespan() != Globals::RainOptions->lifespan)
+			m_rain.SetLifespan(Globals::RainOptions->lifespan);
 
-		ImGui::InputInt("Rain burst (n per 100 ms)",
-				&Globals::RainOptions->burst);
 		if (m_rain.GetBurst() != Globals::RainOptions->burst)
 			m_rain.SetBurst(Globals::RainOptions->burst);
+
+		if (m_rain.GetAccel() != Globals::RainOptions->accel)
+			m_rain.SetAccel(Globals::RainOptions->accel);
+
+		if (m_rain.GetInitVel() != Globals::RainOptions->initVel)
+			m_rain.SetInitVel(Globals::RainOptions->initVel);
 	}
 }
 #endif
@@ -305,11 +347,11 @@ Game::Game()
 	: m_Camera{ { 0.0f, 0.0f, -5.0f } }
 	, m_fire{ "Fire",
 		  { 0.0f, 0.0f, 0.0f },
-		  { 0, 1.5, 0 },
-		  { 0, 0, 0 },
+		  { 0, 3, 0 },
+		  { 0, -1.5, 0 },
 		  m_Camera }
 	, m_rain{ "Rain",
-		  { 0, 100, 0 },
+		  { 0, 50, 0 },
 		  {
 			  0,
 			  -9.8f,
@@ -380,7 +422,8 @@ void Game::Update()
 			UtilsFormatStr(
 				"Particles -- FPS: %d, frame: %f s, fire particles: %d, rain particles: %d",
 				static_cast<int>(elapsedTime / deltaSeconds),
-				deltaSeconds, m_fire.GetNumAliveParticles(), m_rain.GetNumAliveParticles())
+				deltaSeconds, m_fire.GetNumAliveParticles(),
+				m_rain.GetNumAliveParticles())
 				.c_str());
 		elapsedTime = 0.0f;
 	}
