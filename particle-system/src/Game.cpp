@@ -272,8 +272,20 @@ void Game::InitPerSceneConstants()
 
 Game::Game()
 	: m_Camera{ { 0.0f, 0.0f, -5.0f } }
-	, m_fire{ "Fire", { 0.0f, 0.0f, 0.0f }, m_Camera }
-	, m_rain{ "Rain", { 0, 100, 0 }, m_Camera }
+	, m_fire{ "Fire",
+		  { 0.0f, 0.0f, 0.0f },
+		  { 0, 1.5, 0 },
+		  { 0, 0, 0 },
+		  m_Camera }
+	, m_rain{ "Rain",
+		  { 0, 100, 0 },
+		  {
+			  0,
+			  -9.8f,
+			  0,
+		  },
+		  { 0, 0, 0 },
+		  m_Camera }
 {
 	m_DR = std::make_unique<DeviceResources>();
 	m_sceneBounds.Center = { 0.0f, 0.0f, 0.0f };
@@ -335,9 +347,9 @@ void Game::Update()
 		SetWindowText(
 			m_DR->GetWindow(),
 			UtilsFormatStr(
-				"Particles -- FPS: %d, frame: %f s, alive particles: %d",
+				"Particles -- FPS: %d, frame: %f s, fire particles: %d, rain particles: %d",
 				static_cast<int>(elapsedTime / deltaSeconds),
-				deltaSeconds, m_fire.GetNumAliveParticles())
+				deltaSeconds, m_fire.GetNumAliveParticles(), m_rain.GetNumAliveParticles())
 				.c_str());
 		elapsedTime = 0.0f;
 	}
@@ -690,6 +702,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_rain.Init(
 		device, m_DR->GetDeviceContext(),
 		UtilsFormatStr("%s/textures/trace_01.png", ASSETS_ROOT).c_str());
+	m_rain.SetLifespan(6);
+	m_rain.SetMaxParticles(10000);
 
 	{ // Init globals
 		Globals::FireOptions =
