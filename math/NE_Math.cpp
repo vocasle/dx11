@@ -1103,6 +1103,16 @@ void Vec3D::Normalize()
 	MathVec3DNormalize(this);
 }
 
+bool Vec3D::operator==(const Vec3D& rhs) const
+{
+	return X == rhs.X && Y == rhs.Y && Z == rhs.Z;
+}
+
+bool Vec3D::operator!=(const Vec3D& rhs) const
+{
+	return !(*this == rhs);
+}
+
 Vec4D &Vec4D::operator*(const float scalar)
 {
 	MathVec4DModulateByScalar(this, scalar, this);

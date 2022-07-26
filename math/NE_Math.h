@@ -42,6 +42,8 @@ struct Vec3D {
 	float Dot(const Vec3D &rhs) const;
 	float Length() const;
 	void Normalize();
+	bool operator==(const Vec3D& rhs) const;
+	bool operator!=(const Vec3D& rhs) const;
 #endif
 	float X;
 	float Y;
