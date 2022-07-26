@@ -220,10 +220,10 @@ void ParticleSystem::EmitParticle()
 {
 	Vec3D accel = { 0, -9.8f, 0 };
 	Vec3D initVel = { 0, 1.5f, 0 };
-	initVel.X = MathRandom(-0.2f, 0.2f);
+	initVel.X = MathRandom(-m_randomFactor, m_randomFactor);
 	Vec3D initPos = m_emitter.GetInitPos();
-	initPos.X += MathRandom(-0.2f, 0.2f);
-	initPos.Z += MathRandom(-0.2f, 0.2f);
+	initPos.X += MathRandom(-m_randomFactor, m_randomFactor);
+	initPos.Z += MathRandom(-m_randomFactor, m_randomFactor);
 	Particle p = {
 		ParticleType::Particle, accel, initVel, initPos, 0.0f, *this
 	};
@@ -372,5 +372,11 @@ void ParticleSystem::SetMaxParticles(int max)
 void ParticleSystem::SetParticleSize(float width, float height)
 {
 	m_particleSize = { width, height };
+	ResetParticles();
+}
+
+void ParticleSystem::SetRandomFactor(float factor)
+{
+	m_randomFactor = factor;
 	ResetParticles();
 }

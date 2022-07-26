@@ -90,6 +90,7 @@ class ParticleSystem {
 	void SetLifespan(float lifespan);
 	void SetMaxParticles(int max);
 	void SetParticleSize(float width, float height);
+	void SetRandomFactor(float factor);
 
 	ID3D11BlendState *GetBlendState() const
 	{
@@ -175,4 +176,5 @@ class ParticleSystem {
 	float m_lifespan = 1;
 	int m_maxParticles = 70;
 	Vec2D m_particleSize = { 1, 1 };
+	float m_randomFactor = 1;
 };
