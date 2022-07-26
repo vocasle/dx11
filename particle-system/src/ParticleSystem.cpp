@@ -220,16 +220,15 @@ void ParticleSystem::CreateEmitter()
 void ParticleSystem::EmitParticle()
 {
 	Vec3D accel = m_accel;
+	accel.X += MathRandom(-m_randomFactor, m_randomFactor);
+	accel.Y += MathRandom(-m_randomFactor, m_randomFactor);
+	accel.Z += MathRandom(-m_randomFactor, m_randomFactor);
 	Vec3D initVel = m_initVel;
 	initVel.X += MathRandom(-m_randomFactor, m_randomFactor);
 	initVel.Y += MathRandom(-m_randomFactor, m_randomFactor);
 	initVel.Z += MathRandom(-m_randomFactor, m_randomFactor);
-	Vec3D initPos = m_emitter.GetInitPos();
-	initPos.X += MathRandom(-m_randomFactor, m_randomFactor);
-	initPos.Y += MathRandom(-m_randomFactor, m_randomFactor);
-	initPos.Z += MathRandom(-m_randomFactor, m_randomFactor);
 	Particle p = {
-		ParticleType::Particle, accel, initVel, initPos, 0.0f, *this
+		ParticleType::Particle, accel, initVel, m_emitter.GetInitPos(), 0.0f, *this
 	};
 	p.CreateQuad(m_particleSize.X, m_particleSize.Y, m_camera->GetUp(),
 		     m_camera->GetRight());
