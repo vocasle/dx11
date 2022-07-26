@@ -19,10 +19,16 @@ struct ParticleSystemOptions {
 	Vec3D origin = {};
 	float lifespan = 0;
 	int maxParticles = 0;
+	ParticleSystemOptions(const ParticleSystem &ps)
+		: origin(ps.GetOrigin())
+		, lifespan(ps.GetLifespan())
+		, maxParticles(ps.GetMaxParticles())
+	{
+	}
 };
 
-ParticleSystemOptions g_FireOptions;
-ParticleSystemOptions g_RainOptions;
+std::unique_ptr<ParticleSystemOptions> FireOptions;
+std::unique_ptr<ParticleSystemOptions> RainOptions;
 };
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext *context,
@@ -164,11 +170,26 @@ void Game::UpdateImgui()
 
 	if (ImGui::CollapsingHeader("Fire")) {
 		ImGui::Checkbox("Enable fire",
-				&Globals::g_FireOptions.isEnabled);
+				&Globals::FireOptions->isEnabled);
+		ImGui::InputFloat("Fire lifespan",
+				  &Globals::FireOptions->lifespan);
+		if (m_fire.GetLifespan() != Globals::FireOptions->lifespan)
+			m_fire.SetLifespan(Globals::FireOptions->lifespan);
 	}
 	if (ImGui::CollapsingHeader("Rain")) {
 		ImGui::Checkbox("Enable rain",
-				&Globals::g_RainOptions.isEnabled);
+				&Globals::RainOptions->isEnabled);
+		ImGui::InputFloat("Rain lifespan",
+				  &Globals::RainOptions->lifespan);
+		if (m_rain.GetLifespan() != Globals::RainOptions->lifespan)
+			m_rain.SetLifespan(Globals::RainOptions->lifespan);
+
+		ImGui::InputInt("Rain num particles",
+				&Globals::RainOptions->maxParticles);
+		if (m_rain.GetMaxParticles() <
+		    Globals::RainOptions->maxParticles)
+			m_rain.SetMaxParticles(
+				Globals::RainOptions->maxParticles);
 	}
 }
 #endif
@@ -428,7 +449,7 @@ void Game::Render()
 	};
 	m_Renderer.BindShaderResources(BindTargets::PixelShader, nullSRVs, 5);
 
-	if (Globals::g_FireOptions.isEnabled) {
+	if (Globals::FireOptions->isEnabled) {
 		m_DR->PIXBeginEvent(L"Draw fire");
 		{
 			m_Renderer.SetBlendState(m_fire.GetBlendState());
@@ -454,7 +475,7 @@ void Game::Render()
 		m_DR->PIXEndEvent();
 	}
 
-	if (Globals::g_RainOptions.isEnabled) {
+	if (Globals::RainOptions->isEnabled) {
 		m_DR->PIXBeginEvent(L"Draw rain");
 		{
 			m_Renderer.SetBlendState(m_rain.GetBlendState());
@@ -669,6 +690,15 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_rain.Init(
 		device, m_DR->GetDeviceContext(),
 		UtilsFormatStr("%s/textures/trace_01.png", ASSETS_ROOT).c_str());
+
+	{ // Init globals
+		Globals::FireOptions =
+			std::make_unique<Globals::ParticleSystemOptions>(
+				m_fire);
+		Globals::RainOptions =
+			std::make_unique<Globals::ParticleSystemOptions>(
+				m_rain);
+	}
 
 #if WITH_IMGUI
 	ImGui::CreateContext();
