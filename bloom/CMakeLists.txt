@@ -65,29 +65,50 @@ target_compile_definitions(${current_target} PUBLIC
 	NOMINMAX=1
 	WITH_IMGUI=1)
 
-configure_file(SoftShadowsConfig.h.in SoftShadowsConfig.h)
+target_compile_definitions(${current_target} PRIVATE ASSETS_ROOT="${CMAKE_BINARY_DIR}/assets")
+target_compile_definitions(${current_target} PRIVATE SRC_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
+if (MSVC)
+	target_compile_definitions(${current_target} PRIVATE SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/Debug")
+else()
+	target_compile_definitions(${current_target} PRIVATE SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}")
+endif()
 
 target_include_directories(${current_target} PRIVATE
 	${CMAKE_CURRENT_BINARY_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_TYPE ps)
-set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_ENTRYPOINT main)
-set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_MODEL 5_0)
-set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_FLAGS $<1:/DFLAGS_ADDED>)
-set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_ENABLE_DEBUG true)
-set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_DISABLE_OPTIMIZATIONS true)
+	if (MSVC)
+	set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_TYPE Pixel)
+	set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_ENTRYPOINT main)
+	set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_MODEL 5.0)
+	set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_FLAGS $<1:/DFLAGS_ADDED>)
+	set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_ENABLE_DEBUG true)
+	set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_DISABLE_OPTIMIZATIONS true)
 
-set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_TYPE vs)
-set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_ENTRYPOINT main)
-set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_MODEL 5_0)
-set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_FLAGS $<1:/DFLAGS_ADDED>)
-set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_ENABLE_DEBUG true)
-set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_DISABLE_OPTIMIZATIONS true)
-
-set_property(TARGET ${current_target} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$(OutDir)")
+	set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_TYPE Vertex)
+	set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_ENTRYPOINT main)
+	set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_MODEL 5.0)
+	set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_FLAGS $<1:/DFLAGS_ADDED>)
+	set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_ENABLE_DEBUG true)
+	set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_DISABLE_OPTIMIZATIONS true)
+endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_TYPE ps)
+	set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_ENTRYPOINT main)
+	set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_MODEL 5_0)
+	set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_FLAGS $<1:/DFLAGS_ADDED>)
+	set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_ENABLE_DEBUG true)
+	set_property(SOURCE ${pixel_shader_files} PROPERTY VS_SHADER_DISABLE_OPTIMIZATIONS true)
+
+	set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_TYPE vs)
+	set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_ENTRYPOINT main)
+	set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_MODEL 5_0)
+	set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_FLAGS $<1:/DFLAGS_ADDED>)
+	set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_ENABLE_DEBUG true)
+	set_property(SOURCE ${vertex_shader_files} PROPERTY VS_SHADER_DISABLE_OPTIMIZATIONS true)
+
+
 	# Build HLSL shaders
 	set (shader_target ${current_target}-compile-shaders)
 	add_custom_target(${shader_target})
