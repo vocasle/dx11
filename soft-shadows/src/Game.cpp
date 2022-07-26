@@ -3,7 +3,6 @@
 #include "MeshGenerator.h"
 #include "Mouse.h"
 #include "NE_Math.h"
-#include "SoftShadowsConfig.h"
 #include "Utils.h"
 
 #include <d3dcompiler.h>

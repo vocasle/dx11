@@ -1,6 +1,5 @@
 #include "ShaderManager.h"
 
-#include "SoftShadowsConfig.h"
 #include "Utils.h"
 
 #include <Windows.h>
