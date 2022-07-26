@@ -12,6 +12,20 @@
 #include <imgui.h>
 #endif
 
+namespace Globals
+{
+    struct ParticleSystemOptions
+    {
+        bool isEnabled = true;
+        Vec3D origin = {};
+        float lifespan = 0;
+        int maxParticles = 0;
+    };
+
+    ParticleSystemOptions g_FireOptions;
+    ParticleSystemOptions g_RainOptions;
+};
+
 static void
 GameUpdateConstantBuffer (ID3D11DeviceContext *context, size_t bufferSize,
                           void *data, ID3D11Buffer *dest)
@@ -146,18 +160,17 @@ void
 Game::UpdateImgui ()
 {
   // Any application code here
-  ImGui::Checkbox ("Rotate dir light", &m_ImguiState.RotateDirLight);
-  ImGui::Checkbox ("Animate first point light",
-                   &m_ImguiState.AnimatePointLight);
-  ImGui::Checkbox ("Capture spotlight", &m_ImguiState.ToggleSpotlight);
   static float zNear = 0.5f;
   ImGui::SliderFloat ("Z near", &zNear, 0.1f, 10.0f, "%f", 1.0f);
   static float zFar = 200.0f;
   ImGui::SliderFloat ("Z far", &zFar, 10.0f, 1000.0f, "%f", 1.0f);
-  m_Camera.SetZFar (zFar);
-  m_Camera.SetZNear (zNear);
-  ImGui::SliderFloat ("Bounding sphere radius", &m_sceneBounds.Radius, 10.0f,
-                      500.0f, "%f", 1.0f);
+  if (m_Camera.GetZFar() != zFar)
+      m_Camera.SetZFar (zFar);
+  if (m_Camera.GetZNear() != zNear)
+      m_Camera.SetZNear (zNear);
+
+    ImGui::Checkbox("Enable fire", &Globals::g_FireOptions.isEnabled);
+    ImGui::Checkbox("Enable rain", &Globals::g_RainOptions.isEnabled);
 }
 #endif
 
@@ -424,45 +437,51 @@ Game::Render ()
   };
   m_Renderer.BindShaderResources (BindTargets::PixelShader, nullSRVs, 5);
 
-  m_DR->PIXBeginEvent (L"Draw fire");
+  if (Globals::g_FireOptions.isEnabled)
   {
-    m_Renderer.SetBlendState (m_fire.GetBlendState ());
-    m_Renderer.SetDepthStencilState (m_fire.GetDepthStencilState ());
-    m_Renderer.BindVertexShader (
-        m_shaderManager.GetVertexShader ("ParticleVS"));
-    m_Renderer.SetVertexBuffer (m_fire.GetVertexBuffer (),
-                                m_shaderManager.GetStrides (), 0);
-    m_Renderer.SetIndexBuffer (m_fire.GetIndexBuffer (), 0);
-    m_Renderer.BindPixelShader (m_shaderManager.GetPixelShader ("ParticlePS"));
-    m_Renderer.SetInputLayout (m_shaderManager.GetInputLayout ());
-    m_Renderer.BindConstantBuffer (BindTargets::VertexShader,
-                                   m_PerFrameCB.Get (), 0);
-    m_Renderer.BindShaderResource (BindTargets::PixelShader, m_fire.GetSRV (),
-                                   0);
-    m_Renderer.SetSamplerState (m_fire.GetSamplerState (), 0);
-    m_Renderer.DrawIndexed (m_fire.GetNumIndices (), 0, 0);
+      m_DR->PIXBeginEvent (L"Draw fire");
+      {
+        m_Renderer.SetBlendState (m_fire.GetBlendState ());
+        m_Renderer.SetDepthStencilState (m_fire.GetDepthStencilState ());
+        m_Renderer.BindVertexShader (
+            m_shaderManager.GetVertexShader ("ParticleVS"));
+        m_Renderer.SetVertexBuffer (m_fire.GetVertexBuffer (),
+                                    m_shaderManager.GetStrides (), 0);
+        m_Renderer.SetIndexBuffer (m_fire.GetIndexBuffer (), 0);
+        m_Renderer.BindPixelShader (m_shaderManager.GetPixelShader ("ParticlePS"));
+        m_Renderer.SetInputLayout (m_shaderManager.GetInputLayout ());
+        m_Renderer.BindConstantBuffer (BindTargets::VertexShader,
+                                       m_PerFrameCB.Get (), 0);
+        m_Renderer.BindShaderResource (BindTargets::PixelShader, m_fire.GetSRV (),
+                                       0);
+        m_Renderer.SetSamplerState (m_fire.GetSamplerState (), 0);
+        m_Renderer.DrawIndexed (m_fire.GetNumIndices (), 0, 0);
+      }
+      m_DR->PIXEndEvent ();
   }
-  m_DR->PIXEndEvent ();
 
-  m_DR->PIXBeginEvent (L"Draw rain");
+  if (Globals::g_RainOptions.isEnabled)
   {
-    m_Renderer.SetBlendState (m_rain.GetBlendState ());
-    m_Renderer.SetDepthStencilState (m_rain.GetDepthStencilState ());
-    m_Renderer.BindVertexShader (
-        m_shaderManager.GetVertexShader ("ParticleVS"));
-    m_Renderer.SetVertexBuffer (m_rain.GetVertexBuffer (),
-                                m_shaderManager.GetStrides (), 0);
-    m_Renderer.SetIndexBuffer (m_rain.GetIndexBuffer (), 0);
-    m_Renderer.BindPixelShader (m_shaderManager.GetPixelShader ("ParticlePS"));
-    m_Renderer.SetInputLayout (m_shaderManager.GetInputLayout ());
-    m_Renderer.BindConstantBuffer (BindTargets::VertexShader,
-                                   m_PerFrameCB.Get (), 0);
-    m_Renderer.BindShaderResource (BindTargets::PixelShader, m_rain.GetSRV (),
-                                   0);
-    m_Renderer.SetSamplerState (m_rain.GetSamplerState (), 0);
-    m_Renderer.DrawIndexed (m_rain.GetNumIndices (), 0, 0);
+      m_DR->PIXBeginEvent (L"Draw rain");
+      {
+        m_Renderer.SetBlendState (m_rain.GetBlendState ());
+        m_Renderer.SetDepthStencilState (m_rain.GetDepthStencilState ());
+        m_Renderer.BindVertexShader (
+            m_shaderManager.GetVertexShader ("ParticleVS"));
+        m_Renderer.SetVertexBuffer (m_rain.GetVertexBuffer (),
+                                    m_shaderManager.GetStrides (), 0);
+        m_Renderer.SetIndexBuffer (m_rain.GetIndexBuffer (), 0);
+        m_Renderer.BindPixelShader (m_shaderManager.GetPixelShader ("ParticlePS"));
+        m_Renderer.SetInputLayout (m_shaderManager.GetInputLayout ());
+        m_Renderer.BindConstantBuffer (BindTargets::VertexShader,
+                                       m_PerFrameCB.Get (), 0);
+        m_Renderer.BindShaderResource (BindTargets::PixelShader, m_rain.GetSRV (),
+                                       0);
+        m_Renderer.SetSamplerState (m_rain.GetSamplerState (), 0);
+        m_Renderer.DrawIndexed (m_rain.GetNumIndices (), 0, 0);
+      }
+      m_DR->PIXEndEvent ();
   }
-  m_DR->PIXEndEvent ();
 
   // draw sky
   DrawSky ();
