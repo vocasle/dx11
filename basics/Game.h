@@ -15,36 +15,35 @@
 #define MODEL_PULL 10
 #define TEXTURE_PULL 4
 
-class Game
-{
-public:
-  Game ();
-  ~Game ();
+class Game {
+    public:
+	Game();
+	~Game();
 
-  void Tick ();
-  void Initialize (HWND hWnd, uint32_t width, uint32_t height);
-  void GetDefaultSize (uint32_t *width, uint32_t *height);
+	void Tick();
+	void Initialize(HWND hWnd, uint32_t width, uint32_t height);
+	void GetDefaultSize(uint32_t *width, uint32_t *height);
 
-private:
-  void CreateDefaultSampler ();
-  void Clear ();
-  void Update ();
-  void Render ();
-  std::vector<uint8_t> CreateVertexShader (const char *filepath,
-                                           ID3D11Device *device,
-                                           ID3D11VertexShader **vs);
-  void CreatePixelShader (const char *filepath, ID3D11Device *device,
-                          ID3D11PixelShader **ps);
+    private:
+	void CreateDefaultSampler();
+	void Clear();
+	void Update();
+	void Render();
+	std::vector<uint8_t> CreateVertexShader(const char *filepath,
+						ID3D11Device *device,
+						ID3D11VertexShader **vs);
+	void CreatePixelShader(const char *filepath, ID3D11Device *device,
+			       ID3D11PixelShader **ps);
 
 #if WITH_IMGUI
-  void UpdateImgui ();
+	void UpdateImgui();
 #endif
 
-  std::unique_ptr<DeviceResources> m_DR;
-  Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PS;
-  Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VS;
-  Microsoft::WRL::ComPtr<ID3D11InputLayout> m_IL;
-  Microsoft::WRL::ComPtr<ID3D11SamplerState> m_DefaultSampler;
-  Timer m_Timer;
-  Renderer m_Renderer;
+	std::unique_ptr<DeviceResources> m_DR;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PS;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VS;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_IL;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_DefaultSampler;
+	Timer m_Timer;
+	Renderer m_Renderer;
 };
