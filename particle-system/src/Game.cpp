@@ -175,6 +175,12 @@ void Game::UpdateImgui()
 				  &Globals::FireOptions->lifespan);
 		if (m_fire.GetLifespan() != Globals::FireOptions->lifespan)
 			m_fire.SetLifespan(Globals::FireOptions->lifespan);
+		ImGui::InputInt("Fire num particles",
+				&Globals::FireOptions->maxParticles);
+		if (m_fire.GetMaxParticles() !=
+		    Globals::FireOptions->maxParticles)
+			m_fire.SetMaxParticles(
+				Globals::FireOptions->maxParticles);
 	}
 	if (ImGui::CollapsingHeader("Rain")) {
 		ImGui::Checkbox("Enable rain",
@@ -186,7 +192,7 @@ void Game::UpdateImgui()
 
 		ImGui::InputInt("Rain num particles",
 				&Globals::RainOptions->maxParticles);
-		if (m_rain.GetMaxParticles() <
+		if (m_rain.GetMaxParticles() !=
 		    Globals::RainOptions->maxParticles)
 			m_rain.SetMaxParticles(
 				Globals::RainOptions->maxParticles);
@@ -703,7 +709,6 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		device, m_DR->GetDeviceContext(),
 		UtilsFormatStr("%s/textures/trace_01.png", ASSETS_ROOT).c_str());
 	m_rain.SetLifespan(6);
-	m_rain.SetMaxParticles(10000);
 
 	{ // Init globals
 		Globals::FireOptions =
