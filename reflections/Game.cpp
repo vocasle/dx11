@@ -292,15 +292,28 @@ void Game::Update()
 	const auto w = animated->GetWorld();
 	UtilsDebugPrint("animated.World=%s\n", w.ToString().c_str());
 
+	static float elapsedTime = 0.0f;
+	const float deltaSeconds =
+		static_cast<float>(m_Timer.DeltaMillis / 1000.0);
+	elapsedTime += deltaSeconds;
+
+	if (elapsedTime >= 1.0f) {
+		SetWindowText(m_DR->GetWindow(),
+			      UtilsFormatStr("reflections -- FPS: %d, frame: %f s",
+					     static_cast<int>(elapsedTime /
+							      deltaSeconds),
+					     deltaSeconds)
+				      .c_str());
+		elapsedTime = 0.0f;
+	}
+
 #if WITH_IMGUI
 	// update directional light
-	static float elapsedTime = 0.0f;
-	elapsedTime += (float)m_Timer.DeltaMillis / (1000.0f * 2.0f);
 	if (m_ImguiState.RotateDirLight) {
 		m_PerSceneData.dirLight.Position.X =
-			m_PerSceneData.dirLight.Radius * sinf(elapsedTime);
+			m_PerSceneData.dirLight.Radius * sinf(elapsedTime / 2);
 		m_PerSceneData.dirLight.Position.Z =
-			m_PerSceneData.dirLight.Radius * cosf(elapsedTime);
+			m_PerSceneData.dirLight.Radius * cosf(elapsedTime / 2);
 
 		const Vec3D at = m_Camera.GetAt();
 		const Vec3D pos = m_Camera.GetPos();

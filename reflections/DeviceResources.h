@@ -23,6 +23,7 @@ class DeviceResources {
 	void CreateDeviceResources();
 	void CreateWindowSizeDependentResources();
 	void ReportLiveObjects();
+	HWND GetWindow() const { return m_hWnd; }
 
 	ID3D11Device *GetDevice() const
 	{

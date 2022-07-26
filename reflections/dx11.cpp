@@ -21,9 +21,8 @@
 
 // Global Variables:
 HINSTANCE hInst; // current instance
-WCHAR szTitle[MAX_LOADSTRING] = L"reflections"; // The title bar text
-WCHAR szWindowClass[MAX_LOADSTRING] =
-	L"reflectionsWindowClass"; // the main window class name
+const char szTitle[MAX_LOADSTRING] = "reflections"; // The title bar text
+const char szWindowClass[MAX_LOADSTRING] = "reflectionsWindowClass"; // the main window class name
 
 // Forward declarations of functions included in this code module:
 ATOM MyRegisterClass(HINSTANCE hInstance);
@@ -91,9 +90,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 //
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-	WNDCLASSEXW wcex = {};
+	WNDCLASSEX wcex = {};
 
-	wcex.cbSize = sizeof(WNDCLASSEXW);
+	wcex.cbSize = sizeof(WNDCLASSEX);
 
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc = WndProc;
@@ -103,11 +102,11 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_DX11));
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_DX11);
+	wcex.lpszMenuName = MAKEINTRESOURCE(IDC_DX11);
 	wcex.lpszClassName = szWindowClass;
 	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
-	return RegisterClassExW(&wcex);
+	return RegisterClassEx(&wcex);
 }
 
 //
@@ -133,7 +132,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, Game *gGame)
 
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, TRUE);
 
-	HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+	HWND hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
 				  CW_USEDEFAULT, CW_USEDEFAULT,
 				  rc.right - rc.left, rc.bottom - rc.top, NULL,
 				  NULL, hInstance, NULL);
