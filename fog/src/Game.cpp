@@ -4,7 +4,6 @@
 #include "MeshGenerator.h"
 #include "Mouse.h"
 #include "NE_Math.h"
-#include "SoftShadowsConfig.h"
 #include "Texture.h"
 #include "Utils.h"
 
