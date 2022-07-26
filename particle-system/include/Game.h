@@ -77,7 +77,6 @@ class Game {
 	void Update();
 	void Render();
 	void CreateActors();
-	void BuildShadowTransform();
 	std::vector<uint8_t> CreateVertexShader(const char *filepath,
 						ID3D11Device *device,
 						ID3D11VertexShader **vs);

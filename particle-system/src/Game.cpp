@@ -299,8 +299,6 @@ void Game::Update()
 				 sizeof(PerFrameConstants), &m_PerFrameData,
 				 m_PerFrameCB.Get());
 
-	BuildShadowTransform();
-
 	m_fire.Tick(static_cast<float>(m_Timer.DeltaMillis / 1000));
 	m_fire.UpdateVertexBuffer(m_DR->GetDeviceContext());
 
