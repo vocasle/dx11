@@ -24,7 +24,7 @@
 
 Rendering equation terms explained:
 
-Lo(X, Wo) = Le(X, Wo) + Integral over S^2 { Li(X, Wi) * Fx(Wi,Wo) * |Wi, n| * dWi }
+    Lo(X, Wo) = Le(X, Wo) + Integral over S^2 { Li(X, Wi) * Fx(Wi,Wo) * |Wi, n| * dWi }
 
 X - a point in the scene
 Wo - outgoing direction
@@ -41,3 +41,31 @@ Li(X, Wi) - incoming light. This defines what light is seen from point X if I st
 Fx(Wi,Wo) - material. Given an incoming direction and outgoing direction it determines which light is going to outgoing direction
 
 |Wi,n| - lambert. A dot product between incoming direction and surface normal. 
+
+---
+Line equation:
+
+    P(t) = (1-t)*P1 + t*P2,
+
+0 <= t <= 1.
+
+Ray equation:
+
+    P(t) = S + t*V,
+
+t >= 0, S - ray endpoint, V - direction in which ray is extending to infinity.
+
+Plane equation:
+
+    dot(N, Q)+ D = 0,
+
+N - normalized normal vector,
+Q - point.
+
+Signed distance from plane to arbitrary point:
+
+d = dot(N,Q) + D,
+
+d = 0 -> Q lies on plane,
+d < 0 -> Q is on the negative side of the plane,
+d > 0 -> Q is on positive side of the plane.
