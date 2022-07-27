@@ -40,7 +40,7 @@ add_executable(${current_target} WIN32 ${source_files} ${header_files} ${pixel_s
 
 set_property(TARGET ${current_target} PROPERTY CXX_STANDARD 20)
 
-target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math objloader)
+target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui ne_math ne_objloader)
 
 target_compile_definitions(${current_target} PUBLIC
 	NOMINMAX=1
