@@ -52,7 +52,13 @@ target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui
 	ne_math
 	ne_input)
 
-configure_file("include/${current_target}_config.h.in" "${current_target}_config.h")
+target_compile_definitions(${current_target} PRIVATE ASSETS_ROOT="${CMAKE_BINARY_DIR}/assets")
+target_compile_definitions(${current_target} PRIVATE SRC_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
+if (MSVC)
+	target_compile_definitions(${current_target} PRIVATE SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/Debug")
+else()
+	target_compile_definitions(${current_target} PRIVATE SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}")
+endif()
 
 target_include_directories(${current_target} PRIVATE
 	${CMAKE_CURRENT_BINARY_DIR}

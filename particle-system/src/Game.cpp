@@ -4,7 +4,6 @@
 #include "Mouse.h"
 #include "NE_Math.h"
 #include "Utils.h"
-#include "particle-system_config.h"
 
 #if WITH_IMGUI
 #include <backends/imgui_impl_dx11.h>
