@@ -68,7 +68,7 @@ target_compile_definitions(${current_target} PUBLIC
 target_compile_definitions(${current_target} PRIVATE ASSETS_ROOT="${CMAKE_BINARY_DIR}/assets")
 target_compile_definitions(${current_target} PRIVATE SRC_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
 if (MSVC)
-	target_compile_definitions(${current_target} PRIVATE SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/Debug")
+	target_compile_definitions(${current_target} PRIVATE SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
 else()
 	target_compile_definitions(${current_target} PRIVATE SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}")
 endif()
