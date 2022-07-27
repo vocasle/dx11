@@ -270,7 +270,7 @@ bool DeviceResources::WindowSizeChanged(int width, int height)
 	newRc.left = newRc.top = 0;
 	newRc.right = width;
 	newRc.bottom = height;
-	if (newRc == m_OutputSize) {
+	if (newRc == m_OutputSize || !m_hWnd) {
 		return false;
 	}
 
