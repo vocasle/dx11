@@ -39,6 +39,8 @@ float cubeScales[] = {
 
 D3D11_RASTERIZER_DESC g_rasterizerDesc = { CD3D11_RASTERIZER_DESC{
 	CD3D11_DEFAULT{} } };
+
+bool g_RotateDirLight = false;
 };
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext *context,
@@ -162,6 +164,7 @@ void Game::UpdateImgui()
 					   &m_PerSceneData.dirLight.Position));
 		m_Camera.SetZFar(zFar);
 		m_Camera.SetZNear(zNear);
+		ImGui::Checkbox("Rotate dir light", &g_RotateDirLight);
 	}
 
 	if (ImGui::CollapsingHeader("Rasterizer settings")) {
@@ -406,7 +409,7 @@ void Game::InitPerSceneConstants()
 	dirLight.Ambient = ColorFromRGBA(0.1f, 0.1f, 0.1f, 1.0f);
 	dirLight.Diffuse = ColorFromRGBA(0.5f, 0.5f, 0.5f, 1.0f);
 	dirLight.Specular = ColorFromRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-	dirLight.Position = MathVec3DFromXYZ(5.0f, 5.0f, 5.0f);
+	dirLight.Position = MathVec3DFromXYZ(5.0f, 10.0f, 5.0f);
 	m_PerSceneData.dirLight = dirLight;
 
 	SpotLight spotLight = {};
@@ -483,10 +486,18 @@ void Game::Update()
 		elapsedTime = 0.0f;
 	}
 
-#if WITH_IMGUI
-	static float totalTime = 0.0f;
-	totalTime += deltaSeconds;
-#endif
+	if (g_RotateDirLight)
+	{
+		static float totalTime = 0.0f;
+		totalTime += deltaSeconds;
+
+		static const float radius = 10;
+		Vec3D& pos = m_PerSceneData.dirLight.Position;
+		pos.X = radius * cosf(totalTime);
+		pos.Z = radius * sinf(totalTime);
+
+		GameUpdateConstantBuffer(m_DR->GetDeviceContext(), sizeof(PerSceneConstants), &m_PerSceneData, m_PerSceneCB.Get());
+	}
 }
 
 void Game::Render()
