@@ -143,7 +143,7 @@ void ParticleSystem::CreateDepthStencilState(ID3D11Device *device)
 {
 	CD3D11_DEPTH_STENCIL_DESC desc =
 		CD3D11_DEPTH_STENCIL_DESC{ CD3D11_DEFAULT{} };
-	desc.DepthEnable = false;
+	desc.DepthEnable = true;
 	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 
 	HR(device->CreateDepthStencilState(
