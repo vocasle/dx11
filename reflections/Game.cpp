@@ -54,11 +54,12 @@ void Game::CreatePixelShader(const char *filepath, ID3D11Device *device,
 
 Actor *Game::FindActorByName(const std::string &name)
 {
-	auto it = std::find_if(std::begin(m_Actors), std::end(m_Actors),
-			       [&name](const Actor &actor) {
-				       return actor.GetName() == name;
-			       });
-	return it == std::end(m_Actors) ? nullptr : &*it;
+	for (auto& actor : m_Actors)
+	{
+		if (actor.GetName() == name)
+			return &actor;
+	}
+	return nullptr;
 }
 
 // TODO: Update this to get list of actors to draw
