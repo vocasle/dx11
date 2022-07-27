@@ -5,7 +5,6 @@
 #include "framework.h"
 
 #include "Game.h"
-#include "Keyboard.h"
 #include "Mouse.h"
 #include "Utils.h"
 
@@ -24,9 +23,9 @@
 
 // Global Variables:
 HINSTANCE hInst; // current instance
-const char szTitle[MAX_LOADSTRING] = "particle-system"; // The title bar text
+const char szTitle[MAX_LOADSTRING] = "particles"; // The title bar text
 const char szWindowClass[MAX_LOADSTRING] =
-	"particleSystemWindowClass"; // the main window class name
+	"particlesWindowClass"; // the main window class name
 FILE *hLog = nullptr;
 
 // Forward declarations of functions included in this code module:
@@ -57,10 +56,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
+	fopen_s(&hLog, "log.txt", "w");
 	// Initialize global strings
 	// LoadStringW(NULL, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	// LoadStringW(NULL, IDC_DX11, szWindowClass, MAX_LOADSTRING);
-	fopen_s(&hLog, "log.txt", "w");
 	MyRegisterClass(hInstance);
 
 	gGame = std::make_unique<Game>();
@@ -87,7 +86,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 
 	fclose(hLog);
-
 	return (int)msg.wParam;
 }
 
@@ -186,6 +184,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam)) {
 		return true;
 	}
+
 #endif
 
 	switch (message) {
@@ -231,10 +230,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		} else if (s_minimized) {
 			s_minimized = FALSE;
 			if (s_in_suspend && gGame)
-				// pOnResuming();
+				// OnResuming();
 				s_in_suspend = FALSE;
 		} else if (!s_in_sizemove && gGame) {
-			// OnWindowSizeChanged(LOWORD(lParam), HIWORD(lParam));
+			gGame->OnWindowSizeChanged(LOWORD(lParam),
+						   HIWORD(lParam));
 		}
 		break;
 
@@ -248,7 +248,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			RECT rc;
 			GetClientRect(hWnd, &rc);
 
-			// OnWindowSizeChanged(rc.right - rc.left, rc.bottom - rc.top);
+			gGame->OnWindowSizeChanged(rc.right - rc.left,
+						   rc.bottom - rc.top);
 		}
 		break;
 
@@ -339,32 +340,46 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return MAKELRESULT(0, MNC_CLOSE);
 
 	case WM_MOUSEMOVE:
-		Mouse::Get().OnMouseMove(message, wParam, lParam);
+		if (!ImGui::GetIO().WantCaptureMouse) {
+			Mouse::Get().OnMouseMove(message, wParam, lParam);
+		}
 		break;
 	case WM_INPUT:
 	case WM_LBUTTONDOWN:
-		Mouse::Get().OnMouseDown(message, wParam, lParam,
-					 Mouse::ButtonType::Left);
+		if (!ImGui::GetIO().WantCaptureMouse) {
+			Mouse::Get().OnMouseDown(message, wParam, lParam,
+						 Mouse::ButtonType::Left);
+		}
 		break;
 	case WM_LBUTTONUP:
-		Mouse::Get().OnMouseUp(message, wParam, lParam,
-				       Mouse::ButtonType::Left);
+		if (!ImGui::GetIO().WantCaptureMouse) {
+			Mouse::Get().OnMouseUp(message, wParam, lParam,
+					       Mouse::ButtonType::Left);
+		}
 		break;
 	case WM_RBUTTONDOWN:
-		Mouse::Get().OnMouseDown(message, wParam, lParam,
-					 Mouse::ButtonType::Right);
+		if (!ImGui::GetIO().WantCaptureMouse) {
+			Mouse::Get().OnMouseDown(message, wParam, lParam,
+						 Mouse::ButtonType::Right);
+		}
 		break;
 	case WM_RBUTTONUP:
-		Mouse::Get().OnMouseUp(message, wParam, lParam,
-				       Mouse::ButtonType::Right);
+		if (!ImGui::GetIO().WantCaptureMouse) {
+			Mouse::Get().OnMouseUp(message, wParam, lParam,
+					       Mouse::ButtonType::Right);
+		}
 		break;
 	case WM_MBUTTONDOWN:
-		Mouse::Get().OnMouseDown(message, wParam, lParam,
-					 Mouse::ButtonType::Scroll);
+		if (!ImGui::GetIO().WantCaptureMouse) {
+			Mouse::Get().OnMouseDown(message, wParam, lParam,
+						 Mouse::ButtonType::Scroll);
+		}
 		break;
 	case WM_MBUTTONUP:
-		Mouse::Get().OnMouseUp(message, wParam, lParam,
-				       Mouse::ButtonType::Scroll);
+		if (!ImGui::GetIO().WantCaptureMouse) {
+			Mouse::Get().OnMouseUp(message, wParam, lParam,
+					       Mouse::ButtonType::Scroll);
+		}
 		break;
 	case WM_MOUSEWHEEL:
 	case WM_XBUTTONDOWN:
@@ -374,13 +389,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_KEYDOWN:
 	case WM_CHAR:
-		Keyboard::Get().OnKeyDown(wParam);
-		if (wParam == VK_ESCAPE) {
-			PostQuitMessage(0);
+		if (!ImGui::GetIO().WantCaptureKeyboard) {
+			Keyboard::Get().OnKeyDown(wParam);
+			if (wParam == VK_ESCAPE) {
+				PostQuitMessage(0);
+			}
 		}
 		break;
 	case WM_KEYUP:
-		Keyboard::Get().OnKeyUp(wParam);
+		if (!ImGui::GetIO().WantCaptureKeyboard) {
+			Keyboard::Get().OnKeyUp(wParam);
+		}
 		break;
 	case WM_SYSKEYUP: {
 		// Keyboard::ProcessMessage(message, wParam, lParam);
