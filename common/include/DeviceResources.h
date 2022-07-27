@@ -7,7 +7,7 @@
 #include <dxgidebug.h>
 #include <wrl/client.h>
 
-#define DEFAULT_WIN_WIDTH 1024
+#define DEFAULT_WIN_WIDTH 1280
 #define DEFAULT_WIN_HEIGHT 720
 
 class DeviceResources {
