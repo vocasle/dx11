@@ -311,10 +311,12 @@ void Game::Update()
 #if WITH_IMGUI
 	// update directional light
 	if (m_ImguiState.RotateDirLight) {
+		static float totalTime = 0;
+		totalTime += deltaSeconds;
 		m_PerSceneData.dirLight.Position.X =
-			m_PerSceneData.dirLight.Radius * sinf(elapsedTime / 2);
+			m_PerSceneData.dirLight.Radius * sinf(totalTime / 2);
 		m_PerSceneData.dirLight.Position.Z =
-			m_PerSceneData.dirLight.Radius * cosf(elapsedTime / 2);
+			m_PerSceneData.dirLight.Radius * cosf(totalTime / 2);
 
 		const Vec3D at = m_Camera.GetAt();
 		const Vec3D pos = m_Camera.GetPos();
