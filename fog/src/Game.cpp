@@ -858,4 +858,9 @@ void Game::CreateWindowSizeDependentResources()
 
 	m_Camera.SetFov(fovAngleY);
 	m_Camera.SetViewDimensions(size.right, size.bottom);
+
+	g_OffscreenRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
+						m_DR->GetOutputSize().right,
+						m_DR->GetOutputSize().bottom,
+						m_DR->GetDevice());
 }
