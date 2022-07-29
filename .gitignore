@@ -14,3 +14,4 @@ out/
 /build-debug
 /cmake-build-debug-visual-studio
 /.vim
+.vscode/
