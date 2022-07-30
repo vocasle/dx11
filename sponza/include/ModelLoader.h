@@ -1,51 +1,78 @@
 #pragma once
 
-#include <string>
+#include <assimp/material.h>
 
 #include <assimp/Importer.hpp>
+#include <string>
+#include <vector>
 
-class ModelLoader
-{
-    public:
-    void Load(const std::string& path);
-    private:
+#include "NE_Math.h"
 
-    Assimp::Importer m_importer;
-    std::string m_cwd;
+struct Vertex {
+  Vec4D Position;
+  Vec4D Normal;
 };
 
-// #include <vector>
-// #include <d3d11_1.h>
-// #include <DirectXMath.h>
+enum class TextureStorageType {
+  Embedded,
+  Detached,
+  None,
+};
 
+std::string TextureStorageTypeToStr(TextureStorageType tst);
 
+enum class TextureType {
+  Ambient,
+  Emissive,
+  Diffuse,
+  Specular,
+  Shininess,
+  Normal,
+  None,
+};
 
+TextureType TextureTypeFromAssimpTextureType(aiTextureType type);
+std::string TextureTypeToStr(TextureType tt);
 
-// #include "mesh.h"
-// // #include "TextureLoader.h"
+struct TextureInfo {
+  TextureInfo(const std::string &path,
+              TextureType type,
+              TextureStorageType storageType)
+      : Path(path),
+        Type(type),
+        StorageType(storageType) {
+  }
+  TextureInfo()
+      : TextureInfo("", TextureType::None, TextureStorageType::None) {
+  }
+  std::string Path;
+  TextureType Type;
+  TextureStorageType StorageType;
+};
 
-// using namespace DirectX;
+struct Mesh {
+  Mesh() {
+  }
+  Mesh(std::vector<Vertex> vertices,
+       std::vector<unsigned int> indices,
+       std::vector<TextureInfo> textures,
+       std::string name)
+      : Vertices(vertices),
+        Indices(indices),
+        Textures(textures),
+        Name(name) {
+  }
+  std::vector<Vertex> Vertices;
+  std::vector<unsigned int> Indices;
+  std::vector<TextureInfo> Textures;
+  std::string Name;
+};
 
-// class ModelLoader
-// {
-// public:
-// 	ModelLoader();
-// 	~ModelLoader();
+class ModelLoader {
+ public:
+  std::vector<Mesh> Load(const std::string &path);
 
-// 	bool Load(HWND hwnd, ID3D11Device* dev, ID3D11DeviceContext* devcon, std::string filename);
-// 	void Draw(ID3D11DeviceContext* devcon);
-
-// 	void Close();
-// private:
-// 	ID3D11Device *dev_;
-// 	ID3D11DeviceContext *devcon_;
-// 	std::vector<Mesh> meshes_;
-// 	std::string directory_;
-// 	std::vector<Texture> textures_loaded_;
-// 	HWND hwnd_;
-
-// 	void processNode(aiNode* node, const aiScene* scene);
-// 	Mesh processMesh(aiMesh* mesh, const aiScene* scene);
-// 	std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName, const aiScene* scene);
-// 	ID3D11ShaderResourceView* loadEmbeddedTexture(const aiTexture* embeddedTexture);
-// };
+ private:
+  Assimp::Importer m_importer;
+  std::string m_cwd;
+};
