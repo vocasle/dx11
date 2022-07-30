@@ -160,14 +160,14 @@ void ShaderManager::Recompile(ID3D11Device *device)
 					ComPtr<ID3D11VertexShader> vs = {};
 					UtilsDebugPrint(
 						"Hot reload shader %s\n",
-						shaderName.c_str());
+						shaderName.string().c_str());
 					const HRESULT hr = device->CreateVertexShader(
 						shaderBlob->GetBufferPointer(),
 						shaderBlob->GetBufferSize(),
 						nullptr, vs.GetAddressOf());
 					UtilsDebugPrint(
 						"Hot reloading shader %s. Result: %ld\n",
-						shaderName.c_str(), hr);
+						shaderName.string().c_str(), hr);
 					HR(hr)
 					UpdateVertexShader(sn, vs.Get());
 				}
@@ -176,14 +176,14 @@ void ShaderManager::Recompile(ID3D11Device *device)
 					ComPtr<ID3D11PixelShader> ps = {};
 					UtilsDebugPrint(
 						"Hot reload shader %s\n",
-						shaderName.c_str());
+						shaderName.string().c_str());
 					const HRESULT hr = device->CreatePixelShader(
 						shaderBlob->GetBufferPointer(),
 						shaderBlob->GetBufferSize(),
 						nullptr, ps.GetAddressOf());
 					UtilsDebugPrint(
 						"Hot reloading shader %s. Result: %ld\n",
-						shaderName.c_str(), hr);
+						shaderName.string().c_str(), hr);
 					HR(hr)
 					UpdatePixelShader(sn, ps.Get());
 				}
