@@ -100,7 +100,7 @@ ProcessMesh(aiMesh *mesh, const aiScene *scene) {
         if (!tex) {
           UtilsDebugPrint(
               "WARN: %s is an embedded texture and should be loaded "
-              "differently",
+              "differently\n",
               texturePath.C_Str());
           texType = TextureStorageType::Embedded;
         }
