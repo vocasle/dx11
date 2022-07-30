@@ -4,6 +4,13 @@ static const float4 AMBIENT = float4(0.4f, 0.4f, 0.4f, 1.0f);
 
 float4 main(VSOut In) : SV_TARGET
 {
+
+	float3 L = normalize(dirLight.Position);
+	float3 N = normalize(In.NormalW);
+	float diff = max(dot(L, N), 0.0f);
+	float3 grey = float3(0.5, 0.5, 0.5);
+	return float4(grey * diff, 1.0f);
+
 	const float4 diffuseSampled = diffuseTexture.Sample(defaultSampler, In.TexCoords);
 	const float4 specularSampled = specularTexture.Sample(defaultSampler, In.TexCoords);
 	const float4 glossSampled = glossTexture.Sample(defaultSampler, In.TexCoords);
@@ -29,10 +36,10 @@ float4 main(VSOut In) : SV_TARGET
 	intensities[0] = DirectionalLightIntensity(dirLight, normal, viewDir);
 
 	const uint numPointLights = 4;
-	for (uint i = 0; i < numPointLights; ++i)
-	{
-		intensities[1 + i] = PointLightIntensity(pointLights[i], normal, In.PosW, viewDir);
-	}
+	// for (uint i = 0; i < numPointLights; ++i)
+	// {
+	// 	intensities[1 + i] = PointLightIntensity(pointLights[i], normal, In.PosW, viewDir);
+	// }
 
 //	intensities[5] = SpotLightIntensity(spotLights[0], normal, In.PosW, viewDir);
 	float shadows[MAX_LIGHTS] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};

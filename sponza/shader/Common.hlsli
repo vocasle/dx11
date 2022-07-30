@@ -47,13 +47,13 @@ cbuffer PerFrameConstants : register(b1)
 
 cbuffer PerSceneConstants : register(b2)
 {
-	PointLight pointLights[4];
+	// PointLight pointLights[4];
 	DirectionalLight dirLight;
-	SpotLight spotLights[2];
-	float4 fogColor;
-	float fogStart;
-	float fogEnd;
-	float pad[2];
+	// SpotLight spotLights[2];
+	// float4 fogColor;
+	// float fogStart;
+	// float fogEnd;
+	// float pad[2];
 };
 
 sampler defaultSampler					: register(s0);

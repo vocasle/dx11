@@ -15,6 +15,7 @@
 #include "Renderer.h"
 #include "ShaderManager.h"
 #include "Timer.h"
+#include "DynamicConstBuffer.h"
 
 class Game {
  public:
@@ -47,4 +48,7 @@ class Game {
   Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerState;
   ModelLoader m_modelLoader;
   std::vector<Mesh> m_meshes;
+  std::unique_ptr<DynamicConstBuffer> m_perFrameCB;
+  std::unique_ptr<DynamicConstBuffer> m_perSceneCB;
+  std::unique_ptr<DynamicConstBuffer> m_perObjectCB;
 };

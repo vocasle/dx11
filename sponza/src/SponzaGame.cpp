@@ -173,21 +173,39 @@ Game::Render() {
     m_deviceResources->PIXBeginEvent(L"Color pass");
     // reset view proj matrix back to camera
     {
-        // m_PerFrameData.view = m_camera.GetViewMat();
-        // m_PerFrameData.proj = m_camera.GetProjMat();
-        // m_PerFrameData.cameraPosW = m_camera.GetPos();
-        // GameUpdateConstantBuffer(m_deviceResources->GetDeviceContext(),
-        // 			 sizeof(PerFrameConstants),
-        // 			 &m_PerFrameData, m_PerFrameCB.Get());
+        m_perFrameCB->SetValue("view", m_camera.GetViewMat());
+        m_perFrameCB->SetValue("proj", m_camera.GetProjMat());
+        m_perFrameCB->SetValue("cameraPosW", Vec4D(m_camera.GetPos(), 0));
+        m_perFrameCB->UpdateConstantBuffer(m_deviceResources->GetDeviceContext());
+
+        
+        const Vec3D scale = {0.1f, 0.1f, 0.1f};
+        m_perObjectCB->SetValue("world", MathMat4X4ScaleFromVec3D(&scale));
+        m_perObjectCB->SetValue("worldInvTranspose", MathMat4X4Identity());
+        m_perObjectCB->UpdateConstantBuffer(m_deviceResources->GetDeviceContext());
+
+        m_perSceneCB->SetValue("dirLight.Diffuse", Vec4D(1.0f, 1.0f, 1.0f, 1.0f));
+        m_perSceneCB->SetValue("dirLight.Position", Vec3D(1000, 1000, 1000));
+        m_perSceneCB->UpdateConstantBuffer(m_deviceResources->GetDeviceContext());
+
         m_renderer.BindVertexShader(m_shaderManager.GetVertexShader("ColorVS"));
         m_renderer.BindPixelShader(m_shaderManager.GetPixelShader("PhongPS"));
         m_renderer.SetSamplerState(m_defaultSampler.Get(), 0);
         m_renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 
+        m_renderer.BindConstantBuffer(BindTargets::VertexShader, m_perObjectCB->Get(), 0);
+        m_renderer.BindConstantBuffer(BindTargets::VertexShader, m_perFrameCB->Get(), 1);
+        m_renderer.BindConstantBuffer(BindTargets::VertexShader, m_perSceneCB->Get(), 2);
+        m_renderer.BindConstantBuffer(BindTargets::PixelShader, m_perObjectCB->Get(), 0);
+        m_renderer.BindConstantBuffer(BindTargets::PixelShader, m_perFrameCB->Get(), 1);
+        m_renderer.BindConstantBuffer(BindTargets::PixelShader, m_perSceneCB->Get(), 2);
+
         for (const Mesh &mesh : m_meshes) {
-          m_renderer.SetVertexBuffer(mesh.GetVertexBuffer(), mesh.GetVertexSize(), 0);
-          m_renderer.SetIndexBuffer(mesh.GetIndexBuffer(), 0);
-          m_renderer.DrawIndexed(mesh.GetIndexCount(), 0, 0);
+            m_renderer.SetVertexBuffer(
+                mesh.GetVertexBuffer(), mesh.GetVertexSize(), 0);
+            m_renderer.SetIndexBuffer(mesh.GetIndexBuffer(), 0);
+            m_renderer.DrawIndexed(mesh.GetIndexCount(), 0, 0);
+            
         }
     }
     m_deviceResources->PIXEndEvent();
@@ -227,11 +245,42 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
     CreateDefaultSampler();
     // CreateRasterizerState();
 
+    m_camera.SetZFar(100000);
+    m_camera.SetZNear(0.1f);
+
     m_renderer.SetDeviceResources(m_deviceResources.get());
 
     m_meshes = m_modelLoader.Load(UtilsFormatStr("%s/sponza.glb", SPONZA_ROOT));
 
     for (Mesh &mesh : m_meshes) mesh.CreateBuffers(device);
+
+    {
+        DynamicConstBufferDesc perObjectDesc;
+        perObjectDesc.AddNode(Node("worldInvTranspose", NodeType::Float4X4));
+        perObjectDesc.AddNode(Node("world", NodeType::Float4X4));
+        perObjectDesc.AddNode(Node("material", NodeType::Float4X4));
+
+        m_perObjectCB = std::make_unique<DynamicConstBuffer>(perObjectDesc, *m_deviceResources);
+
+        DynamicConstBufferDesc perSceneDesc;
+        Node dirLight = Node("dirLight", NodeType::Struct);
+        dirLight.AddChild("Ambient", NodeType::Float4);
+        dirLight.AddChild("Diffuse", NodeType::Float4);
+        dirLight.AddChild("Specular", NodeType::Float4);
+        dirLight.AddChild("Position", NodeType::Float3);
+        dirLight.AddChild("Radius", NodeType::Float);
+        perSceneDesc.AddNode(dirLight);
+
+        m_perSceneCB = std::make_unique<DynamicConstBuffer>(perSceneDesc, *m_deviceResources);
+
+        DynamicConstBufferDesc perFrameDesc;
+        perFrameDesc.AddNode(Node("view", NodeType::Float4X4));
+        perFrameDesc.AddNode(Node("proj", NodeType::Float4X4));
+        perFrameDesc.AddNode(Node("shadowTransform", NodeType::Float4X4));
+        perFrameDesc.AddNode(Node("cameraPosW", NodeType::Float4));
+
+        m_perFrameCB = std::make_unique<DynamicConstBuffer>(perFrameDesc, *m_deviceResources);
+    }
 
 #if WITH_IMGUI
     ImGui::CreateContext();
