@@ -2,9 +2,9 @@ set(app_name "sponza")
 
 set(app_source_files
     "src/main.cpp"
-    "src/model_loader.cpp")
+    "src/ModelLoader.cpp")
 set(app_header_files 
-    "include/model_loader.h")
+    "include/ModelLoader.h")
 
 set(CMAKE_BUILD_TYPE Debug)
 
@@ -36,9 +36,10 @@ target_link_libraries("${app_name}"
     ne_utils)
 
 target_compile_definitions("${app_name}" 
-    PUBLIC NOMINMAX=1
-	PUBLIC WITH_IMGUI=1
-    PRIVATE "${app_name}" ASSETS_ROOT="${CMAKE_BINARY_DIR}/assets")
+    PRIVATE NOMINMAX=1
+	PRIVATE WITH_IMGUI=1
+    PRIVATE ASSETS_ROOT="${CMAKE_BINARY_DIR}/assets"
+    PRIVATE SPONZA_ROOT="${CMAKE_SOURCE_DIR}/assets/sponza-gltf-pbr")
 
 if (MSVC)
 	target_compile_definitions("${app_name}" PRIVATE SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
