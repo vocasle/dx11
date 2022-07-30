@@ -8,3 +8,9 @@ BinPackArguments: false
 BinPackParameters: false
 PackConstructorInitializers: Never
 AlwaysBreakAfterReturnType: AllDefinitions
+AlignAfterOpenBracket: Align
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
