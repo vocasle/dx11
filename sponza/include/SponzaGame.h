@@ -46,4 +46,5 @@ class Game {
   ShaderManager m_shaderManager;
   Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerState;
   ModelLoader m_modelLoader;
+  std::vector<Mesh> m_meshes;
 };

@@ -19,50 +19,6 @@
 
 using namespace Microsoft::WRL;
 
-namespace {
-Vec3D cubePositions[] = {
-    {2.794f, 0.441f, 0.294f},
-    {-0.735f, 1.324f, 3.088f},
-    {-1.0f, -1.324f, -1.765f},
-};
-
-Vec3D cubeRotations[] = {
-    {MathToRadians(-42.0f), MathToRadians(53.0f), 0.0f},
-    {MathToRadians(45.0f), 0.0f, MathToRadians(45.0f)},
-    {MathToRadians(11.0f), MathToRadians(-37.0f), MathToRadians(15.0f)},
-};
-
-float cubeScales[] = {
-    0.854f,
-    0.8f,
-    1.357f,
-};
-
-Vec4D g_PointLightColors[] = {
-    {1, 1, 0, 1}, {1, 0, 1, 1}, {1, 0, 1, 1}, {1, 1, 0, 1}};
-
-D3D11_RASTERIZER_DESC g_rasterizerDesc = {
-    CD3D11_RASTERIZER_DESC{CD3D11_DEFAULT{}}};
-
-std::unique_ptr<Texture> g_OffscreenRTV;
-std::unique_ptr<Texture> g_BrightessRTV;
-std::unique_ptr<Texture> g_BlurRTV;
-std::unique_ptr<Texture> g_BlurRTV2;
-std::unique_ptr<DynamicConstBuffer> g_FogCBuf;
-std::unique_ptr<DynamicConstBuffer> g_LightCBuf;
-std::unique_ptr<DynamicConstBuffer> g_BlurCBuf;
-
-struct BloomSettings {
-  bool isEnabled;
-  bool isOnlyBrightness;
-  bool isOnlyColor;
-  bool isOnlyBlur;
-  float threshold;
-};
-
-BloomSettings g_BloomSettings = {false, false, false, false, 1.0f};
-};  // namespace
-
 static void
 GameUpdateConstantBuffer(ID3D11DeviceContext *context,
                          size_t bufferSize,
@@ -95,11 +51,7 @@ GameCreateConstantBuffer(ID3D11Device *device,
 
 void
 Game::CreateRasterizerState() {
-  if (FAILED(m_deviceResources->GetDevice()->CreateRasterizerState(
-          &g_rasterizerDesc, m_rasterizerState.ReleaseAndGetAddressOf()))) {
-    OutputDebugStringA("ERROR: Failed to create rasterizer state\n");
-    ExitProcess(EXIT_FAILURE);
-  }
+  throw std::runtime_error("Not implemented");
 }
 
 #if WITH_IMGUI
@@ -219,6 +171,10 @@ Game::Render() {
   m_deviceResources->PIXBeginEvent(L"Color pass");
   // reset view proj matrix back to camera
   {
+    for (const Mesh& mesh : m_meshes)
+    {
+      
+    }
     // draw to offscreen texture
     // m_renderer.SetRenderTargets(g_OffscreenRTV->GetRTV(),
     // 			    g_OffscreenRTV->GetDSV());
@@ -272,105 +228,16 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
                                    m_deviceResources->GetBackBufferHeight());
   ID3D11Device *device = m_deviceResources->GetDevice();
 
-  // m_ShadowMap.InitResources(device, 1024, 1024);
-  // m_camera.SetViewDimensions(m_deviceResources->GetBackBufferWidth(),
-  // 			   m_deviceResources->GetBackBufferHeight());
-  // m_CubeMap.LoadCubeMap(
-  // 	device,
-  // 	{
-  // 		UtilsFormatStr("%s/textures/right.jpg", ASSETS_ROOT)
-  // 			.c_str(),
-  // 		UtilsFormatStr("%s/textures/left.jpg", ASSETS_ROOT)
-  // 			.c_str(),
-  // 		UtilsFormatStr("%s/textures/top.jpg", ASSETS_ROOT)
-  // 			.c_str(),
-  // 		UtilsFormatStr("%s/textures/bottom.jpg", ASSETS_ROOT)
-  // 			.c_str(),
-  // 		UtilsFormatStr("%s/textures/front.jpg", ASSETS_ROOT)
-  // 			.c_str(),
-  // 		UtilsFormatStr("%s/textures/back.jpg", ASSETS_ROOT)
-  // 			.c_str(),
-  // 	});
-
-  // m_dynamicCubeMap.Init(device);
-  // m_dynamicCubeMap.BuildCubeFaceCamera({ 0.0f, 0.0f, 0.0f });
-
   m_shaderManager.Initialize(
       device, SHADERS_ROOT, UtilsFormatStr("%s/shader", SOURCE_ROOT));
 
-  // GameCreateConstantBuffer(device, sizeof(PerSceneConstants),
-  // 			 &m_PerSceneCB);
-  // GameCreateConstantBuffer(device, sizeof(PerObjectConstants),
-  // 			 &m_PerObjectCB);
-  // GameCreateConstantBuffer(device, sizeof(PerFrameConstants),
-  // 			 &m_PerFrameCB);
-  // GameUpdateConstantBuffer(m_deviceResources->GetDeviceContext(),
-  // 			 sizeof(PerSceneConstants), &m_PerSceneData,
-  // 			 m_PerSceneCB.Get());
 
   CreateDefaultSampler();
-  g_rasterizerDesc.DepthBias = 500;
-  CreateRasterizerState();
+  // CreateRasterizerState();
 
   m_renderer.SetDeviceResources(m_deviceResources.get());
 
-  g_OffscreenRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
-                                             m_deviceResources->GetOutputSize().right,
-                                             m_deviceResources->GetOutputSize().bottom,
-                                             m_deviceResources->GetDevice());
-
-  g_BrightessRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
-                                             m_deviceResources->GetOutputSize().right,
-                                             m_deviceResources->GetOutputSize().bottom,
-                                             m_deviceResources->GetDevice());
-
-  g_BlurRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
-                                        m_deviceResources->GetOutputSize().right,
-                                        m_deviceResources->GetOutputSize().bottom,
-                                        m_deviceResources->GetDevice());
-
-  g_BlurRTV2 = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
-                                         m_deviceResources->GetOutputSize().right,
-                                         m_deviceResources->GetOutputSize().bottom,
-                                         m_deviceResources->GetDevice());
-
-  {
-    DynamicConstBufferDesc desc = {};
-    desc.AddNode({"fogEnd", NodeType::Float});
-    desc.AddNode({"fogStart", NodeType::Float});
-    desc.AddNode({"width", NodeType::Float});
-    desc.AddNode({"height", NodeType::Float});
-    desc.AddNode({"fogColor", NodeType::Float4});
-    desc.AddNode({"world", NodeType::Float4X4});
-    desc.AddNode({"viewInverse", NodeType::Float4X4});
-    desc.AddNode({"projInverse", NodeType::Float4X4});
-    desc.AddNode({"cameraPos", NodeType::Float3});
-    desc.AddNode({"_pad1", NodeType::Float});
-    g_FogCBuf = std::make_unique<DynamicConstBuffer>(desc);
-    g_FogCBuf->SetValue("width", m_deviceResources->GetOutputSize().right);
-    g_FogCBuf->SetValue("height", m_deviceResources->GetOutputSize().bottom);
-    g_FogCBuf->CreateConstantBuffer(m_deviceResources->GetDevice());
-  }
-
-  {
-    DynamicConstBufferDesc desc = {};
-    desc.AddNode({"color", NodeType::Float4});
-    // desc.AddNode({"world", NodeType::Float4X4});
-    // desc.AddNode({"view", NodeType::Float4X4});
-    // desc.AddNode({"projection", NodeType::Float4X4});
-    g_LightCBuf = std::make_unique<DynamicConstBuffer>(desc);
-    g_LightCBuf->CreateConstantBuffer(m_deviceResources->GetDevice());
-  }
-
-  {
-    DynamicConstBufferDesc desc = {};
-    desc.AddNode({"width", NodeType::Float});
-    desc.AddNode({"height", NodeType::Float});
-    desc.AddNode({"isHorizontal", NodeType::Bool});
-    desc.AddNode({"pad", NodeType::Float});
-    g_BlurCBuf = std::make_unique<DynamicConstBuffer>(desc);
-    g_BlurCBuf->CreateConstantBuffer(m_deviceResources->GetDevice());
-  }
+  m_meshes = m_modelLoader.Load(UtilsFormatStr("%s/sponza.glb", SPONZA_ROOT));
 
 #if WITH_IMGUI
   ImGui::CreateContext();
@@ -412,21 +279,4 @@ Game::CreateWindowSizeDependentResources() {
 
   m_camera.SetFov(fovAngleY);
   m_camera.SetViewDimensions(size.right, size.bottom);
-
-  g_OffscreenRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
-                                             m_deviceResources->GetOutputSize().right,
-                                             m_deviceResources->GetOutputSize().bottom,
-                                             m_deviceResources->GetDevice());
-  g_BrightessRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
-                                             m_deviceResources->GetOutputSize().right,
-                                             m_deviceResources->GetOutputSize().bottom,
-                                             m_deviceResources->GetDevice());
-  g_BlurRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
-                                        m_deviceResources->GetOutputSize().right,
-                                        m_deviceResources->GetOutputSize().bottom,
-                                        m_deviceResources->GetDevice());
-  g_BlurRTV2 = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
-                                         m_deviceResources->GetOutputSize().right,
-                                         m_deviceResources->GetOutputSize().bottom,
-                                         m_deviceResources->GetDevice());
 }
