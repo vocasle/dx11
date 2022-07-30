@@ -2,13 +2,15 @@ set(app_name "sponza")
 
 set(app_source_files
     "src/main.cpp"
-    "src/ModelLoader.cpp")
+    "src/ModelLoader.cpp"
+    "src/SponzaGame.cpp")
 set(app_header_files 
-    "include/ModelLoader.h")
+    "include/ModelLoader.h"
+    "include/SponzaGame.h")
 
 set(CMAKE_BUILD_TYPE Debug)
 
-add_executable("${app_name}" "${app_source_files}" "${app_header_files}")
+add_executable("${app_name}" WIN32 "${app_source_files}" "${app_header_files}")
 
 set(ASSIMP_LIBRARY_DIR "${CMAKE_SOURCE_DIR}/assimp/lib")
 
@@ -38,6 +40,7 @@ target_link_libraries("${app_name}"
 target_compile_definitions("${app_name}" 
     PRIVATE NOMINMAX=1
 	PRIVATE WITH_IMGUI=1
+    PRIVATE SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}"
     PRIVATE ASSETS_ROOT="${CMAKE_BINARY_DIR}/assets"
     PRIVATE SPONZA_ROOT="${CMAKE_SOURCE_DIR}/assets/sponza-gltf-pbr")
 
