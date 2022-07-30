@@ -6,8 +6,33 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <memory>
 
-extern FILE *hLog;
+class File {
+    public:
+	File(const std::string &path)
+	{
+		fopen_s(&m_out, path.c_str(), "w");
+	}
+	~File()
+	{
+		if (m_out) {
+			fclose(m_out);
+		}
+	}
+	FILE *Get() const
+	{
+		return m_out;
+	}
+
+    private:
+	FILE *m_out;
+};
+
+namespace
+{
+File gLog("log.txt");
+};
 
 void UtilsDebugPrint(const char *fmt, ...)
 {
@@ -18,7 +43,7 @@ void UtilsDebugPrint(const char *fmt, ...)
 	va_end(args);
 	OutputDebugStringA(out);
 	fprintf(stdout, "%s", out);
-	fprintf(hLog, "%s", out);
+	fprintf(gLog.Get(), "%s", out);
 }
 
 void UtilsFatalError(const char *fmt, ...)
@@ -29,7 +54,7 @@ void UtilsFatalError(const char *fmt, ...)
 	vsnprintf(out, sizeof(out), fmt, args);
 	va_end(args);
 	fprintf(stderr, "%s", out);
-	fprintf(hLog, "%s", out);
+	fprintf(gLog.Get(), "%s", out);
 	OutputDebugStringA(out);
 	ExitProcess(EXIT_FAILURE);
 }
