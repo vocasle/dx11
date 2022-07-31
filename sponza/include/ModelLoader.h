@@ -66,10 +66,10 @@ public:
           m_textures(textures),
           m_name(name) {
     }
-    void CreateBuffers(ID3D11Device* device)
+
+    void CreateDeviceDependentResources(ID3D11Device* device)
     {
-      m_vertexBuffer.Create(device);
-      m_indexBuffer.Create(device);
+      CreateBuffers(device);
     }
 
     ID3D11Buffer* GetVertexBuffer() const {
@@ -89,6 +89,12 @@ public:
     }
 
 private:
+    void CreateBuffers(ID3D11Device* device)
+    {
+      m_vertexBuffer.Create(device);
+      m_indexBuffer.Create(device);
+    }
+
     Buffer<Vertex> m_vertexBuffer;
     Buffer<unsigned int> m_indexBuffer;
     std::vector<TextureInfo> m_textures;
