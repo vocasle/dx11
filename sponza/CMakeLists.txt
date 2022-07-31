@@ -3,11 +3,13 @@ set(app_name "sponza")
 set(app_source_files
     "src/main.cpp"
     "src/ModelLoader.cpp"
-    "src/SponzaGame.cpp")
+    "src/SponzaGame.cpp"
+    "src/AssetManager.cpp")
 set(app_header_files 
     "include/ModelLoader.h"
     "include/SponzaGame.h"
-    "include/Buffer.h")
+    "include/Buffer.h"
+    "include/AssetManager.h")
 
 add_executable("${app_name}" WIN32 "${app_source_files}" "${app_header_files}")
 
