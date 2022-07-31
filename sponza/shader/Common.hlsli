@@ -2,11 +2,10 @@
 
 struct VSIn
 {
-	float3 Pos : POSITION;
-	float3 Normal : NORMAL;
+	float4 Pos : POSITION;
+	float4 Normal : NORMAL;
 	float3 Tangent : TANGENT;
 	float3 Bitangent : BITANGENT;
-	float2 TexCoords : TEXCOORDS;
 };
 
 struct VSOut
