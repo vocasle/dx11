@@ -44,7 +44,7 @@ target_compile_definitions("${app_name}"
     PRIVATE SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}"
     PRIVATE ASSETS_ROOT="${CMAKE_BINARY_DIR}/assets"
     PRIVATE SPONZA_ROOT="${CMAKE_SOURCE_DIR}/assets/sponza-gltf-pbr"
-    PRIVATE SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}")
+    PRIVATE SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
 
 set(pixel_shader_files
 	shader/PhongPS.hlsl)
