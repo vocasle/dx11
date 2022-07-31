@@ -10,12 +10,12 @@
 #include "DeviceResources.h"
 #include "Keyboard.h"
 #include "LightHelper.h"
-#include "ModelLoader.h"
 #include "NE_Math.h"
 #include "Renderer.h"
 #include "ShaderManager.h"
 #include "Timer.h"
 #include "DynamicConstBuffer.h"
+#include "AssetManager.h"
 
 class Game {
  public:
@@ -46,9 +46,9 @@ class Game {
   Renderer m_renderer;
   ShaderManager m_shaderManager;
   Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerState;
-  ModelLoader m_modelLoader;
   std::vector<Mesh> m_meshes;
   std::unique_ptr<DynamicConstBuffer> m_perFrameCB;
   std::unique_ptr<DynamicConstBuffer> m_perSceneCB;
   std::unique_ptr<DynamicConstBuffer> m_perObjectCB;
+  std::unique_ptr<AssetManager> m_assetManager;
 };

@@ -257,11 +257,8 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
     m_camera.SetZNear(0.1f);
 
     m_renderer.SetDeviceResources(m_deviceResources.get());
-
-    m_meshes = m_modelLoader.Load(UtilsFormatStr("%s/sponza.glb", SPONZA_ROOT));
-
-    for (Mesh &mesh : m_meshes)
-        mesh.CreateDeviceDependentResources(device);
+    m_assetManager = std::make_unique<AssetManager>(*m_deviceResources);
+    m_meshes = m_assetManager->LoadModel(UtilsFormatStr("%s/sponza.glb", SPONZA_ROOT));
 
     {
         DynamicConstBufferDesc perObjectDesc;
