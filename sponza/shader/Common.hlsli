@@ -4,29 +4,16 @@ struct VSIn
 {
 	float4 Pos : POSITION;
 	float4 Normal : NORMAL;
-	float3 Tangent : TANGENT;
-	float3 Bitangent : BITANGENT;
+	float4 Tangent : TANGENT;
 };
 
 struct VSOut
 {
 	float4 PosH : SV_POSITION;
-	float3 NormalW : NORMAL;
-	float2 TexCoords : TEXCOORDS;
-	float3 PosW : POSITION;
+	float4 NormalW : NORMAL;
+	float4 PosW : POSITION;
 	float4 ShadowPosH : TEXCOORD1;
-	float3 TangentW : TANGENT;
-	float3 BitangentW : BITANGENT;
-};
-
-static const VSOut EMPTY_VSOUT = {
-	{0.0f, 0.0f, 0.0f, 0.0f},
-	{0.0f, 0.0f, 0.0f},
-	{0.0f, 0.0f},
-	{0.0f, 0.0f, 0.0f},
-	{0.0f, 0.0f, 0.0f, 0.0f},
-	{0.0f, 0.0f, 0.0f},
-	{0.0f, 0.0f, 0.0f}
+	float4 TangentW : TANGENT;
 };
 
 cbuffer PerObjectConstants : register(b0)
