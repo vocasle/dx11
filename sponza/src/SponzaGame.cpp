@@ -210,6 +210,19 @@ Game::Render() {
             BindTargets::PixelShader, m_perSceneCB->Get(), 2);
 
         for (const Mesh &mesh : m_meshes) {
+            for (const TextureInfo &ti : mesh.GetTextures()) {
+                if (ti.Type == TextureType::Diffuse) {
+                    Texture *tex = m_assetManager->GetTexture(ti.Path);
+                    if (tex)
+                        m_renderer.BindShaderResource(
+                            BindTargets::PixelShader, tex->GetSRV(), 0);
+                    else
+                        UtilsDebugPrint(
+                            "WARN: Textures %s is known to AssetManager, but "
+                            "is not loaded!\n",
+                            ti.Path.c_str());
+                }
+            }
             m_renderer.SetVertexBuffer(
                 mesh.GetVertexBuffer(), mesh.GetVertexSize(), 0);
             m_renderer.SetIndexBuffer(mesh.GetIndexBuffer(), 0);
@@ -258,7 +271,8 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
 
     m_renderer.SetDeviceResources(m_deviceResources.get());
     m_assetManager = std::make_unique<AssetManager>(*m_deviceResources);
-    m_meshes = m_assetManager->LoadModel(UtilsFormatStr("%s/sponza.glb", SPONZA_ROOT));
+    m_meshes =
+        m_assetManager->LoadModel(UtilsFormatStr("%s/sponza.glb", SPONZA_ROOT));
 
     {
         DynamicConstBufferDesc perObjectDesc;
