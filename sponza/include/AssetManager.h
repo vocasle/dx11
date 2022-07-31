@@ -10,7 +10,7 @@ class AssetManager
 {
 public:
     AssetManager(DeviceResources& deviceResources);
-    void LoadTexture(const std::string& path);
+    Texture* LoadTexture(const std::string& path);
     Texture* GetTexture(const std::string& path);
 
 private:
