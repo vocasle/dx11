@@ -1,24 +1,27 @@
 #include "Common.hlsli"
 
 static const float4 AMBIENT = float4(0.4f, 0.4f, 0.4f, 1.0f);
+static const float PRECISION = 0.000001f;
 
 float4 main(VSOut In) : SV_TARGET
 {
+    const float2 uv = float2(In.PosW.w, In.NormalW.w);
+    const float4 diffuseSampled = diffuseTexture.Sample(defaultSampler, uv);
+    float4 specularSampled = specularTexture.Sample(defaultSampler, uv);
+    float4 glossSampled = glossTexture.Sample(defaultSampler, uv);
+    const float3 normalSampled = normalTexture.Sample(defaultSampler, uv).xyz;
 
-	float3 L = normalize(dirLight.Position);
-	float3 N = normalize(In.NormalW);
-	float diff = max(dot(L, N), 0.0f);
-	float3 grey = float3(0.5, 0.5, 0.5);
-	return float4(grey * diff, 1.0f);
+    float3 L = normalize(dirLight.Position);
+    float3 N = normalize(In.NormalW.xyz);
+    float3 normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW.xyz), normalize(In.TangentW));
+    float diff = max(dot(L, N), 0.0f);
+    return float4(diffuseSampled.rgb * diff, 1.0f);
 
-	const float4 diffuseSampled = diffuseTexture.Sample(defaultSampler, In.TexCoords);
-	const float4 specularSampled = specularTexture.Sample(defaultSampler, In.TexCoords);
-	const float4 glossSampled = glossTexture.Sample(defaultSampler, In.TexCoords);
-	const float3 normalSampled = normalTexture.Sample(defaultSampler, In.TexCoords).xyz;
     float2 shadowUV = float2(In.ShadowPosH.x * 0.5f + 0.5f,
                                                -In.ShadowPosH.y * 0.5f + 0.5f);
 	const float4 shadowSampled = shadowTexture.Sample(defaultSampler, shadowUV);
-	float3 normal = NormalSampleToWorldSpace(normalSampled, normalize(In.NormalW), normalize(In.TangentW));
+
+
 
     //return float4(shadowSampled.xxx / In.ShadowPosH.z , 1.0f);
 //	return float4(In.ShadowPosH.zzz, 1.0f);
@@ -30,7 +33,7 @@ float4 main(VSOut In) : SV_TARGET
 	//float diff = max(dot(L, normal), 0.0f);
 	//return float4(diffuseSampled.rgb * diff, 1.0f);
 
-	const float3 viewDir = normalize(cameraPosW - In.PosW);
+	const float3 viewDir = normalize(cameraPosW - In.PosW.xyz);
 
 	LightIntensity intensities[MAX_LIGHTS];
 	intensities[0] = DirectionalLightIntensity(dirLight, normal, viewDir);
