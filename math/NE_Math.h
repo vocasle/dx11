@@ -103,6 +103,7 @@ struct Mat3X3 {
 	};
 #ifdef __cplusplus
 	std::string ToString() const;
+        float Determinant() const;
 #endif
 };
 
