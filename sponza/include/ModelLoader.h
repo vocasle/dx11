@@ -1,6 +1,7 @@
 #pragma once
 
 #include <assimp/material.h>
+#include <d3d11.h>
 
 #include <assimp/Importer.hpp>
 #include <string>
@@ -8,8 +9,6 @@
 
 #include "Buffer.h"
 #include "NE_Math.h"
-
-#include <d3d11.h>
 
 struct Vertex {
     Vec4D Position;
@@ -55,44 +54,58 @@ struct TextureInfo {
 
 class Mesh {
 public:
-    Mesh(): Mesh({}, {}, {}, "") {
+    Mesh()
+        : Mesh({}, {}, {}, "") {
     }
     Mesh(std::vector<Vertex> vertices,
          std::vector<unsigned int> indices,
          std::vector<TextureInfo> textures,
          std::string name)
-        : m_vertexBuffer(vertices, BufferDescription(D3D11_USAGE_IMMUTABLE, D3D11_BIND_VERTEX_BUFFER)),
-          m_indexBuffer(indices, BufferDescription(D3D11_USAGE_IMMUTABLE, D3D11_BIND_INDEX_BUFFER)),
+        : m_vertexBuffer(vertices,
+                         BufferDescription(D3D11_USAGE_IMMUTABLE,
+                                           D3D11_BIND_VERTEX_BUFFER)),
+          m_indexBuffer(indices,
+                        BufferDescription(D3D11_USAGE_IMMUTABLE,
+                                          D3D11_BIND_INDEX_BUFFER)),
           m_textures(textures),
           m_name(name) {
     }
 
-    void CreateDeviceDependentResources(ID3D11Device* device)
-    {
-      CreateBuffers(device);
+    void
+    CreateDeviceDependentResources(ID3D11Device *device) {
+        CreateBuffers(device);
     }
 
-    ID3D11Buffer* GetVertexBuffer() const {
-      return m_vertexBuffer.GetBuffer();
+    [[nodiscard]] ID3D11Buffer *
+    GetVertexBuffer() const {
+        return m_vertexBuffer.GetBuffer();
     }
 
-    ID3D11Buffer* GetIndexBuffer() const {
-      return m_indexBuffer.GetBuffer();
+    [[nodiscard]] ID3D11Buffer *
+    GetIndexBuffer() const {
+        return m_indexBuffer.GetBuffer();
     }
 
-    unsigned int GetIndexCount() const {
-      return m_indexBuffer.Count();
+    [[nodiscard]] unsigned int
+    GetIndexCount() const {
+        return m_indexBuffer.Count();
     }
 
-    unsigned int GetVertexSize() const {
-      return m_vertexBuffer.GetValueSize();
+    [[nodiscard]] unsigned int
+    GetVertexSize() const {
+        return m_vertexBuffer.GetValueSize();
+    }
+
+    [[nodiscard]] const std::vector<TextureInfo> &
+    GetTextures() const {
+        return m_textures;
     }
 
 private:
-    void CreateBuffers(ID3D11Device* device)
-    {
-      m_vertexBuffer.Create(device);
-      m_indexBuffer.Create(device);
+    void
+    CreateBuffers(ID3D11Device *device) {
+        m_vertexBuffer.Create(device);
+        m_indexBuffer.Create(device);
     }
 
     Buffer<Vertex> m_vertexBuffer;
@@ -104,8 +117,14 @@ private:
 class ModelLoader {
 public:
     std::vector<Mesh> Load(const std::string &path);
+    void FreeScene();
+    const aiScene *
+    GetScenePtr() const {
+        return m_scene;
+    }
 
 private:
     Assimp::Importer m_importer;
     std::string m_cwd;
+    const aiScene *m_scene;
 };
