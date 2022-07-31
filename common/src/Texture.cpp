@@ -80,7 +80,9 @@ void
 Texture::GenerateMips(ID3D11DeviceContext *context) {
     context->GenerateMips(mSRV.Get());
 }
-Texture::Texture(const std::string &filepath, ID3D11Device *device) {
+Texture::Texture(const std::string &filepath,
+                 ID3D11Device *device,
+                 ID3D11DeviceContext *context) {
     Image img(filepath);
     if (!img.IsValid()) {
         UtilsFormatStr("ERROR: Failed to load texture from %s\n",
@@ -89,7 +91,7 @@ Texture::Texture(const std::string &filepath, ID3D11Device *device) {
 
     mWidth = static_cast<int>(img.GetWidth());
     mHeight = static_cast<int>(img.GetHeight());
-    mFormat = DXGI_FORMAT_R8G8B8A8_UINT;
+    mFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
     CD3D11_TEXTURE2D_DESC desc(
         mFormat,
@@ -102,6 +104,9 @@ Texture::Texture(const std::string &filepath, ID3D11Device *device) {
     HR(device->CreateTexture2D(
         &desc, nullptr, mTexture.ReleaseAndGetAddressOf()))
 
+    context->UpdateSubresource(
+        mTexture.Get(), 0, nullptr, img.GetBytes(), mWidth * 4, 0);
+
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Format = mFormat;
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
@@ -110,6 +115,8 @@ Texture::Texture(const std::string &filepath, ID3D11Device *device) {
 
     HR(device->CreateShaderResourceView(
         mTexture.Get(), &srvDesc, mSRV.ReleaseAndGetAddressOf()))
+
+    context->GenerateMips(mSRV.Get());
 }
 Texture::Texture(const Texture &rhs) {
     mTexture = rhs.mTexture;
