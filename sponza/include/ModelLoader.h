@@ -12,8 +12,9 @@
 #include "NE_Math.h"
 
 struct Vertex {
-    Vec4D Position;
-    Vec4D Normal;
+    Vec4D Position; // W stores U texel coordinate
+    Vec4D Normal; // W stores V texel coordinate
+    Vec4D Tangent; // W stores handedness of cross(N,T)
 };
 
 enum class TextureStorageType {

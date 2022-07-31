@@ -13,12 +13,15 @@ static Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene);
 
 std::vector<Mesh>
 ModelLoader::Load(const std::string &path) {
-    m_scene = m_importer.ReadFile(
-        path, aiProcess_Triangulate | aiProcess_ConvertToLeftHanded);
+    m_scene = m_importer.ReadFile(path,
+                                  aiProcess_Triangulate |
+                                      aiProcess_ConvertToLeftHanded |
+                                      aiProcess_CalcTangentSpace);
 
     if (m_scene == nullptr)
         return {};
 
+    // TODO: Probably should be part of TextureInfo
     m_cwd = path.substr(0, path.find_last_of("/\\"));
 
     std::vector<Mesh> meshes;
@@ -70,6 +73,21 @@ ProcessMesh(aiMesh *mesh, const aiScene *scene) {
         if (mesh->mTextureCoords[0]) {
             vertex.Position.W = (float)mesh->mTextureCoords[0][i].x;
             vertex.Normal.W = (float)mesh->mTextureCoords[0][i].y;
+        }
+
+        if (mesh->HasTangentsAndBitangents()) {
+            vertex.Tangent.X = mesh->mTangents[i].x;
+            vertex.Tangent.Y = mesh->mTangents[i].y;
+            vertex.Tangent.Z = mesh->mTangents[i].z;
+
+            Mat3X3 m = {};
+            m.V[0] =
+                Vec3D(vertex.Tangent.X, vertex.Tangent.Y, vertex.Tangent.Z);
+            m.V[1] = Vec3D(mesh->mBitangents[i].x,
+                           mesh->mBitangents[i].y,
+                           mesh->mBitangents[i].z);
+            m.V[2] = Vec3D(vertex.Normal.X, vertex.Normal.Y, vertex.Normal.Z);
+            vertex.Tangent.W = m.Determinant() > 0 ? 1 : -1;
         }
 
         vertices.push_back(vertex);
