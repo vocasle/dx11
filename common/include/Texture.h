@@ -9,6 +9,7 @@
 class Texture {
 public:
     Texture(DXGI_FORMAT format, int width, int height, ID3D11Device *device);
+    Texture(DXGI_FORMAT format, int width, int height, void *data, size_t sysMemPitch, size_t sysMemSlicePitch, ID3D11Device *device);
     Texture(const std::string &filepath, ID3D11Device *device);
     Texture(const Texture &rhs);
     Texture &operator=(const Texture &rhs);

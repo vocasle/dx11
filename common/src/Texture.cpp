@@ -137,3 +137,38 @@ Texture::operator=(const Texture &rhs) {
     }
     return *this;
 }
+Texture::Texture(DXGI_FORMAT format,
+                 int width,
+                 int height,
+                 void *data,
+                 size_t sysMemPitch,
+                 size_t sysMemSlicePitch,
+                 ID3D11Device *device)
+    : mWidth(width),
+      mHeight(height),
+      mFormat(format) {
+    CD3D11_TEXTURE2D_DESC desc(
+        mFormat,
+        mWidth,
+        mHeight,
+        1,
+        0,
+        D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.SysMemPitch = sysMemPitch;
+    initData.SysMemSlicePitch = sysMemSlicePitch;
+    initData.pSysMem = data;
+
+    HR(device->CreateTexture2D(
+        &desc, &initData, mTexture.ReleaseAndGetAddressOf()))
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = mFormat;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.MipLevels = -1;
+
+    HR(device->CreateShaderResourceView(
+        mTexture.Get(), &srvDesc, mSRV.ReleaseAndGetAddressOf()))
+}
