@@ -25,14 +25,16 @@ Texture::Texture(DXGI_FORMAT format,
     HR(device->CreateTexture2D(
         &desc, nullptr, mTexture.ReleaseAndGetAddressOf()))
 
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Format = format;
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    srvDesc.Texture2D.MipLevels = -1;
+    {
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Format = format;
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+        srvDesc.Texture2D.MipLevels = -1;
 
-    HR(device->CreateShaderResourceView(
-        mTexture.Get(), &srvDesc, mSRV.ReleaseAndGetAddressOf()))
+        HR(device->CreateShaderResourceView(
+            mTexture.Get(), &srvDesc, mSRV.ReleaseAndGetAddressOf()))
+    }
 
     D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
     rtvDesc.Format = format;
@@ -54,7 +56,7 @@ Texture::Texture(DXGI_FORMAT format,
             D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 
         HR(device->CreateTexture2D(
-            &texDesc, NULL, mDepthTexture.ReleaseAndGetAddressOf()))
+            &texDesc, nullptr, mDepthTexture.ReleaseAndGetAddressOf()))
 
         D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
         dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
@@ -76,8 +78,7 @@ Texture::Texture(DXGI_FORMAT format,
 
 void
 Texture::GenerateMips(ID3D11DeviceContext *context) {
-    //	context->UpdateSubresource(mTexture.Get(), 0, nullptr, bytes, width *
-    // sizeof(uint8_t) * desiredChannels, 0);
+    context->GenerateMips(mSRV.Get());
 }
 Texture::Texture(const std::string &filepath, ID3D11Device *device) {
     Image img(filepath);
@@ -86,10 +87,14 @@ Texture::Texture(const std::string &filepath, ID3D11Device *device) {
                        filepath.c_str());
     }
 
+    mWidth = static_cast<int>(img.GetWidth());
+    mHeight = static_cast<int>(img.GetHeight());
+    mFormat = DXGI_FORMAT_R8G8B8A8_UINT;
+
     CD3D11_TEXTURE2D_DESC desc(
-        DXGI_FORMAT_R8G8B8A8_UINT,
-        img.GetWidth(),
-        img.GetHeight(),
+        mFormat,
+        mWidth,
+        mHeight,
         1,
         0,
         D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
@@ -98,7 +103,7 @@ Texture::Texture(const std::string &filepath, ID3D11Device *device) {
         &desc, nullptr, mTexture.ReleaseAndGetAddressOf()))
 
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UINT;
+    srvDesc.Format = mFormat;
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MostDetailedMip = 0;
     srvDesc.Texture2D.MipLevels = -1;
