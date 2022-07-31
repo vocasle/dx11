@@ -19,12 +19,15 @@ target_include_directories("${app_name}" PRIVATE "include" "${CMAKE_SOURCE_DIR}/
 target_link_directories("${app_name}" PRIVATE "${ASSIMP_LIBRARY_DIR}")
 
 if (MSVC)
-    set_target_properties("${app_name}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
+		set(CMAKE_BUILD_TYPE "Debug")
+	endif()
+	set(app_binary_dir ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE})
 endif()
 
 add_custom_command(TARGET "${app_name}"
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy "${ASSIMP_LIBRARY_DIR}/assimp-vc143-mt.dll" "${CMAKE_CURRENT_BINARY_DIR}/.")
+    COMMAND ${CMAKE_COMMAND} -E copy "${ASSIMP_LIBRARY_DIR}/assimp-vc143-mt.dll" "${app_binary_dir}/.")
 
 target_link_libraries("${app_name}"
     "assimp-vc143-mt.lib"
@@ -84,13 +87,12 @@ foreach(FILE ${HLSL_SHADER_FILES})
       add_custom_command(TARGET ${shader_target}
           COMMAND ${FXC_EXE} /nologo
                     /WX
-                    /Fh ${CMAKE_CURRENT_BINARY_DIR}/${FILE_WE}.h
                     /Emain
                     /T${shadertype}_${shadermodel}
                     $<IF:$<CONFIG:DEBUG>,/Od,/O1>
                     /Zi
-                    /Fo ${CMAKE_CURRENT_BINARY_DIR}/${FILE_WE}.cso
-                    /Fd ${CMAKE_CURRENT_BINARY_DIR}/${FILE_WE}.pdb
+                    /Fo ${app_binary_dir}/${FILE_WE}.cso
+                    /Fd ${app_binary_dir}/${FILE_WE}.pdb
                     ${FILE}
                  MAIN_DEPENDENCY ${FILE}
                  COMMENT "HLSL ${FILE}"
