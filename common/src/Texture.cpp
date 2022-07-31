@@ -99,7 +99,12 @@ Texture::Texture(const std::string &filepath,
         mHeight,
         1,
         0,
-        D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+        D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET,
+        D3D11_USAGE_DEFAULT,
+        0,
+        1,
+        0,
+        D3D11_RESOURCE_MISC_GENERATE_MIPS);
 
     HR(device->CreateTexture2D(
         &desc, nullptr, mTexture.ReleaseAndGetAddressOf()))
