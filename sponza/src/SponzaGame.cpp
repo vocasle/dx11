@@ -61,6 +61,16 @@ Game::UpdateImgui() {
     if (ImGui::Button("Compile")) {
         m_shaderManager.Recompile(m_deviceResources->GetDevice());
     }
+    static float zFar = m_camera.GetZFar();
+    static float zNear = m_camera.GetZNear();
+
+    ImGui::InputFloat("z far", &zFar);
+    ImGui::InputFloat("z near", &zNear);
+
+    if (zFar != m_camera.GetZFar())
+        m_camera.SetZFar(zFar);
+    if (zNear != m_camera.GetZNear())
+        m_camera.SetZNear(zNear);
 }
 #endif
 
@@ -71,7 +81,7 @@ Game::CreateDefaultSampler() {
     samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
     samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
     samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.ComparisonFunc = D3D11_COMPARISON_GREATER;
+    samplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS;
     samplerDesc.MaxAnisotropy = D3D11_REQ_MAXANISOTROPY;
     samplerDesc.MipLODBias = 0.0f;
     samplerDesc.MinLOD = 0;
@@ -222,6 +232,17 @@ Game::Render() {
                             "is not loaded!\n",
                             ti.Path.c_str());
                 }
+                if (ti.Type == TextureType::Normal) {
+                    Texture *tex = m_assetManager->GetTexture(ti.Path);
+                    if (tex)
+                        m_renderer.BindShaderResource(
+                            BindTargets::PixelShader, tex->GetSRV(), 3);
+                    else
+                        UtilsDebugPrint(
+                            "WARN: Textures %s is known to AssetManager, but "
+                            "is not loaded!\n",
+                            ti.Path.c_str());
+                }
             }
             m_renderer.SetVertexBuffer(
                 mesh.GetVertexBuffer(), mesh.GetVertexSize(), 0);
@@ -266,8 +287,8 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
     CreateDefaultSampler();
     // CreateRasterizerState();
 
-    m_camera.SetZFar(100000);
-    m_camera.SetZNear(0.1f);
+    m_camera.SetZFar(10000);
+    m_camera.SetZNear(10);
 
     m_renderer.SetDeviceResources(m_deviceResources.get());
     m_assetManager = std::make_unique<AssetManager>(*m_deviceResources);
