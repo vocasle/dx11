@@ -101,17 +101,12 @@ ProcessMesh(aiMesh *mesh, const aiScene *scene) {
 
                 const aiTexture *tex =
                     scene->GetEmbeddedTexture(texturePath.C_Str());
-                TextureStorageType texType = TextureStorageType::Detached;
-                if (!tex) {
-                    UtilsDebugPrint(
-                        "WARN: %s is an embedded texture and should be loaded "
-                        "differently\n",
-                        texturePath.C_Str());
-                    texType = TextureStorageType::Embedded;
-                }
+
                 textures.emplace_back(texturePath.C_Str(),
                                       TextureTypeFromAssimpTextureType(type),
-                                      texType);
+                                      tex ? TextureStorageType::Embedded
+                                          : TextureStorageType::Detached,
+                                      tex);
             }
         }
     }

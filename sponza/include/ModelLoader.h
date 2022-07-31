@@ -1,6 +1,7 @@
 #pragma once
 
 #include <assimp/material.h>
+#include <assimp/texture.h>
 #include <d3d11.h>
 
 #include <assimp/Importer.hpp>
@@ -39,10 +40,17 @@ std::string TextureTypeToStr(TextureType tt);
 struct TextureInfo {
     TextureInfo(const std::string &path,
                 TextureType type,
-                TextureStorageType storageType)
+                TextureStorageType storageType,
+                const aiTexture *texturePtr)
         : Path(path),
           Type(type),
-          StorageType(storageType) {
+          StorageType(storageType),
+          TexturePtr(texturePtr) {
+    }
+    TextureInfo(const std::string &path,
+                TextureType type,
+                TextureStorageType storageType)
+        : TextureInfo(path, type, storageType, nullptr) {
     }
     TextureInfo()
         : TextureInfo("", TextureType::None, TextureStorageType::None) {
@@ -50,6 +58,7 @@ struct TextureInfo {
     std::string Path;
     TextureType Type;
     TextureStorageType StorageType;
+    const aiTexture *TexturePtr;
 };
 
 class Mesh {
