@@ -103,12 +103,6 @@ ProcessMesh(aiMesh *mesh, const aiScene *scene) {
     if (mesh->mMaterialIndex >= 0) {
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
-        float shininess = 0;
-        if (material->Get(AI_MATKEY_SHININESS, shininess) == AI_FAILURE) {
-            UtilsDebugPrint("WARN: Material %s does not have shininess\n",
-                            material->GetName().C_Str());
-        }
-
         static const aiTextureType supportedTypes[] = {
             aiTextureType_AMBIENT,
             aiTextureType_DIFFUSE,
@@ -116,6 +110,8 @@ ProcessMesh(aiMesh *mesh, const aiScene *scene) {
             aiTextureType_NORMALS,
             aiTextureType_SHININESS,
             aiTextureType_EMISSIVE,
+            aiTextureType_DIFFUSE_ROUGHNESS,
+            aiTextureType_METALNESS,
         };
 
         aiString texturePath;
@@ -131,7 +127,7 @@ ProcessMesh(aiMesh *mesh, const aiScene *scene) {
                                       tex ? TextureStorageType::Embedded
                                           : TextureStorageType::Detached,
                                       tex,
-                                      shininess);
+                                      0);
             }
         }
     }
@@ -154,6 +150,10 @@ TextureTypeFromAssimpTextureType(aiTextureType type) {
             return TextureType::Shininess;
         case aiTextureType_EMISSIVE:
             return TextureType::Emissive;
+        case             aiTextureType_DIFFUSE_ROUGHNESS:
+            return TextureType::DiffuseRoughness;
+        case aiTextureType_METALNESS:
+            return TextureType::Metalness;
         default:
             return TextureType::None;
     }
@@ -174,6 +174,10 @@ TextureTypeToStr(TextureType tt) {
             return "Shininess";
         case TextureType::Normal:
             return "Normal";
+        case TextureType::DiffuseRoughness:
+            return "DiffuseRoughness";
+        case TextureType::Metalness:
+            return "Metalness";
         default:
             return "None";
     }

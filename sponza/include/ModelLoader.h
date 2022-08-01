@@ -33,6 +33,8 @@ enum class TextureType {
     Shininess,
     Normal,
     None,
+    DiffuseRoughness,
+    Metalness,
 };
 
 TextureType TextureTypeFromAssimpTextureType(aiTextureType type);
