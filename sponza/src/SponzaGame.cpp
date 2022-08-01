@@ -293,7 +293,7 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
     m_renderer.SetDeviceResources(m_deviceResources.get());
     m_assetManager = std::make_unique<AssetManager>(*m_deviceResources);
     m_meshes =
-        m_assetManager->LoadModel(UtilsFormatStr("%s/sponza.glb", SPONZA_ROOT));
+        m_assetManager->LoadModel(UtilsFormatStr("%s/Sponza.gltf", SPONZA_ROOT));
 
     {
         DynamicConstBufferDesc perObjectDesc;
