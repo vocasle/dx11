@@ -103,6 +103,12 @@ ProcessMesh(aiMesh *mesh, const aiScene *scene) {
     if (mesh->mMaterialIndex >= 0) {
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
+        float shininess = 0;
+        if (material->Get(AI_MATKEY_SHININESS, shininess) == AI_FAILURE) {
+            UtilsDebugPrint("WARN: Material %s does not have shininess\n",
+                            material->GetName().C_Str());
+        }
+
         static const aiTextureType supportedTypes[] = {
             aiTextureType_AMBIENT,
             aiTextureType_DIFFUSE,
@@ -124,7 +130,8 @@ ProcessMesh(aiMesh *mesh, const aiScene *scene) {
                                       TextureTypeFromAssimpTextureType(type),
                                       tex ? TextureStorageType::Embedded
                                           : TextureStorageType::Detached,
-                                      tex);
+                                      tex,
+                                      shininess);
             }
         }
     }

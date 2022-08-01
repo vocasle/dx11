@@ -12,9 +12,9 @@
 #include "NE_Math.h"
 
 struct Vertex {
-    Vec4D Position; // W stores U texel coordinate
-    Vec4D Normal; // W stores V texel coordinate
-    Vec4D Tangent; // W stores handedness of cross(N,T)
+    Vec4D Position;  // W stores U texel coordinate
+    Vec4D Normal;    // W stores V texel coordinate
+    Vec4D Tangent;   // W stores handedness of cross(N,T)
 };
 
 enum class TextureStorageType {
@@ -42,16 +42,18 @@ struct TextureInfo {
     TextureInfo(const std::string &path,
                 TextureType type,
                 TextureStorageType storageType,
-                const aiTexture *texturePtr)
+                const aiTexture *texturePtr,
+                float shininess)
         : Path(path),
           Type(type),
           StorageType(storageType),
-          TexturePtr(texturePtr) {
+          TexturePtr(texturePtr),
+          Shininess(shininess) {
     }
     TextureInfo(const std::string &path,
                 TextureType type,
                 TextureStorageType storageType)
-        : TextureInfo(path, type, storageType, nullptr) {
+        : TextureInfo(path, type, storageType, nullptr, 0) {
     }
     TextureInfo()
         : TextureInfo("", TextureType::None, TextureStorageType::None) {
@@ -60,6 +62,7 @@ struct TextureInfo {
     TextureType Type;
     TextureStorageType StorageType;
     const aiTexture *TexturePtr;
+    float Shininess;
 };
 
 class Mesh {
