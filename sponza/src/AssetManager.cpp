@@ -16,7 +16,7 @@ AssetManager::LoadTexture(const std::string &path) {
         return tex;
 
     const std::string fullPath =
-        path.find('/') == std::string::npos
+        path.find(':') == std::string::npos
             ? m_knownLocations[m_knownLocations.size() - 1] + '/' + path
             : path;
 
