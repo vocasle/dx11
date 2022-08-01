@@ -7,8 +7,7 @@ struct DirectionalLight
 	float4 Ambient;
 	float4 Diffuse;
 	float4 Specular;
-	float3 Position;
-    float Radius;
+	float4 Position; // W - is radius
 };
 
 struct PointLight
@@ -16,10 +15,7 @@ struct PointLight
 	float4 Ambient;
 	float4 Diffuse;
 	float4 Specular;
-	float3 Position;
-    float Range;
-	float3 Att;
-    float pad;
+	float4 Position; // W - is range
 };
 
 struct SpotLight
@@ -27,12 +23,8 @@ struct SpotLight
 	float4 Ambient;
 	float4 Diffuse;
 	float4 Specular;
-	float3 Position;
-    float Range;
-	float3 Direction;
-    float Spot;
-    float3 Att;
-    float pad;
+	float4 Position; // W - is range
+	float4 Direction; // W - is spot
 };
 
 struct Material
@@ -59,7 +51,7 @@ LightIntensity DirectionalLightIntensity(DirectionalLight light, float3 normal, 
 {
     LightIntensity intensity;
     intensity.intensity = float3(1.0f, 1.0f, 1.0f);
-    const float3 L = normalize(light.Position);
+    const float3 L = normalize(light.Position.xyz);
     const float3 H = normalize(L + viewDir);
     intensity.L = L;
     intensity.H = H;
@@ -70,10 +62,10 @@ LightIntensity DirectionalLightIntensity(DirectionalLight light, float3 normal, 
 LightIntensity PointLightIntensity(PointLight light, float3 normal, float3 surfPoint, float3 viewDir)
 {
     LightIntensity intensity;
-    const float distance = length(light.Position - surfPoint);
+    const float distance = length(light.Position.xyz - surfPoint);
     const float atten = 1.0f / (distance * distance);
     intensity.intensity = float3(atten, atten, atten);
-    const float3 L = normalize(light.Position - surfPoint);
+    const float3 L = normalize(light.Position.xyz - surfPoint);
     const float3 H = normalize(L + viewDir);
     intensity.L = L;
     intensity.H = H;
@@ -84,9 +76,9 @@ LightIntensity PointLightIntensity(PointLight light, float3 normal, float3 surfP
 LightIntensity SpotLightIntensity(SpotLight light, float3 normal, float3 surfPoint, float3 viewDir)
 {
     LightIntensity intensity;
-    const float distance = length(light.Position - surfPoint);
-    const float3 L = normalize(light.Position - surfPoint);
-    const float atten = pow(max(dot(-light.Direction, L), 0.0f), light.Spot) / (distance * distance);
+    const float distance = length(light.Position.xyz - surfPoint);
+    const float3 L = normalize(light.Position.xyz - surfPoint);
+    const float atten = pow(max(dot(-light.Direction.xyz, L), 0.0f), light.Direction.w) / (distance * distance);
     intensity.intensity = float3(atten, atten, atten);
     const float3 H = normalize(L + viewDir);
     intensity.L = L;
