@@ -55,6 +55,17 @@ struct Node {
     }
 
     void
+    AddChildN(const Node &child, int repeat) {
+        assert(Type == NodeType::Array &&
+               "Only array type allowed to use this function");
+        Node n = Node(UtilsFormatStr("s[%lu]", Name.c_str(), Children.size()),
+                      child.Type);
+        n.Children = child.Children;
+        for (int i = 0; i < repeat; ++i)
+            Children.push_back(child);
+    }
+
+    void
     Print() const {
         UtilsDebugPrint("{ Name: %s, Type: %s }\n",
                         Name.c_str(),
