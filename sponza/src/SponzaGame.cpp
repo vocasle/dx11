@@ -194,7 +194,7 @@ Game::Render() {
 
         m_perSceneCB->SetValue("dirLight.Diffuse",
                                Vec4D(1.0f, 1.0f, 1.0f, 1.0f));
-        m_perSceneCB->SetValue("dirLight.Position", Vec3D(1000, 1000, 0));
+        m_perSceneCB->SetValue("dirLight.Position", Vec4D(1000, 1000, 0, 1000));
         m_perSceneCB->UpdateConstantBuffer();
 
         m_renderer.BindVertexShader(m_shaderManager.GetVertexShader("ColorVS"));
@@ -313,9 +313,28 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
         dirLight.AddChild("Ambient", NodeType::Float4);
         dirLight.AddChild("Diffuse", NodeType::Float4);
         dirLight.AddChild("Specular", NodeType::Float4);
-        dirLight.AddChild("Position", NodeType::Float3);
-        dirLight.AddChild("Radius", NodeType::Float);
+        dirLight.AddChild("Position", NodeType::Float4);
+
+        Node pointLight = Node("pointLight", NodeType::Struct);
+        pointLight.AddChild("Ambient", NodeType::Float4);
+        pointLight.AddChild("Diffuse", NodeType::Float4);
+        pointLight.AddChild("Specular", NodeType::Float4);
+        pointLight.AddChild("Position", NodeType::Float4);
+        Node pointLightsArr = Node("pointLights", NodeType::Array);
+        pointLightsArr.AddChildN(pointLight, 4);
+
+        Node spotLight = Node("spotLight", NodeType::Struct);
+        spotLight.AddChild("Ambient", NodeType::Float4);
+        spotLight.AddChild("Diffuse", NodeType::Float4);
+        spotLight.AddChild("Specular", NodeType::Float4);
+        spotLight.AddChild("Position", NodeType::Float4);
+        spotLight.AddChild("Direction", NodeType::Float4);
+        Node spotLightsArr = Node("spotLights", NodeType::Array);
+        spotLightsArr.AddChildN(spotLight, 2);
+
         perSceneDesc.AddNode(dirLight);
+        perSceneDesc.AddNode(pointLightsArr);
+        perSceneDesc.AddNode(spotLightsArr);
 
         m_perSceneCB = std::make_unique<DynamicConstBuffer>(perSceneDesc,
                                                             *m_deviceResources);
