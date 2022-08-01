@@ -2,7 +2,6 @@
 
 #include <d3dcompiler.h>
 
-#include "Camera.h"
 #include "DynamicConstBuffer.h"
 #include "Mouse.h"
 #include "NE_Math.h"
@@ -186,20 +185,17 @@ Game::Render() {
         m_perFrameCB->SetValue("view", m_camera.GetViewMat());
         m_perFrameCB->SetValue("proj", m_camera.GetProjMat());
         m_perFrameCB->SetValue("cameraPosW", Vec4D(m_camera.GetPos(), 0));
-        m_perFrameCB->UpdateConstantBuffer(
-            m_deviceResources->GetDeviceContext());
+        m_perFrameCB->UpdateConstantBuffer();
 
         const Vec3D scale = {0.1f, 0.1f, 0.1f};
         m_perObjectCB->SetValue("world", MathMat4X4ScaleFromVec3D(&scale));
         m_perObjectCB->SetValue("worldInvTranspose", MathMat4X4Identity());
-        m_perObjectCB->UpdateConstantBuffer(
-            m_deviceResources->GetDeviceContext());
+        m_perObjectCB->UpdateConstantBuffer();
 
         m_perSceneCB->SetValue("dirLight.Diffuse",
                                Vec4D(1.0f, 1.0f, 1.0f, 1.0f));
-        m_perSceneCB->SetValue("dirLight.Position", Vec3D(1000, 1000, 1000));
-        m_perSceneCB->UpdateConstantBuffer(
-            m_deviceResources->GetDeviceContext());
+        m_perSceneCB->SetValue("dirLight.Position", Vec3D(1000, 1000, 0));
+        m_perSceneCB->UpdateConstantBuffer();
 
         m_renderer.BindVertexShader(m_shaderManager.GetVertexShader("ColorVS"));
         m_renderer.BindPixelShader(m_shaderManager.GetPixelShader("PhongPS"));
@@ -221,27 +217,33 @@ Game::Render() {
 
         for (const Mesh &mesh : m_meshes) {
             for (const TextureInfo &ti : mesh.GetTextures()) {
+                m_perObjectCB->SetValue("material.shininess", ti.Shininess);
+                m_perObjectCB->UpdateConstantBuffer();
                 if (ti.Type == TextureType::Diffuse) {
-                    Texture *tex = m_assetManager->GetTexture(ti.Path);
-                    if (tex)
+                    if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
                         m_renderer.BindShaderResource(
                             BindTargets::PixelShader, tex->GetSRV(), 0);
-                    else
-                        UtilsDebugPrint(
-                            "WARN: Textures %s is known to AssetManager, but "
-                            "is not loaded!\n",
-                            ti.Path.c_str());
+                    }
                 }
                 if (ti.Type == TextureType::Normal) {
-                    Texture *tex = m_assetManager->GetTexture(ti.Path);
-                    if (tex)
+                    if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
                         m_renderer.BindShaderResource(
                             BindTargets::PixelShader, tex->GetSRV(), 3);
-                    else
-                        UtilsDebugPrint(
-                            "WARN: Textures %s is known to AssetManager, but "
-                            "is not loaded!\n",
-                            ti.Path.c_str());
+                    }
+                }
+                if (ti.Type == TextureType::Specular ||
+                    ti.Type == TextureType::Metalness) {
+                    if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
+                        m_renderer.BindShaderResource(
+                            BindTargets::PixelShader, tex->GetSRV(), 1);
+                    }
+                }
+                if (ti.Type == TextureType::Shininess ||
+                    ti.Type == TextureType::DiffuseRoughness) {
+                    if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
+                        m_renderer.BindShaderResource(
+                            BindTargets::PixelShader, tex->GetSRV(), 2);
+                    }
                 }
             }
             m_renderer.SetVertexBuffer(
@@ -299,7 +301,9 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
         DynamicConstBufferDesc perObjectDesc;
         perObjectDesc.AddNode(Node("worldInvTranspose", NodeType::Float4X4));
         perObjectDesc.AddNode(Node("world", NodeType::Float4X4));
-        perObjectDesc.AddNode(Node("material", NodeType::Float4X4));
+        Node material("material", NodeType::Struct);
+        material.AddChild("shininess", NodeType::Float);
+        perObjectDesc.AddNode(material);
 
         m_perObjectCB = std::make_unique<DynamicConstBuffer>(
             perObjectDesc, *m_deviceResources);
