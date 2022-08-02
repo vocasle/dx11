@@ -63,7 +63,7 @@ LightIntensity PointLightIntensity(PointLight light, float3 normal, float3 surfP
 {
     LightIntensity intensity;
     const float distance = length(light.Position.xyz - surfPoint);
-    const float atten = 1.0f / (distance * distance);
+    const float atten = light.Position.w / (distance * distance);
     intensity.intensity = float3(atten, atten, atten);
     const float3 L = normalize(light.Position.xyz - surfPoint);
     const float3 H = normalize(L + viewDir);
