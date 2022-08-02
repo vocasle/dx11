@@ -58,11 +58,19 @@ struct Node {
     AddChildN(const Node &child, int repeat) {
         assert(Type == NodeType::Array &&
                "Only array type allowed to use this function");
-        Node n = Node(UtilsFormatStr("s[%lu]", Name.c_str(), Children.size()),
+        Node n = Node(UtilsFormatStr("%s[%lu]", Name.c_str(), Children.size()),
                       child.Type);
         n.Children = child.Children;
-        for (int i = 0; i < repeat; ++i)
-            Children.push_back(child);
+        for (int i = 0; i < repeat; ++i) {
+            n.Name = UtilsFormatStr("%s[%lu]", Name.c_str(), Children.size());
+            for (Node &node : n.Children) {
+                const size_t pos = node.Name.find('.');
+                if (pos != std::string::npos) {
+                    node.Name = n.Name + node.Name.substr(pos);
+                }
+            }
+            Children.push_back(n);
+        }
     }
 
     void
@@ -76,7 +84,7 @@ struct Node {
     }
 
     void
-    Visit(std::function<void(const Node &node)> inVisitor) const {
+    Visit(const std::function<void(const Node &node)> &inVisitor) const {
         inVisitor(*this);
         for (auto &child : Children) {
             child.Visit(inVisitor);
@@ -110,47 +118,9 @@ private:
 class DynamicConstBuffer {
 public:
     DynamicConstBuffer(const DynamicConstBufferDesc &desc,
-                       DeviceResources &deviceResources)
-        : mDeviceResources(&deviceResources) {
-        size_t sz = 0;
-        for (auto &node : desc.GetNodes()) {
-            auto visitor = [&sz](const Node &node) -> void {
-                if (node.Type != NodeType::Array &&
-                    node.Type != NodeType::Struct) {
-                    sz += static_cast<size_t>(node.Type);
-                }
-            };
-            node.Visit(visitor);
-        }
-        if (sz % 16 != 0) {
-            UtilsDebugPrint(
-                "WARN: Invalid alignment for cbuffer. Adding padding\n");
-            sz = static_cast<size_t>(std::ceil(sz / 16.0f) * 16);
-        }
-        mBytes.resize(sz);
+                       DeviceResources &deviceResources);
 
-        size_t offset = 0;
-        for (auto &node : desc.GetNodes()) {
-            auto visitor = [this, &offset](const Node &node) -> void {
-                if (node.Type != NodeType::Struct &&
-                    node.Type != NodeType::Array) {
-                    mValues[node.Name] = {node.Type, &mBytes[offset]};
-                    offset += static_cast<size_t>(node.Type);
-                } else {
-                    mValues[node.Name] = {node.Type, &mBytes[offset]};
-                }
-            };
-            node.Visit(visitor);
-        }
-
-        CreateConstantBuffer();
-        UpdateConstantBuffer();
-    }
-
-    [[nodiscard]] ID3D11Buffer *
-    Get() const {
-        return mBuffer.Get();
-    }
+    [[nodiscard]] ID3D11Buffer *Get() const;
 
     template <typename T, typename S>
     T *
@@ -176,12 +146,13 @@ public:
 
     template <typename T, typename S>
     void
-    SetValue(const S &inName, const T &inValue) const {
+    SetValue(const S &inName, const T &inValue) {
         bool isSet = false;
         for (const auto &[key, value] : mValues) {
             if (key == inName) {
                 *static_cast<T *>(value.Ptr) = inValue;
                 isSet = true;
+                UpdateConstantBuffer();
                 break;
             }
         }
@@ -192,42 +163,13 @@ public:
         }
     }
 
-    void
-    UpdateConstantBuffer() {
-        D3D11_MAPPED_SUBRESOURCE mapped = {};
-
-        if (FAILED(mDeviceResources->GetDeviceContext()->Map(
-                mBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
-            UtilsFatalError("ERROR: Failed to map constant buffer\n");
-        }
-        memcpy(mapped.pData, mBytes.data(), mBytes.size());
-        mDeviceResources->GetDeviceContext()->Unmap(mBuffer.Get(), 0);
-    }
-
-    void
-    CreateConstantBuffer() {
-        D3D11_BUFFER_DESC bufferDesc = {};
-        bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        bufferDesc.ByteWidth = mBytes.size();
-        bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-
-        D3D11_SUBRESOURCE_DATA initData = {};
-        initData.pSysMem = mBytes.data();
-
-        if (FAILED(mDeviceResources->GetDevice()->CreateBuffer(
-                &bufferDesc, &initData, mBuffer.ReleaseAndGetAddressOf()))) {
-            UtilsFatalError(
-                "ERROR: Failed to create per frame constants cbuffer\n");
-        }
-    }
-
-    [[nodiscard]] const std::vector<uint8_t> &
-    GetBytes() const {
-        return mBytes;
-    }
+    void UpdateConstantBuffer();
+    void CreateConstantBuffer();
+    [[nodiscard]] const std::vector<uint8_t> &GetBytes() const;
 
 private:
+    void RecalculateHash();
+
     struct Value {
         NodeType Type;
         void *Ptr;
@@ -237,4 +179,6 @@ private:
     std::unordered_map<std::string, Value> mValues;
     Microsoft::WRL::ComPtr<ID3D11Buffer> mBuffer;
     DeviceResources *mDeviceResources;
+    bool mIsDirty;
+    size_t mHash;
 };
