@@ -18,37 +18,6 @@
 
 using namespace Microsoft::WRL;
 
-static void
-GameUpdateConstantBuffer(ID3D11DeviceContext *context,
-                         size_t bufferSize,
-                         void *data,
-                         ID3D11Buffer *dest) {
-    D3D11_MAPPED_SUBRESOURCE mapped = {};
-
-    if (FAILED(context->Map(
-            (ID3D11Resource *)dest, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
-        UtilsFatalError("ERROR: Failed to map constant buffer\n");
-    }
-    memcpy(mapped.pData, data, bufferSize);
-    context->Unmap((ID3D11Resource *)dest, 0);
-}
-
-static void
-GameCreateConstantBuffer(ID3D11Device *device,
-                         size_t byteWidth,
-                         ID3D11Buffer **pDest) {
-    D3D11_BUFFER_DESC bufferDesc = {};
-    bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bufferDesc.ByteWidth = byteWidth;
-    bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-
-    if (FAILED(device->CreateBuffer(&bufferDesc, NULL, pDest))) {
-        UtilsFatalError(
-            "ERROR: Failed to create per frame constants cbuffer\n");
-    }
-}
-
 void
 Game::CreateRasterizerState() {
     throw std::runtime_error("Not implemented");
@@ -57,19 +26,46 @@ Game::CreateRasterizerState() {
 #if WITH_IMGUI
 void
 Game::UpdateImgui() {
-    if (ImGui::Button("Compile")) {
+    if (ImGui::Button("Recompile all shaders")) {
         m_shaderManager.Recompile(m_deviceResources->GetDevice());
     }
-    static float zFar = m_camera.GetZFar();
-    static float zNear = m_camera.GetZNear();
 
-    ImGui::InputFloat("z far", &zFar);
-    ImGui::InputFloat("z near", &zNear);
+    if (ImGui::CollapsingHeader("Camera settings")) {
+        static float zFar = m_camera.GetZFar();
+        static float zNear = m_camera.GetZNear();
 
-    if (zFar != m_camera.GetZFar())
-        m_camera.SetZFar(zFar);
-    if (zNear != m_camera.GetZNear())
-        m_camera.SetZNear(zNear);
+        ImGui::InputFloat("z far", &zFar);
+        ImGui::InputFloat("z near", &zNear);
+
+        if (zFar != m_camera.GetZFar())
+            m_camera.SetZFar(zFar);
+        if (zNear != m_camera.GetZNear())
+            m_camera.SetZNear(zNear);
+    }
+
+    if (ImGui::CollapsingHeader("Lights setting")) {
+        if (ImGui::CollapsingHeader("Point light settings")) {
+            ImGui::ColorPicker4(
+                "Ambient",
+                reinterpret_cast<float *>(
+                    m_perSceneCB->GetValue<Vec4D>("pointLights[0].Ambient")));
+
+            ImGui::ColorPicker4(
+                "Diffuse",
+                reinterpret_cast<float *>(
+                    m_perSceneCB->GetValue<Vec4D>("pointLights[0].Diffuse")));
+
+            ImGui::ColorPicker4(
+                "Specular",
+                reinterpret_cast<float *>(
+                    m_perSceneCB->GetValue<Vec4D>("pointLights[0].Specular")));
+
+            ImGui::InputFloat4(
+                "Position",
+                reinterpret_cast<float *>(
+                    m_perSceneCB->GetValue<Vec4D>("pointLights[0].Position")));
+        }
+    }
 }
 #endif
 
@@ -129,20 +125,12 @@ Game::Update() {
     m_camera.ProcessKeyboard(m_timer.DeltaMillis);
     m_camera.ProcessMouse(m_timer.DeltaMillis);
 
-    // TODO: Replace with dynamic const buffer
-    // m_PerFrameData.view = m_camera.GetViewMat();
-    // m_PerFrameData.proj = m_camera.GetProjMat();
-    // m_PerFrameData.cameraPosW = m_camera.GetPos();
-
-    // GameUpdateConstantBuffer(m_deviceResources->GetDeviceContext(),
-    // 			 sizeof(PerFrameConstants), &m_PerFrameData,
-    // 			 m_PerFrameCB.Get());
-    // GameUpdateConstantBuffer(m_deviceResources->GetDeviceContext(),
-    // 			 sizeof(PerSceneConstants), &m_PerSceneData,
-    // 			 m_PerSceneCB.Get());
+    m_perFrameCB->SetValue("view", m_camera.GetViewMat());
+    m_perFrameCB->SetValue("proj", m_camera.GetProjMat());
+    m_perFrameCB->SetValue("cameraPosW", Vec4D(m_camera.GetPos(), 0));
 
     static float elapsedTime = 0.0f;
-    const float deltaSeconds = static_cast<float>(m_timer.DeltaMillis / 1000.0);
+    const auto deltaSeconds = static_cast<float>(m_timer.DeltaMillis / 1000.0);
     elapsedTime += deltaSeconds;
 
     if (elapsedTime >= 1.0f) {
@@ -182,25 +170,21 @@ Game::Render() {
     m_deviceResources->PIXBeginEvent(L"Color pass");
     // reset view proj matrix back to camera
     {
-        m_perFrameCB->SetValue("view", m_camera.GetViewMat());
-        m_perFrameCB->SetValue("proj", m_camera.GetProjMat());
-        m_perFrameCB->SetValue("cameraPosW", Vec4D(m_camera.GetPos(), 0));
-        m_perFrameCB->UpdateConstantBuffer();
-
         const Vec3D scale = {0.1f, 0.1f, 0.1f};
         m_perObjectCB->SetValue("world", MathMat4X4ScaleFromVec3D(&scale));
         m_perObjectCB->SetValue("worldInvTranspose", MathMat4X4Identity());
-        m_perObjectCB->UpdateConstantBuffer();
-
         m_perSceneCB->SetValue("dirLight.Diffuse",
                                Vec4D(1.0f, 1.0f, 1.0f, 1.0f));
         m_perSceneCB->SetValue("dirLight.Position", Vec4D(1000, 1000, 0, 1000));
-        m_perSceneCB->UpdateConstantBuffer();
 
         m_renderer.BindVertexShader(m_shaderManager.GetVertexShader("ColorVS"));
         m_renderer.BindPixelShader(m_shaderManager.GetPixelShader("PhongPS"));
         m_renderer.SetSamplerState(m_defaultSampler.Get(), 0);
         m_renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+
+        m_perFrameCB->UpdateConstantBuffer();
+        m_perSceneCB->UpdateConstantBuffer();
+        m_perObjectCB->UpdateConstantBuffer();
 
         m_renderer.BindConstantBuffer(
             BindTargets::VertexShader, m_perObjectCB->Get(), 0);
@@ -217,8 +201,6 @@ Game::Render() {
 
         for (const Mesh &mesh : m_meshes) {
             for (const TextureInfo &ti : mesh.GetTextures()) {
-                m_perObjectCB->SetValue("material.shininess", ti.Shininess);
-                m_perObjectCB->UpdateConstantBuffer();
                 if (ti.Type == TextureType::Diffuse) {
                     if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
                         m_renderer.BindShaderResource(
