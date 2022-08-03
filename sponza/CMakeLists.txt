@@ -4,22 +4,27 @@ set(app_source_files
         "src/main.cpp"
         "src/ModelLoader.cpp"
         "src/SponzaGame.cpp"
-        "src/AssetManager.cpp")
+        "src/AssetManager.cpp"
+        "src/ParticleSystem.cpp")
 
 set(app_header_files
         "include/ModelLoader.h"
         "include/SponzaGame.h"
         "include/Buffer.h"
-        "include/AssetManager.h")
+        "include/AssetManager.h"
+        "include/ParticleSystem.h")
 
 set(pixel_shader_files
-        shader/PhongPS.hlsl)
+        "shader/PhongPS.hlsl"
+        "shader/ParticlePS.hlsl")
 
 set(vertex_shader_files
-        shader/ColorVS.hlsl)
+        "shader/ColorVS.hlsl"
+        "shader/ParticleVS.hlsl")
 
 set(shader_header_files
-        shader/Common.hlsli)
+        "shader/Common.hlsli"
+        "shader/Particle.hlsli")
 
 add_executable("${app_name}" WIN32 "${app_source_files}" "${app_header_files}" ${pixel_shader_files} ${vertex_shader_files} ${shader_header_files})
 
