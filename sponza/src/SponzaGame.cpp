@@ -44,26 +44,35 @@ Game::UpdateImgui() {
     }
 
     if (ImGui::CollapsingHeader("Lights setting")) {
+        static int e = 0;
+        ImGui::RadioButton("First", &e, 0);
+        ImGui::SameLine();
+        ImGui::RadioButton("Second", &e, 1);
+        ImGui::SameLine();
+        ImGui::RadioButton("Third", &e, 2);
+        ImGui::SameLine();
+        ImGui::RadioButton("Fourth", &e, 3);
+
         if (ImGui::CollapsingHeader("Point light settings")) {
-            ImGui::ColorPicker4(
-                "Ambient",
-                reinterpret_cast<float *>(
-                    m_perSceneCB->GetValue<Vec4D>("pointLights[0].Ambient")));
-
-            ImGui::ColorPicker4(
-                "Diffuse",
-                reinterpret_cast<float *>(
-                    m_perSceneCB->GetValue<Vec4D>("pointLights[0].Diffuse")));
-
-            ImGui::ColorPicker4(
-                "Specular",
-                reinterpret_cast<float *>(
-                    m_perSceneCB->GetValue<Vec4D>("pointLights[0].Specular")));
+            //            ImGui::ColorPicker4(
+            //                "Ambient",
+            //                reinterpret_cast<float *>(
+            //                    m_perSceneCB->GetValue<Vec4D>("pointLights[0].Ambient")));
+            //
+            //            ImGui::ColorPicker4(
+            //                "Diffuse",
+            //                reinterpret_cast<float *>(
+            //                    m_perSceneCB->GetValue<Vec4D>("pointLights[0].Diffuse")));
+            //
+            //            ImGui::ColorPicker4(
+            //                "Specular",
+            //                reinterpret_cast<float *>(
+            //                    m_perSceneCB->GetValue<Vec4D>("pointLights[0].Specular")));
 
             ImGui::InputFloat4(
                 "Position",
-                reinterpret_cast<float *>(
-                    m_perSceneCB->GetValue<Vec4D>("pointLights[0].Position")));
+                reinterpret_cast<float *>(m_perSceneCB->GetValue<Vec4D>(
+                    UtilsFormatStr("pointLights[%d].Position", e))));
         }
     }
 }
@@ -276,8 +285,8 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
 
     m_renderer.SetDeviceResources(m_deviceResources.get());
     m_assetManager = std::make_unique<AssetManager>(*m_deviceResources);
-    m_meshes =
-        m_assetManager->LoadModel(UtilsFormatStr("%s/Sponza.gltf", SPONZA_ROOT));
+    m_meshes = m_assetManager->LoadModel(
+        UtilsFormatStr("%s/Sponza.gltf", SPONZA_ROOT));
 
     {
         DynamicConstBufferDesc perObjectDesc;

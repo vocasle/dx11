@@ -16,13 +16,17 @@ float4 main(VSOut In) : SV_TARGET
     float3 diffuseResult = {0,0,0};
     float3 specularResult = {0,0,0};
 
-    LightIntensity intensities[2];
+    LightIntensity intensities[5];
 
     intensities[0] = DirectionalLightIntensity(dirLight, normal, viewDir);
     intensities[1] = PointLightIntensity(pointLights[0], normal, In.PosW.xyz, viewDir);
+    intensities[2] = PointLightIntensity(pointLights[1], normal, In.PosW.xyz, viewDir);
+    intensities[3] = PointLightIntensity(pointLights[2], normal, In.PosW.xyz, viewDir);
+    intensities[4] = PointLightIntensity(pointLights[3], normal, In.PosW.xyz, viewDir);
+
     float3 lightDiffuseResult = {1,1,1};
     [unroll]
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 5; ++i) {
         float diff = max(dot(intensities[i].L, normal), 0);
         float3 diffuseColor = diffuseSampled.rgb * diff;
         float spec = pow(max(dot(normal, intensities[i].H), 0), 16);
@@ -30,7 +34,7 @@ float4 main(VSOut In) : SV_TARGET
 
         // TODO: Find out how to affect the area near the light source with light color? May be via Bloom?
         diffuseResult += diffuseColor * intensities[i].intensity;
-        specularResult += specularColor;
+        specularResult += specularColor * intensities[i].intensity;
         lightDiffuseResult *= intensities[i].diffuse;
     }
 
