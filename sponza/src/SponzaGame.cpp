@@ -90,7 +90,7 @@ Game::CreateDefaultSampler() {
 }
 
 Game::Game()
-    : m_camera{{0.0f, 0.0f, -5.0f}} {
+    : m_camera{{0, 10, -5}} {
     m_deviceResources = std::make_unique<DeviceResources>();
 }
 
