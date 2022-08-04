@@ -20,6 +20,7 @@ cbuffer PerObjectConstants : register(b0)
 {
 	float4x4 worldInvTranspose;
 	float4x4 world;
+	float4x4 shadowTransform;
 	Material material;
 };
 
@@ -27,7 +28,6 @@ cbuffer PerFrameConstants : register(b1)
 {
 	float4x4 view;
 	float4x4 proj;
-	float4x4 shadowTransform;
 	float3 cameraPosW;
 };
 
