@@ -216,13 +216,16 @@ ParticleSystem::CreateEmitter() {
 void
 ParticleSystem::EmitParticle() {
     Vec3D accel = m_options.accel;
-    accel.X += MathRandom(-m_options.randomFactor, m_options.randomFactor);
-    accel.Y += MathRandom(-m_options.randomFactor, m_options.randomFactor);
-    accel.Z += MathRandom(-m_options.randomFactor, m_options.randomFactor);
+    accel.X += MathRandom(-m_options.accelRandFact, m_options.accelRandFact);
+    accel.Y += MathRandom(-m_options.accelRandFact, m_options.accelRandFact);
+    accel.Z += MathRandom(-m_options.accelRandFact, m_options.accelRandFact);
     Vec3D initVel = m_options.initVel;
-    initVel.X += MathRandom(-m_options.randomFactor, m_options.randomFactor);
-    initVel.Y += MathRandom(-m_options.randomFactor, m_options.randomFactor);
-    initVel.Z += MathRandom(-m_options.randomFactor, m_options.randomFactor);
+    initVel.X +=
+        MathRandom(-m_options.initVelRandFact, m_options.initVelRandFact);
+    initVel.Y +=
+        MathRandom(-m_options.initVelRandFact, m_options.initVelRandFact);
+    initVel.Z +=
+        MathRandom(-m_options.initVelRandFact, m_options.initVelRandFact);
     Particle p = {ParticleType::Particle,
                   accel,
                   initVel,
@@ -372,58 +375,15 @@ Particle::Reset() {
 void
 ParticleSystem::ResetParticles() {
     m_particles.clear();
+    m_emitter = {ParticleType::Emitter,
+                 m_options.accel,
+                 m_options.initVel,
+                 m_options.origin,
+                 0.0f,
+                 *this};
     EmitParticle();
 }
 
-void
-ParticleSystem::SetLifespan(float lifespan) {
-    m_options.lifespan = lifespan;
-    ResetParticles();
-}
-void
-ParticleSystem::SetMaxParticles(int max) {
-    m_options.maxParticles = max;
-    ResetParticles();
-}
-void
-ParticleSystem::SetParticleSize(float width, float height) {
-    m_options.particleSize = {width, height};
-    ResetParticles();
-}
-
-void
-ParticleSystem::SetRandomFactor(float factor) {
-    m_options.randomFactor = factor;
-    ResetParticles();
-}
-
-void
-ParticleSystem::SetBurst(int burst) {
-    m_options.burst = burst;
-    ResetParticles();
-}
-
-void
-ParticleSystem::SetInitVel(const Vec3D &initVel) {
-    m_options.initVel = initVel;
-    ResetParticles();
-}
-void
-ParticleSystem::SetAccel(const Vec3D &accel) {
-    m_options.accel = accel;
-    ResetParticles();
-}
-void
-ParticleSystem::SetInitPos(const Vec3D &initPos) {
-    m_options.origin = initPos;
-    m_emitter = Particle(ParticleType::Emitter,
-                         m_options.accel,
-                         m_options.initVel,
-                         m_options.origin,
-                         m_options.lifespan,
-                         *this);
-    ResetParticles();
-}
 ParticleSystemOptions &
 ParticleSystem::GetOptions() {
     return m_options;
@@ -437,7 +397,8 @@ ParticleSystemOptions::ParticleSystemOptions()
     : isEnabled(true),
       lifespan(1),
       maxParticles(100),
-      randomFactor(0),
+      accelRandFact(0),
+      initVelRandFact(0),
       burst(1),
       particleSize(1, 1) {
 }

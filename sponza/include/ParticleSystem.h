@@ -63,10 +63,11 @@ private:
 
 struct ParticleSystemOptions {
     ParticleSystemOptions();
-    bool isEnabled{};
-    float lifespan{};
-    int maxParticles{};
-    float randomFactor{};
+    bool isEnabled;
+    float lifespan;
+    int maxParticles;
+    float accelRandFact;
+    float initVelRandFact;
     int burst{};
     Vec3D initVel;
     Vec3D accel;
@@ -88,14 +89,6 @@ public:
               const std::string &texFilePath);
     void Tick(float deltaTime);
     void UpdateVertexBuffer(ID3D11DeviceContext *context);
-    void SetLifespan(float lifespan);
-    void SetMaxParticles(int max);
-    void SetParticleSize(float width, float height);
-    void SetRandomFactor(float factor);
-    void SetBurst(int burst);
-    void SetInitVel(const Vec3D &initVel);
-    void SetAccel(const Vec3D &accel);
-    void SetInitPos(const Vec3D &initPos);
     void Reset();
 
     [[nodiscard]] ID3D11BlendState *GetBlendState() const;

@@ -82,8 +82,10 @@ Game::UpdateImgui() {
 
         ImGui::InputInt("Fire num particles",
                         &m_firePS.GetOptions().maxParticles);
-        ImGui::InputFloat("Fire random factor",
-                          &m_firePS.GetOptions().randomFactor);
+        ImGui::InputFloat("Fire accel random factor",
+                          &m_firePS.GetOptions().accelRandFact);
+        ImGui::InputFloat("Fire init vel random factor",
+                          &m_firePS.GetOptions().initVelRandFact);
         ImGui::InputInt("Fire burst (n per 100 ms)",
                         &m_firePS.GetOptions().burst);
         ImGui::InputFloat3(
@@ -92,6 +94,9 @@ Game::UpdateImgui() {
         ImGui::InputFloat3(
             "Fire accel",
             reinterpret_cast<float *>(&m_firePS.GetOptions().accel));
+        ImGui::InputFloat3(
+            "Fire pos",
+            reinterpret_cast<float *>(&m_firePS.GetOptions().origin));
         ImGui::InputFloat2(
             "Fire size",
             reinterpret_cast<float *>(&m_firePS.GetOptions().particleSize));
