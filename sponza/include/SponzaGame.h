@@ -6,16 +6,17 @@
 #include <memory>
 #include <vector>
 
+#include "AssetManager.h"
 #include "Camera.h"
 #include "DeviceResources.h"
+#include "DynamicConstBuffer.h"
 #include "Keyboard.h"
 #include "LightHelper.h"
 #include "NE_Math.h"
+#include "ParticleSystem.h"
 #include "Renderer.h"
 #include "ShaderManager.h"
 #include "Timer.h"
-#include "DynamicConstBuffer.h"
-#include "AssetManager.h"
 
 class Game {
  public:
@@ -51,4 +52,5 @@ class Game {
   std::unique_ptr<DynamicConstBuffer> m_perSceneCB;
   std::unique_ptr<DynamicConstBuffer> m_perObjectCB;
   std::unique_ptr<AssetManager> m_assetManager;
+  ParticleSystem m_firePS;
 };

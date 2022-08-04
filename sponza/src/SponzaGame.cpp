@@ -99,7 +99,8 @@ Game::CreateDefaultSampler() {
 }
 
 Game::Game()
-    : m_camera{{0, 10, -5}} {
+    : m_camera({0, 10, -5}),
+      m_firePS("fire", {}, {}, {}, m_camera) {
     m_deviceResources = std::make_unique<DeviceResources>();
 }
 
@@ -141,6 +142,9 @@ Game::Update() {
     static float elapsedTime = 0.0f;
     const auto deltaSeconds = static_cast<float>(m_timer.DeltaMillis / 1000.0);
     elapsedTime += deltaSeconds;
+
+    m_firePS.Tick(deltaSeconds);
+    m_firePS.UpdateVertexBuffer(m_deviceResources->GetDeviceContext());
 
     if (elapsedTime >= 1.0f) {
         SetWindowText(
@@ -245,6 +249,27 @@ Game::Render() {
     }
     m_deviceResources->PIXEndEvent();
 
+    m_deviceResources->PIXBeginEvent(L"Draw fire");
+    {
+        m_renderer.SetBlendState(m_firePS.GetBlendState());
+        m_renderer.SetDepthStencilState(m_firePS.GetDepthStencilState());
+        m_renderer.BindVertexShader(
+            m_shaderManager.GetVertexShader("ParticleVS"));
+        m_renderer.SetVertexBuffer(
+            m_firePS.GetVertexBuffer(), m_shaderManager.GetStrides(), 0);
+        m_renderer.SetIndexBuffer(m_firePS.GetIndexBuffer(), 0);
+        m_renderer.BindPixelShader(
+            m_shaderManager.GetPixelShader("ParticlePS"));
+        m_renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+        m_renderer.BindConstantBuffer(
+            BindTargets::VertexShader, m_perFrameCB->Get(), 0);
+        m_renderer.BindShaderResource(
+            BindTargets::PixelShader, m_firePS.GetSRV(), 0);
+        m_renderer.SetSamplerState(m_firePS.GetSamplerState(), 0);
+        m_renderer.DrawIndexed(m_firePS.GetNumIndices(), 0, 0);
+    }
+    m_deviceResources->PIXEndEvent();
+
 #if WITH_IMGUI
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
@@ -287,6 +312,10 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
     m_assetManager = std::make_unique<AssetManager>(*m_deviceResources);
     m_meshes = m_assetManager->LoadModel(
         UtilsFormatStr("%s/Sponza.gltf", SPONZA_ROOT));
+
+    m_firePS.Init(m_deviceResources->GetDevice(),
+                  m_deviceResources->GetDeviceContext(),
+                  UtilsFormatStr("%s/textures/particlePack_1.1/flame_05.png", ASSETS_ROOT));
 
     {
         DynamicConstBufferDesc perObjectDesc;
