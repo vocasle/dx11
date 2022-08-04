@@ -75,6 +75,27 @@ Game::UpdateImgui() {
                     UtilsFormatStr("pointLights[%d].Position", e))));
         }
     }
+
+    if (ImGui::CollapsingHeader("Fire")) {
+        ImGui::Checkbox("Enable fire", &m_firePS.GetOptions().isEnabled);
+        ImGui::InputFloat("Fire lifespan", &m_firePS.GetOptions().lifespan);
+
+        ImGui::InputInt("Fire num particles",
+                        &m_firePS.GetOptions().maxParticles);
+
+        ImGui::InputFloat("Fire random factor",
+                          &m_firePS.GetOptions().randomFactor);
+
+        ImGui::InputInt("Fire burst (n per 100 ms)",
+                        &m_firePS.GetOptions().burst);
+
+        ImGui::InputFloat3(
+            "Fire init vel",
+            reinterpret_cast<float *>(&m_firePS.GetOptions().initVel));
+        ImGui::InputFloat3(
+            "Fire accel",
+            reinterpret_cast<float *>(&m_firePS.GetOptions().accel));
+    }
 }
 #endif
 
@@ -315,7 +336,8 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
 
     m_firePS.Init(m_deviceResources->GetDevice(),
                   m_deviceResources->GetDeviceContext(),
-                  UtilsFormatStr("%s/textures/particlePack_1.1/flame_05.png", ASSETS_ROOT));
+                  UtilsFormatStr("%s/textures/particlePack_1.1/flame_05.png",
+                                 ASSETS_ROOT));
 
     {
         DynamicConstBufferDesc perObjectDesc;
