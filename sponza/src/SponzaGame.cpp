@@ -44,6 +44,13 @@ Game::UpdateImgui() {
     }
 
     if (ImGui::CollapsingHeader("Lights setting")) {
+        if (ImGui::CollapsingHeader("Directional light settings")) {
+            ImGui::InputFloat4(
+                "Position##PointLight",
+                reinterpret_cast<float *>(
+                    m_perSceneCB->GetValue<Vec4D>("dirLight.Position")));
+        }
+
         static int e = 0;
         ImGui::RadioButton("First", &e, 0);
         ImGui::SameLine();
@@ -212,15 +219,42 @@ Game::Render() {
     m_renderer.SetRasterizerState(m_rasterizerState.Get());
     m_renderer.SetSamplerState(m_defaultSampler.Get(), 0);
 
+    Mat4X4 shadowView = {};
+    Mat4X4 shadowProj = {};
+    BuildShadowTransform(shadowView, shadowProj);
+    m_deviceResources->PIXBeginEvent(L"Shadow pass");
+    {
+        m_shadowMap.Bind(m_deviceResources->GetDeviceContext());
+
+        m_renderer.BindPixelShader(nullptr);
+        m_renderer.BindVertexShader(
+            m_shaderManager.GetVertexShader("ShadowVS"));
+        m_renderer.BindConstantBuffer(
+            BindTargets::VertexShader, m_perObjectCB->Get(), 0);
+        m_renderer.BindConstantBuffer(
+            BindTargets::VertexShader, m_perFrameCB->Get(), 1);
+        m_renderer.SetInputLayout(m_shaderManager.GetInputLayout());
+        m_renderer.SetSamplerState(m_shadowMap.GetShadowSampler(), 1);
+        m_perFrameCB->SetValue("proj", shadowProj);
+        m_perFrameCB->SetValue("view", shadowView);
+        m_perFrameCB->UpdateConstantBuffer();
+        m_renderer.SetRasterizerState(m_shadowMap.GetRasterizerState());
+        DrawMeshes();
+        m_renderer.SetRasterizerState(nullptr);
+        m_shadowMap.Unbind(m_deviceResources->GetDeviceContext());
+        m_perFrameCB->SetValue("proj", m_camera.GetProjMat());
+        m_perFrameCB->SetValue("view", m_camera.GetViewMat());
+        m_perFrameCB->UpdateConstantBuffer();
+    }
+    m_deviceResources->PIXEndEvent();
+
     m_deviceResources->PIXBeginEvent(L"Color pass");
     // reset view proj matrix back to camera
     {
-        const Vec3D scale = {0.1f, 0.1f, 0.1f};
-        m_perObjectCB->SetValue("world", MathMat4X4ScaleFromVec3D(&scale));
+        m_perObjectCB->SetValue("world", MathMat4X4Identity());
         m_perObjectCB->SetValue("worldInvTranspose", MathMat4X4Identity());
-        m_perSceneCB->SetValue("dirLight.Diffuse",
-                               Vec4D(1.0f, 1.0f, 1.0f, 1.0f));
-        m_perSceneCB->SetValue("dirLight.Position", Vec4D(1000, 1000, 0, 1000));
+        m_perObjectCB->SetValue("shadowTransform",
+                                MathMat4X4Identity() * shadowView * shadowProj);
 
         m_renderer.BindVertexShader(m_shaderManager.GetVertexShader("ColorVS"));
         m_renderer.BindPixelShader(m_shaderManager.GetPixelShader("PhongPS"));
@@ -243,41 +277,9 @@ Game::Render() {
             BindTargets::PixelShader, m_perFrameCB->Get(), 1);
         m_renderer.BindConstantBuffer(
             BindTargets::PixelShader, m_perSceneCB->Get(), 2);
-
-        for (const Mesh &mesh : m_meshes) {
-            for (const TextureInfo &ti : mesh.GetTextures()) {
-                if (ti.Type == TextureType::Diffuse) {
-                    if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
-                        m_renderer.BindShaderResource(
-                            BindTargets::PixelShader, tex->GetSRV(), 0);
-                    }
-                }
-                if (ti.Type == TextureType::Normal) {
-                    if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
-                        m_renderer.BindShaderResource(
-                            BindTargets::PixelShader, tex->GetSRV(), 3);
-                    }
-                }
-                if (ti.Type == TextureType::Specular ||
-                    ti.Type == TextureType::Metalness) {
-                    if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
-                        m_renderer.BindShaderResource(
-                            BindTargets::PixelShader, tex->GetSRV(), 1);
-                    }
-                }
-                if (ti.Type == TextureType::Shininess ||
-                    ti.Type == TextureType::DiffuseRoughness) {
-                    if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
-                        m_renderer.BindShaderResource(
-                            BindTargets::PixelShader, tex->GetSRV(), 2);
-                    }
-                }
-            }
-            m_renderer.SetVertexBuffer(
-                mesh.GetVertexBuffer(), mesh.GetVertexSize(), 0);
-            m_renderer.SetIndexBuffer(mesh.GetIndexBuffer(), 0);
-            m_renderer.DrawIndexed(mesh.GetIndexCount(), 0, 0);
-        }
+        m_renderer.BindShaderResource(
+            BindTargets::PixelShader, m_shadowMap.GetDepthMapSRV(), 4);
+        DrawMeshes();
     }
     m_deviceResources->PIXEndEvent();
 
@@ -350,14 +352,13 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
                   UtilsFormatStr("%s/textures/particlePack_1.1/flame_05.png",
                                  ASSETS_ROOT));
 
-    m_shadowMap.InitResources(m_deviceResources->GetDevice(),
-                              m_deviceResources->GetBackBufferWidth(),
-                              m_deviceResources->GetBackBufferHeight());
+    m_shadowMap.InitResources(m_deviceResources->GetDevice(), 2048, 2048);
 
     {
         DynamicConstBufferDesc perObjectDesc;
         perObjectDesc.AddNode(Node("worldInvTranspose", NodeType::Float4X4));
         perObjectDesc.AddNode(Node("world", NodeType::Float4X4));
+        perObjectDesc.AddNode(Node("shadowTransform", NodeType::Float4X4));
         Node material("material", NodeType::Struct);
         material.AddChild("shininess", NodeType::Float);
         perObjectDesc.AddNode(material);
@@ -399,11 +400,14 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
         DynamicConstBufferDesc perFrameDesc;
         perFrameDesc.AddNode(Node("view", NodeType::Float4X4));
         perFrameDesc.AddNode(Node("proj", NodeType::Float4X4));
-        perFrameDesc.AddNode(Node("shadowTransform", NodeType::Float4X4));
         perFrameDesc.AddNode(Node("cameraPosW", NodeType::Float4));
 
         m_perFrameCB = std::make_unique<DynamicConstBuffer>(perFrameDesc,
                                                             *m_deviceResources);
+
+        m_perSceneCB->SetValue("dirLight.Diffuse",
+                               Vec4D(1.0f, 1.0f, 1.0f, 1.0f));
+        m_perSceneCB->SetValue("dirLight.Position", Vec4D(0, 10000, 0, 10000));
     }
 
 #if WITH_IMGUI
@@ -447,4 +451,63 @@ Game::CreateWindowSizeDependentResources() {
 
     m_camera.SetFov(fovAngleY);
     m_camera.SetViewDimensions(size.right, size.bottom);
+}
+void
+Game::DrawMeshes() {
+    for (const Mesh &mesh : m_meshes) {
+        for (const TextureInfo &ti : mesh.GetTextures()) {
+            if (ti.Type == TextureType::Diffuse) {
+                if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
+                    m_renderer.BindShaderResource(
+                        BindTargets::PixelShader, tex->GetSRV(), 0);
+                }
+            }
+            if (ti.Type == TextureType::Normal) {
+                if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
+                    m_renderer.BindShaderResource(
+                        BindTargets::PixelShader, tex->GetSRV(), 3);
+                }
+            }
+            if (ti.Type == TextureType::Specular ||
+                ti.Type == TextureType::Metalness) {
+                if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
+                    m_renderer.BindShaderResource(
+                        BindTargets::PixelShader, tex->GetSRV(), 1);
+                }
+            }
+            if (ti.Type == TextureType::Shininess ||
+                ti.Type == TextureType::DiffuseRoughness) {
+                if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
+                    m_renderer.BindShaderResource(
+                        BindTargets::PixelShader, tex->GetSRV(), 2);
+                }
+            }
+        }
+        m_renderer.SetVertexBuffer(
+            mesh.GetVertexBuffer(), mesh.GetVertexSize(), 0);
+        m_renderer.SetIndexBuffer(mesh.GetIndexBuffer(), 0);
+        m_renderer.DrawIndexed(mesh.GetIndexCount(), 0, 0);
+    }
+}
+
+void
+Game::BuildShadowTransform(Mat4X4 &view, Mat4X4 &proj) {
+    // Only the first "main" light casts a shadow.
+    const Vec4D dirLightPos =
+        *m_perSceneCB->GetValue<Vec4D>("dirLight.Position");
+    const Vec3D lightPos = {dirLightPos.X, dirLightPos.Y, dirLightPos.Z};
+    const Vec3D targetPos = {0.0f, 0.0f, 0.0f};
+    const Vec3D worldUp = {0.0f, 1.0f, 0.0f};
+    const float radius = MathVec3DLength(lightPos);
+
+    const Vec3D right = (targetPos - lightPos).Cross(worldUp);
+    const Vec3D up = right.Cross(targetPos - lightPos);
+
+    view = MathMat4X4ViewAt(&lightPos, &targetPos, &up);
+    proj = MathMat4X4OrthographicOffCenter(-radius,
+                                           radius,
+                                           -radius,
+                                           radius,
+                                           m_camera.GetZNear(),
+                                           m_camera.GetZFar());
 }

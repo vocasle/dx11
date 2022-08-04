@@ -36,6 +36,8 @@ class Game {
   void Render();
   void CreateRasterizerState();
   void CreateWindowSizeDependentResources();
+  void DrawMeshes();
+  void BuildShadowTransform(Mat4X4 &view, Mat4X4 &proj);
 
 #if WITH_IMGUI
   void UpdateImgui();
