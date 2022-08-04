@@ -16,3 +16,4 @@ out/
 /.vim
 .vscode/
 /sponza/log.txt
+/sponza.cap
