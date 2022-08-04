@@ -11,6 +11,7 @@
 #include "Camera.h"
 #include "DeviceResources.h"
 #include "DynamicConstBuffer.h"
+#include "DynamicCubeMap.h"
 #include "Keyboard.h"
 #include "LightHelper.h"
 #include "NE_Math.h"
@@ -21,11 +22,14 @@
 #include "Timer.h"
 
 struct Actor {
-    Actor() = default;
-    explicit Actor(std::vector<Mesh> meshes)
-        : m_meshes(std::move(meshes)) {
+    Actor()
+        : m_isVisible(true){};
+    Actor(std::vector<Mesh> meshes)
+        : m_meshes(std::move(meshes)),
+          m_isVisible(true) {
     }
     std::vector<Mesh> m_meshes;
+    bool m_isVisible;
 };
 
 class Game {
@@ -67,4 +71,5 @@ private:
     std::unique_ptr<AssetManager> m_assetManager;
     ParticleSystem m_firePS;
     ShadowMap m_shadowMap;
+    DynamicCubeMap m_dynamicCubeMap;
 };

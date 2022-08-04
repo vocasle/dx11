@@ -248,6 +248,53 @@ Game::Render() {
     }
     m_deviceResources->PIXEndEvent();
 
+    m_deviceResources->PIXBeginEvent(L"Dynamic cube map pass");
+    {
+        m_renderer.SetDepthStencilState(nullptr);
+        m_renderer.SetViewport(m_dynamicCubeMap.GetViewport());
+        static const float BLACK_COLOR[4] = {0, 0, 0, 1};
+        m_actors[1].m_isVisible = false;
+        for (int i = 0; i < 6; ++i) {
+            // Clear cube map face and depth buffer.
+
+            m_renderer.ClearRenderTargetView(m_dynamicCubeMap.GetRTV(i),
+                                             BLACK_COLOR);
+            m_renderer.ClearDepthStencilView(
+                m_dynamicCubeMap.GetDSV(),
+                D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+                1.0f,
+                0);
+            // Bind cube map face as render target.
+            // m_renderer.
+            m_renderer.SetRenderTargets(m_dynamicCubeMap.GetRTV(i),
+                                        m_dynamicCubeMap.GetDSV());
+
+            m_perFrameCB->SetValue(
+                "cameraPosW", Vec4D(m_dynamicCubeMap.GetCamera(i).GetPos(), 0));
+            m_perFrameCB->SetValue("view",
+                                   m_dynamicCubeMap.GetCamera(i).GetViewMat());
+            m_perFrameCB->SetValue("proj",
+                                   m_dynamicCubeMap.GetCamera(i).GetProjMat());
+            m_perFrameCB->UpdateConstantBuffer();
+            DrawActors();
+            m_renderer.SetDepthStencilState(nullptr);
+        }
+
+        // reset viewport
+        m_renderer.SetViewport(m_deviceResources->GetViewport());
+        m_renderer.SetRenderTargets(m_deviceResources->GetRenderTargetView(),
+                                    m_deviceResources->GetDepthStencilView());
+        m_renderer.Clear(BLACK_COLOR);
+        m_actors[1].m_isVisible = true;
+        m_renderer.SetRasterizerState(nullptr);
+        m_renderer.SetDepthStencilState(nullptr);
+        m_perFrameCB->SetValue("proj", m_camera.GetProjMat());
+        m_perFrameCB->SetValue("view", m_camera.GetViewMat());
+        m_perFrameCB->SetValue("cameraPosW", Vec4D(m_camera.GetPos(), 0));
+        m_perFrameCB->UpdateConstantBuffer();
+    }
+    m_deviceResources->PIXEndEvent();
+
     m_deviceResources->PIXBeginEvent(L"Color pass");
     // reset view proj matrix back to camera
     {
@@ -359,6 +406,9 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
     const int shadowMapSize = 2048;
     m_shadowMap.InitResources(
         m_deviceResources->GetDevice(), shadowMapSize, shadowMapSize);
+
+    m_dynamicCubeMap.Init(m_deviceResources->GetDevice());
+    m_dynamicCubeMap.BuildCubeFaceCamera({0, 0, 0});
 
     {
         DynamicConstBufferDesc perObjectDesc;
@@ -520,6 +570,7 @@ Game::BuildShadowTransform(Mat4X4 &view, Mat4X4 &proj) {
 void
 Game::DrawActors() {
     for (const Actor &actor : m_actors) {
-        DrawMeshes(actor.m_meshes);
+        if (actor.m_isVisible)
+            DrawMeshes(actor.m_meshes);
     }
 }
