@@ -15,16 +15,19 @@ public:
     Actor();
     explicit Actor(std::vector<Mesh> meshes);
 
-    bool IsVisible() const;
-    const std::vector<Mesh> &GetMeshes() const;
+    [[nodiscard]] bool IsVisible() const;
+    [[nodiscard]] const std::vector<Mesh> &GetMeshes() const;
     [[nodiscard]] Mat4X4 GetWorld() const;
+    [[nodiscard]] float GetRoughness() const;
 
     void SetVisible(bool isVisible);
     void SetWorld(const Mat4X4 &world);
+    void SetRoughness(float roughness);
 
 private:
     std::vector<Mesh> m_meshes;
     bool m_isVisible;
     Mat4X4 m_world;
+    float m_roughness;
 };
 #endif  // DX11_JUNIOR_ROADMAP_ACTOR_H

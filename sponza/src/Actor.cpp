@@ -6,12 +6,14 @@
 
 Actor::Actor()
     : m_isVisible(true),
-      m_world(MathMat4X4Identity()){};
+      m_world(MathMat4X4Identity()),
+      m_roughness(1){};
 
 Actor::Actor(std::vector<Mesh> meshes)
     : m_meshes(std::move(meshes)),
       m_isVisible(true),
-      m_world(MathMat4X4Identity()) {
+      m_world(MathMat4X4Identity()),
+      m_roughness(1) {
 }
 const std::vector<Mesh> &
 Actor::GetMeshes() const {
@@ -34,4 +36,12 @@ Actor::IsVisible() const {
 Mat4X4
 Actor::GetWorld() const {
     return m_world;
+}
+float
+Actor::GetRoughness() const {
+    return m_roughness;
+}
+void
+Actor::SetRoughness(float roughness) {
+    m_roughness = roughness;
 }
