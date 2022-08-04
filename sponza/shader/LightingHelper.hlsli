@@ -29,7 +29,7 @@ struct SpotLight
 
 struct Material
 {
-	float shininess;
+	float roughness;
 };
 
 struct LightIntensity
