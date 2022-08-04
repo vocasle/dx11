@@ -82,19 +82,23 @@ Game::UpdateImgui() {
 
         ImGui::InputInt("Fire num particles",
                         &m_firePS.GetOptions().maxParticles);
-
         ImGui::InputFloat("Fire random factor",
                           &m_firePS.GetOptions().randomFactor);
-
         ImGui::InputInt("Fire burst (n per 100 ms)",
                         &m_firePS.GetOptions().burst);
-
         ImGui::InputFloat3(
             "Fire init vel",
             reinterpret_cast<float *>(&m_firePS.GetOptions().initVel));
         ImGui::InputFloat3(
             "Fire accel",
             reinterpret_cast<float *>(&m_firePS.GetOptions().accel));
+        ImGui::InputFloat2(
+            "Fire size",
+            reinterpret_cast<float *>(&m_firePS.GetOptions().particleSize));
+
+        if (ImGui::Button("Update")) {
+            m_firePS.Reset();
+        }
     }
 }
 #endif
@@ -121,7 +125,7 @@ Game::CreateDefaultSampler() {
 
 Game::Game()
     : m_camera({0, 10, -5}),
-      m_firePS("fire", {}, {}, {}, m_camera) {
+      m_firePS("fire", {0, 0, 0}, {0, 10, 0}, {0, 0, 0}, m_camera) {
     m_deviceResources = std::make_unique<DeviceResources>();
 }
 

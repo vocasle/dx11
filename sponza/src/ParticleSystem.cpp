@@ -81,7 +81,6 @@ void
 ParticleSystem::CreateTexture(ID3D11Device *device,
                               ID3D11DeviceContext *context,
                               const std::string &filepath) {
-    D3D11_TEXTURE2D_DESC desc = {};
     Image image{filepath};
 
     ComPtr<ID3D11Texture2D> texture;
@@ -228,7 +227,7 @@ ParticleSystem::EmitParticle() {
                   accel,
                   initVel,
                   m_emitter.GetInitPos(),
-                  0.0f,
+                  0,
                   *this};
     p.CreateQuad(m_options.particleSize.X,
                  m_options.particleSize.Y,
@@ -437,9 +436,10 @@ ParticleSystem::GetOptions() const {
 ParticleSystemOptions::ParticleSystemOptions()
     : isEnabled(true),
       lifespan(1),
-      maxParticles(1),
+      maxParticles(100),
       randomFactor(0),
-      burst(1) {
+      burst(1),
+      particleSize(1, 1) {
 }
 
 ID3D11SamplerState *
@@ -477,6 +477,10 @@ size_t
 ParticleSystem::GetNumIndices() const {
     return m_indices.size();
 }
+void
+ParticleSystem::Reset() {
+    ResetParticles();
+}
 
 const Vec3D &
 Particle::GetAccel() const {
@@ -510,5 +514,6 @@ const std::array<uint32_t, 6> &
 Particle::GetIndices() const {
     return m_indices;
 }
-Particle::Vertex::Vertex(): Lifespan(0) {
+Particle::Vertex::Vertex()
+    : Lifespan(0) {
 }

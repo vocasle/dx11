@@ -96,6 +96,7 @@ public:
     void SetInitVel(const Vec3D &initVel);
     void SetAccel(const Vec3D &accel);
     void SetInitPos(const Vec3D &initPos);
+    void Reset();
 
     [[nodiscard]] ID3D11BlendState *GetBlendState() const;
     [[nodiscard]] ID3D11DepthStencilState *GetDepthStencilState() const;
