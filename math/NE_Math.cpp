@@ -1076,6 +1076,11 @@ operator*(const float s, const Vec3D &rhs) {
     return rhs * s;
 }
 
+Mat4X4
+MathMat4X4ScaleFromVec3D(const Vec3D &scale) {
+    return MathMat4X4ScaleFromVec3D(&scale);
+}
+
 Vec3D
 Vec3D::Cross(const Vec3D &rhs) const {
     return MathVec3DCross(this, &rhs);
