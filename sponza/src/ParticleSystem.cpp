@@ -441,3 +441,74 @@ ParticleSystemOptions::ParticleSystemOptions()
       randomFactor(0),
       burst(1) {
 }
+
+ID3D11SamplerState *
+ParticleSystem::GetSamplerState() const {
+    return m_sampler.Get();
+}
+
+ID3D11ShaderResourceView *
+ParticleSystem::GetSRV() const {
+    return m_diffuseTexture.Get();
+}
+
+std::string
+ParticleSystem::GetName() const {
+    return m_name;
+}
+
+ID3D11BlendState *
+ParticleSystem::GetBlendState() const {
+    return m_blendState.Get();
+}
+ID3D11DepthStencilState *
+ParticleSystem::GetDepthStencilState() const {
+    return m_depthStencilState.Get();
+}
+ID3D11Buffer *
+ParticleSystem::GetVertexBuffer() const {
+    return m_vertexBuffer.Get();
+}
+ID3D11Buffer *
+ParticleSystem::GetIndexBuffer() const {
+    return m_indexBuffer.Get();
+}
+size_t
+ParticleSystem::GetNumIndices() const {
+    return m_indices.size();
+}
+
+const Vec3D &
+Particle::GetAccel() const {
+    return m_accel;
+}
+const Vec3D &
+Particle::GetInitVel() const {
+    return m_initVel;
+}
+const Vec3D &
+Particle::GetInitPos() const {
+    return m_initPos;
+}
+const Vec3D &
+Particle::GetPos() const {
+    return m_pos;
+}
+float
+Particle::GetLifespan() const {
+    return m_lifespan;
+}
+ParticleType
+Particle::GetParticleType() const {
+    return m_type;
+}
+const std::array<Particle::Vertex, 4> &
+Particle::GetVertices() const {
+    return m_vertices;
+}
+const std::array<uint32_t, 6> &
+Particle::GetIndices() const {
+    return m_indices;
+}
+Particle::Vertex::Vertex(): Lifespan(0) {
+}

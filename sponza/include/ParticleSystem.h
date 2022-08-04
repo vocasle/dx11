@@ -19,6 +19,7 @@ class ParticleSystem;
 class Particle {
 public:
     struct Vertex {
+        Vertex();
         Vec3D Position;
         Vec2D TexCoords;
         float Lifespan;
@@ -28,7 +29,7 @@ public:
              const Vec3D &accel,
              const Vec3D &initVel,
              const Vec3D &initPos,
-             const float lifespan,
+             float lifespan,
              const ParticleSystem &ps);
     Particle(const Particle &rhs);
     Particle &operator=(const Particle &rhs);
@@ -36,40 +37,16 @@ public:
                     float height,
                     const Vec3D &up,
                     const Vec3D &right);
-    const Vec3D &
-    GetAccel() const {
-        return m_accel;
-    }
-    const Vec3D &
-    GetInitVel() const {
-        return m_initVel;
-    }
-    const Vec3D &
-    GetInitPos() const {
-        return m_initPos;
-    }
-    const Vec3D &
-    GetPos() const {
-        return m_pos;
-    }
-    float
-    GetLifespan() const {
-        return m_lifespan;
-    }
-    ParticleType
-    GetParticleType() const {
-        return m_type;
-    }
-    const std::array<Vertex, 4> &
-    GetVertices() const {
-        return m_vertices;
-    }
-    const std::array<uint32_t, 6> &
-    GetIndices() const {
-        return m_indices;
-    }
-    void Tick(const float deltaTime);
-    bool IsAlive() const;
+    [[nodiscard]] const Vec3D &GetAccel() const;
+    [[nodiscard]] const Vec3D &GetInitVel() const;
+    [[nodiscard]] const Vec3D &GetInitPos() const;
+    [[nodiscard]] const Vec3D &GetPos() const;
+    [[nodiscard]] float GetLifespan() const;
+    [[nodiscard]] ParticleType GetParticleType() const;
+    [[nodiscard]] const std::array<Vertex, 4> &GetVertices() const;
+    [[nodiscard]] const std::array<uint32_t, 6> &GetIndices() const;
+    void Tick(float deltaTime);
+    [[nodiscard]] bool IsAlive() const;
     void Reset();
 
 private:
@@ -109,7 +86,7 @@ public:
     void Init(ID3D11Device *device,
               ID3D11DeviceContext *context,
               const std::string &texFilePath);
-    void Tick(const float deltaTime);
+    void Tick(float deltaTime);
     void UpdateVertexBuffer(ID3D11DeviceContext *context);
     void SetLifespan(float lifespan);
     void SetMaxParticles(int max);
@@ -120,42 +97,18 @@ public:
     void SetAccel(const Vec3D &accel);
     void SetInitPos(const Vec3D &initPos);
 
-    ID3D11BlendState *
-    GetBlendState() const {
-        return m_blendState.Get();
-    }
-    ID3D11DepthStencilState *
-    GetDepthStencilState() const {
-        return m_depthStencilState.Get();
-    }
-    ID3D11Buffer *
-    GetVertexBuffer() const {
-        return m_vertexBuffer.Get();
-    }
-    ID3D11Buffer *
-    GetIndexBuffer() const {
-        return m_indexBuffer.Get();
-    }
-    size_t
-    GetNumIndices() const {
-        return m_indices.size();
-    }
-    std::string
-    GetName() const {
-        return m_name;
-    }
-    ID3D11ShaderResourceView *
-    GetSRV() const {
-        return m_diffuseTexture.Get();
-    }
-    ID3D11SamplerState *
-    GetSamplerState() const {
-        return m_sampler.Get();
-    }
-    size_t GetNumAliveParticles() const;
+    [[nodiscard]] ID3D11BlendState *GetBlendState() const;
+    [[nodiscard]] ID3D11DepthStencilState *GetDepthStencilState() const;
+    [[nodiscard]] ID3D11Buffer *GetVertexBuffer() const;
+    [[nodiscard]] ID3D11Buffer *GetIndexBuffer() const;
+    [[nodiscard]] size_t GetNumIndices() const;
+    [[nodiscard]] std::string GetName() const;
+    [[nodiscard]] ID3D11ShaderResourceView *GetSRV() const;
+    [[nodiscard]] ID3D11SamplerState *GetSamplerState() const;
+    [[nodiscard]] size_t GetNumAliveParticles() const;
 
     ParticleSystemOptions &GetOptions();
-    const ParticleSystemOptions &GetOptions() const;
+    [[nodiscard]] const ParticleSystemOptions &GetOptions() const;
 
 private:
     void CreateTexture(ID3D11Device *device,
@@ -173,13 +126,10 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D11BlendState> m_blendState;
     Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_depthStencilState;
-
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_indexBuffer;
-
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_diffuseTexture;
     Microsoft::WRL::ComPtr<ID3D11SamplerState> m_sampler;
-
     std::string m_name;
     std::vector<Particle> m_particles;
     std::vector<Particle::Vertex> m_vertices;
