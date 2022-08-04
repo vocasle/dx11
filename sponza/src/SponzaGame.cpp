@@ -519,8 +519,7 @@ Game::BuildShadowTransform(Mat4X4 &view, Mat4X4 &proj) {
 }
 void
 Game::DrawActors() {
-    //    for (const Actor &actor : m_actors) {
-    //        DrawMeshes(actor.m_meshes);
-    //    }
-    DrawMeshes(m_actors[1].m_meshes);
+    for (const Actor &actor : m_actors) {
+        DrawMeshes(actor.m_meshes);
+    }
 }
