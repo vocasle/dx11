@@ -95,7 +95,7 @@ ShadowMap::Unbind(ID3D11DeviceContext *ctx) {
 void
 ShadowMap::CreateRasterizerState(ID3D11Device *device) {
     CD3D11_RASTERIZER_DESC desc{CD3D11_DEFAULT()};
-    desc.DepthBias = 10000;
+    desc.DepthBias = 1000;
 
     HR(device->CreateRasterizerState(
         &desc, m_rasterizerState.ReleaseAndGetAddressOf()))
