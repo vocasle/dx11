@@ -96,6 +96,7 @@ void
 ShadowMap::CreateRasterizerState(ID3D11Device *device) {
     CD3D11_RASTERIZER_DESC desc{CD3D11_DEFAULT()};
     desc.DepthBias = 1000;
+    desc.CullMode = D3D11_CULL_FRONT;
 
     HR(device->CreateRasterizerState(
         &desc, m_rasterizerState.ReleaseAndGetAddressOf()))
