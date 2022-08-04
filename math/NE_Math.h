@@ -295,6 +295,8 @@ Mat4X4 MathMat4X4ScaleFromVec3D(const Vec3D &scale);
 
 Mat4X4 MathMat4X4TranslateFromVec3D(const Vec3D *offset);
 
+Mat4X4 MathMat4X4TranslateFromVec3D(const Vec3D &offset);
+
 Mat4X4 MathMat4X4RotateFromVec3D(const Vec3D *angles);
 
 float MathMat4X4Determinant(const Mat4X4 *mat);

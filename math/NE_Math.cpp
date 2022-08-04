@@ -1080,6 +1080,10 @@ Mat4X4
 MathMat4X4ScaleFromVec3D(const Vec3D &scale) {
     return MathMat4X4ScaleFromVec3D(&scale);
 }
+Mat4X4
+MathMat4X4TranslateFromVec3D(const Vec3D &offset) {
+    return MathMat4X4TranslateFromVec3D(&offset);
+}
 
 Vec3D
 Vec3D::Cross(const Vec3D &rhs) const {
