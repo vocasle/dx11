@@ -30,6 +30,14 @@ Game::UpdateImgui() {
         m_shaderManager.Recompile(m_deviceResources->GetDevice());
     }
 
+    if (ImGui::CollapsingHeader("Suzanne settings")) {
+        static float roughness = m_actors[1].GetRoughness();
+        ImGui::InputFloat("Roughness##Suzanne", &roughness);
+        if (roughness != m_actors[1].GetRoughness()) {
+            m_actors[1].SetRoughness(roughness);
+        }
+    }
+
     if (ImGui::CollapsingHeader("Camera settings")) {
         static float zFar = m_camera.GetZFar();
         static float zNear = m_camera.GetZNear();
@@ -253,21 +261,14 @@ Game::Render() {
         m_renderer.SetDepthStencilState(nullptr);
         m_renderer.SetViewport(m_dynamicCubeMap.GetViewport());
         m_actors[1].SetVisible(false);
+        m_renderer.BindVertexShader(m_shaderManager.GetVertexShader("ColorVS"));
+        m_renderer.BindPixelShader(m_shaderManager.GetPixelShader("PhongPS"));
         for (int i = 0; i < 6; ++i) {
-            // Clear cube map face and depth buffer.
-
-            m_renderer.ClearRenderTargetView(m_dynamicCubeMap.GetRTV(i),
-                                             CLEAR_COLOR);
-            m_renderer.ClearDepthStencilView(
-                m_dynamicCubeMap.GetDSV(),
-                D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-                1.0f,
-                0);
             // Bind cube map face as render target.
-            // m_renderer.
             m_renderer.SetRenderTargets(m_dynamicCubeMap.GetRTV(i),
                                         m_dynamicCubeMap.GetDSV());
-
+            // Clear cube map face and depth buffer.
+            m_renderer.Clear(CLEAR_COLOR);
             m_perFrameCB->SetValue(
                 "cameraPosW", Vec4D(m_dynamicCubeMap.GetCamera(i).GetPos(), 0));
             m_perFrameCB->SetValue("view",
@@ -400,6 +401,7 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
     m_actors.emplace_back(m_assetManager->LoadModel(
         UtilsFormatStr("%s/Suzanne/glTF/Suzanne.gltf", ASSETS_ROOT)));
     m_actors[0].SetWorld(MathMat4X4ScaleFromVec3D({0.5f, 0.5f, 0.5f}));
+    m_actors[1].SetRoughness(0.1f);
     m_actors[1].SetWorld(MathMat4X4ScaleFromVec3D({10, 10, 10}) *
                          MathMat4X4TranslateFromVec3D({0, 20, 0}));
 
@@ -421,8 +423,7 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
         perObjectDesc.AddNode(Node("world", NodeType::Float4X4));
         perObjectDesc.AddNode(Node("shadowTransform", NodeType::Float4X4));
         Node material("material", NodeType::Struct);
-        material.AddChild("shininess", NodeType::Float);
-        material.AddChild("reflection", NodeType::Float);
+        material.AddChild("roughness", NodeType::Float);
         perObjectDesc.AddNode(material);
 
         m_perObjectCB = std::make_unique<DynamicConstBuffer>(
@@ -577,6 +578,7 @@ void
 Game::DrawActors() {
     for (const Actor &actor : m_actors) {
         if (actor.IsVisible()) {
+            m_perObjectCB->SetValue("material.roughness", actor.GetRoughness());
             m_perObjectCB->SetValue("world", actor.GetWorld());
             m_perObjectCB->UpdateConstantBuffer();
             DrawMeshes(actor.GetMeshes());
