@@ -23,13 +23,16 @@
 
 struct Actor {
     Actor()
-        : m_isVisible(true){};
-    Actor(std::vector<Mesh> meshes)
+        : m_isVisible(true),
+          m_world(MathMat4X4Identity()){};
+    explicit Actor(std::vector<Mesh> meshes)
         : m_meshes(std::move(meshes)),
-          m_isVisible(true) {
+          m_isVisible(true),
+          m_world(MathMat4X4Identity()) {
     }
     std::vector<Mesh> m_meshes;
     bool m_isVisible;
+    Mat4X4 m_world;
 };
 
 class Game {

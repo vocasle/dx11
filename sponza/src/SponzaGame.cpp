@@ -396,6 +396,9 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
         UtilsFormatStr("%s/Sponza.gltf", SPONZA_ROOT)));
     m_actors.emplace_back(m_assetManager->LoadModel(
         UtilsFormatStr("%s/Suzanne/glTF/Suzanne.gltf", ASSETS_ROOT)));
+    m_actors[0].m_world = MathMat4X4ScaleFromVec3D({0.5f, 0.5f, 0.5f});
+    m_actors[1].m_world = MathMat4X4ScaleFromVec3D({10, 10, 10}) *
+                          MathMat4X4TranslateFromVec3D({0, 20, 0});
 
     m_firePS.Init(m_deviceResources->GetDevice(),
                   m_deviceResources->GetDeviceContext(),
@@ -569,7 +572,10 @@ Game::BuildShadowTransform(Mat4X4 &view, Mat4X4 &proj) {
 void
 Game::DrawActors() {
     for (const Actor &actor : m_actors) {
-        if (actor.m_isVisible)
+        if (actor.m_isVisible) {
+            m_perObjectCB->SetValue("world", actor.m_world);
+            m_perObjectCB->UpdateConstantBuffer();
             DrawMeshes(actor.m_meshes);
+        }
     }
 }
