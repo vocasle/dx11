@@ -7,7 +7,8 @@ set(app_source_files
         "src/AssetManager.cpp"
         "src/ParticleSystem.cpp"
         "src/ShadowMap.cpp"
-        "src/DynamicCubeMap.cpp")
+        "src/DynamicCubeMap.cpp"
+        src/Actor.cpp)
 
 set(app_header_files
         "include/ModelLoader.h"
@@ -16,7 +17,8 @@ set(app_header_files
         "include/AssetManager.h"
         "include/ParticleSystem.h"
         "include/ShadowMap.h"
-        "include/DynamicCubeMap.h")
+        "include/DynamicCubeMap.h"
+        include/Actor.h)
 
 set(pixel_shader_files
         "shader/PhongPS.hlsl"

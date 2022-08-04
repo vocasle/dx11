@@ -252,7 +252,7 @@ Game::Render() {
     {
         m_renderer.SetDepthStencilState(nullptr);
         m_renderer.SetViewport(m_dynamicCubeMap.GetViewport());
-        m_actors[1].m_isVisible = false;
+        m_actors[1].SetVisible(false);
         for (int i = 0; i < 6; ++i) {
             // Clear cube map face and depth buffer.
 
@@ -284,7 +284,7 @@ Game::Render() {
         m_renderer.SetRenderTargets(m_deviceResources->GetRenderTargetView(),
                                     m_deviceResources->GetDepthStencilView());
         m_renderer.Clear(CLEAR_COLOR);
-        m_actors[1].m_isVisible = true;
+        m_actors[1].SetVisible(true);
         m_renderer.SetRasterizerState(nullptr);
         m_renderer.SetDepthStencilState(nullptr);
         m_perFrameCB->SetValue("proj", m_camera.GetProjMat());
@@ -326,8 +326,11 @@ Game::Render() {
         m_renderer.BindShaderResource(
             BindTargets::PixelShader, m_shadowMap.GetDepthMapSRV(), 4);
         m_renderer.SetSamplerState(m_shadowMap.GetShadowSampler(), 1);
+        m_renderer.BindShaderResource(
+            BindTargets::PixelShader, m_dynamicCubeMap.GetSRV(), 6);
         DrawActors();
         m_renderer.SetSamplerState(nullptr, 1);
+        m_renderer.BindShaderResource(BindTargets::PixelShader, nullptr, 6);
     }
     m_deviceResources->PIXEndEvent();
 
@@ -396,9 +399,9 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
         UtilsFormatStr("%s/Sponza.gltf", SPONZA_ROOT)));
     m_actors.emplace_back(m_assetManager->LoadModel(
         UtilsFormatStr("%s/Suzanne/glTF/Suzanne.gltf", ASSETS_ROOT)));
-    m_actors[0].m_world = MathMat4X4ScaleFromVec3D({0.5f, 0.5f, 0.5f});
-    m_actors[1].m_world = MathMat4X4ScaleFromVec3D({10, 10, 10}) *
-                          MathMat4X4TranslateFromVec3D({0, 20, 0});
+    m_actors[0].SetWorld(MathMat4X4ScaleFromVec3D({0.5f, 0.5f, 0.5f}));
+    m_actors[1].SetWorld(MathMat4X4ScaleFromVec3D({10, 10, 10}) *
+                         MathMat4X4TranslateFromVec3D({0, 20, 0}));
 
     m_firePS.Init(m_deviceResources->GetDevice(),
                   m_deviceResources->GetDeviceContext(),
@@ -419,6 +422,7 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
         perObjectDesc.AddNode(Node("shadowTransform", NodeType::Float4X4));
         Node material("material", NodeType::Struct);
         material.AddChild("shininess", NodeType::Float);
+        material.AddChild("reflection", NodeType::Float);
         perObjectDesc.AddNode(material);
 
         m_perObjectCB = std::make_unique<DynamicConstBuffer>(
@@ -572,10 +576,10 @@ Game::BuildShadowTransform(Mat4X4 &view, Mat4X4 &proj) {
 void
 Game::DrawActors() {
     for (const Actor &actor : m_actors) {
-        if (actor.m_isVisible) {
-            m_perObjectCB->SetValue("world", actor.m_world);
+        if (actor.IsVisible()) {
+            m_perObjectCB->SetValue("world", actor.GetWorld());
             m_perObjectCB->UpdateConstantBuffer();
-            DrawMeshes(actor.m_meshes);
+            DrawMeshes(actor.GetMeshes());
         }
     }
 }
