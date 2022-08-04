@@ -22,7 +22,8 @@ set(pixel_shader_files
 
 set(vertex_shader_files
         "shader/ColorVS.hlsl"
-        "shader/ParticleVS.hlsl")
+        "shader/ParticleVS.hlsl"
+        "shader/ShadowVS.hlsl")
 
 set(shader_header_files
         "shader/Common.hlsli"
