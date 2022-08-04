@@ -173,8 +173,10 @@ Game::Update() {
     const auto deltaSeconds = static_cast<float>(m_timer.DeltaMillis / 1000.0);
     elapsedTime += deltaSeconds;
 
-    m_firePS.Tick(deltaSeconds);
-    m_firePS.UpdateVertexBuffer(m_deviceResources->GetDeviceContext());
+    if (m_firePS.GetOptions().isEnabled) {
+        m_firePS.Tick(deltaSeconds);
+        m_firePS.UpdateVertexBuffer(m_deviceResources->GetDeviceContext());
+    }
 
     if (elapsedTime >= 1.0f) {
         SetWindowText(
@@ -279,8 +281,8 @@ Game::Render() {
     }
     m_deviceResources->PIXEndEvent();
 
-    m_deviceResources->PIXBeginEvent(L"Draw fire");
-    {
+    if (m_firePS.GetOptions().isEnabled) {
+        m_deviceResources->PIXBeginEvent(L"Draw fire");
         m_renderer.SetBlendState(m_firePS.GetBlendState());
         m_renderer.SetDepthStencilState(m_firePS.GetDepthStencilState());
         m_renderer.BindVertexShader(
@@ -297,8 +299,8 @@ Game::Render() {
             BindTargets::PixelShader, m_firePS.GetSRV(), 0);
         m_renderer.SetSamplerState(m_firePS.GetSamplerState(), 0);
         m_renderer.DrawIndexed(m_firePS.GetNumIndices(), 0, 0);
+        m_deviceResources->PIXEndEvent();
     }
-    m_deviceResources->PIXEndEvent();
 
 #if WITH_IMGUI
     ImGui::Render();
