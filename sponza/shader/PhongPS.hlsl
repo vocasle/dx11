@@ -29,9 +29,20 @@ float4 main(VSOut In) : SV_TARGET
 
     const float strength = dot(diffuseResult, specularResult);
     float shadow = 1;
+    static const float dx = 1.0 / 2048.0;
+    const float2 texelSize = {dx, dx};
     if (In.ShadowPosH.z > shadowSampled.x)
     {
-        shadow = 0.01;
+        [unroll]
+        for (int x = -1; x <= 1; ++x) {
+            [unroll]
+            for (int y = -1; y <= 1; ++y) {
+//                const float pcfDepth = shadowTexture.Sample(defaultSampler, shadowUV + float2(x,y) * texelSize).r;
+                const float pcfDepth = shadowTexture.SampleCmpLevelZero(shadowSampler, shadowUV + float2(x,y) * texelSize, In.ShadowPosH.z).r;
+                shadow += pcfDepth;
+            }
+        }
+        shadow /= 9.0;
     }
 
     float3 lightDiffuseResult = {1,1,1};
