@@ -24,7 +24,11 @@ class ShadowMap {
 		return m_ShadowSampler.Get();
 	}
 
+        ID3D11RasterizerState *GetRasterizerState() const;
+
     private:
+        void CreateRasterizerState(ID3D11Device* device);
+
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_pOutputTextureSRV;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_pOutputTextureDSV;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_ShadowSampler;
@@ -33,4 +37,5 @@ class ShadowMap {
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_cachedRTV;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_cachedDSV;
 	D3D11_VIEWPORT m_cachedViewPort;
+        Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerState;
 };
