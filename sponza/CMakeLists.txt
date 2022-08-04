@@ -5,14 +5,16 @@ set(app_source_files
         "src/ModelLoader.cpp"
         "src/SponzaGame.cpp"
         "src/AssetManager.cpp"
-        "src/ParticleSystem.cpp")
+        "src/ParticleSystem.cpp"
+        "src/ShadowMap.cpp")
 
 set(app_header_files
         "include/ModelLoader.h"
         "include/SponzaGame.h"
         "include/Buffer.h"
         "include/AssetManager.h"
-        "include/ParticleSystem.h")
+        "include/ParticleSystem.h"
+        "include/ShadowMap.h")
 
 set(pixel_shader_files
         "shader/PhongPS.hlsl"

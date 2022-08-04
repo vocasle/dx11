@@ -350,6 +350,10 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
                   UtilsFormatStr("%s/textures/particlePack_1.1/flame_05.png",
                                  ASSETS_ROOT));
 
+    m_shadowMap.InitResources(m_deviceResources->GetDevice(),
+                              m_deviceResources->GetBackBufferWidth(),
+                              m_deviceResources->GetBackBufferHeight());
+
     {
         DynamicConstBufferDesc perObjectDesc;
         perObjectDesc.AddNode(Node("worldInvTranspose", NodeType::Float4X4));

@@ -17,6 +17,7 @@
 #include "Renderer.h"
 #include "ShaderManager.h"
 #include "Timer.h"
+#include "ShadowMap.h"
 
 class Game {
  public:
@@ -53,4 +54,5 @@ class Game {
   std::unique_ptr<DynamicConstBuffer> m_perObjectCB;
   std::unique_ptr<AssetManager> m_assetManager;
   ParticleSystem m_firePS;
+  ShadowMap m_shadowMap;
 };
