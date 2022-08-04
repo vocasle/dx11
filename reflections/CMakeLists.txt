@@ -64,7 +64,11 @@ add_executable(${current_target} WIN32 ${sources} ${headers} ${pixel_shaders} ${
 
 target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib imgui)
 
-target_compile_definitions(${current_target} PUBLIC 
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
+	set(CMAKE_BUILD_TYPE "Debug")
+endif()
+
+target_compile_definitions(${current_target} PUBLIC
 	ASSETS_ROOT="${assets_root}"
 	NOMINMAX=1
 	WITH_IMGUI=1
