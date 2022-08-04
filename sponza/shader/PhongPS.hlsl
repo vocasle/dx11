@@ -59,5 +59,7 @@ float4 main(VSOut In) : SV_TARGET
         lightDiffuseResult *= intensities[i].diffuse;
     }
 
+//    return float4(float3(0.5,0.5,0.5) * intensities[0].intensity, 1); diffuse shading for debug purposes
+
     return float4(AMBIENT * lightDiffuseResult + shadow * (diffuseResult + specularResult), 1);
 }
