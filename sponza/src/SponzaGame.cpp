@@ -239,7 +239,7 @@ Game::Render() {
         m_perFrameCB->SetValue("view", shadowView);
         m_perFrameCB->UpdateConstantBuffer();
         m_renderer.SetRasterizerState(m_shadowMap.GetRasterizerState());
-        DrawMeshes();
+        DrawActors();
         m_renderer.SetRasterizerState(nullptr);
         m_shadowMap.Unbind(m_deviceResources->GetDeviceContext());
         m_perFrameCB->SetValue("proj", m_camera.GetProjMat());
@@ -280,7 +280,7 @@ Game::Render() {
         m_renderer.BindShaderResource(
             BindTargets::PixelShader, m_shadowMap.GetDepthMapSRV(), 4);
         m_renderer.SetSamplerState(m_shadowMap.GetShadowSampler(), 1);
-        DrawMeshes();
+        DrawActors();
         m_renderer.SetSamplerState(nullptr, 1);
     }
     m_deviceResources->PIXEndEvent();
@@ -346,8 +346,10 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
 
     m_renderer.SetDeviceResources(m_deviceResources.get());
     m_assetManager = std::make_unique<AssetManager>(*m_deviceResources);
-    m_meshes = m_assetManager->LoadModel(
-        UtilsFormatStr("%s/Sponza.gltf", SPONZA_ROOT));
+    m_actors.emplace_back(m_assetManager->LoadModel(
+        UtilsFormatStr("%s/Sponza.gltf", SPONZA_ROOT)));
+    m_actors.emplace_back(m_assetManager->LoadModel(
+        UtilsFormatStr("%s/Suzanne/glTF/Suzanne.gltf", ASSETS_ROOT)));
 
     m_firePS.Init(m_deviceResources->GetDevice(),
                   m_deviceResources->GetDeviceContext(),
@@ -355,7 +357,8 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
                                  ASSETS_ROOT));
 
     const int shadowMapSize = 2048;
-    m_shadowMap.InitResources(m_deviceResources->GetDevice(), shadowMapSize, shadowMapSize);
+    m_shadowMap.InitResources(
+        m_deviceResources->GetDevice(), shadowMapSize, shadowMapSize);
 
     {
         DynamicConstBufferDesc perObjectDesc;
@@ -456,8 +459,8 @@ Game::CreateWindowSizeDependentResources() {
     m_camera.SetViewDimensions(size.right, size.bottom);
 }
 void
-Game::DrawMeshes() {
-    for (const Mesh &mesh : m_meshes) {
+Game::DrawMeshes(const std::vector<Mesh> &meshes) {
+    for (const Mesh &mesh : meshes) {
         for (const TextureInfo &ti : mesh.GetTextures()) {
             if (ti.Type == TextureType::Diffuse) {
                 if (Texture *tex = m_assetManager->GetTexture(ti.Path)) {
@@ -513,4 +516,11 @@ Game::BuildShadowTransform(Mat4X4 &view, Mat4X4 &proj) {
                                            radius,
                                            m_camera.GetZNear(),
                                            m_camera.GetZFar());
+}
+void
+Game::DrawActors() {
+    //    for (const Actor &actor : m_actors) {
+    //        DrawMeshes(actor.m_meshes);
+    //    }
+    DrawMeshes(m_actors[1].m_meshes);
 }
