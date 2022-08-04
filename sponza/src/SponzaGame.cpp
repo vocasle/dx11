@@ -252,13 +252,12 @@ Game::Render() {
     {
         m_renderer.SetDepthStencilState(nullptr);
         m_renderer.SetViewport(m_dynamicCubeMap.GetViewport());
-        static const float BLACK_COLOR[4] = {0, 0, 0, 1};
         m_actors[1].m_isVisible = false;
         for (int i = 0; i < 6; ++i) {
             // Clear cube map face and depth buffer.
 
             m_renderer.ClearRenderTargetView(m_dynamicCubeMap.GetRTV(i),
-                                             BLACK_COLOR);
+                                             CLEAR_COLOR);
             m_renderer.ClearDepthStencilView(
                 m_dynamicCubeMap.GetDSV(),
                 D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
@@ -284,7 +283,7 @@ Game::Render() {
         m_renderer.SetViewport(m_deviceResources->GetViewport());
         m_renderer.SetRenderTargets(m_deviceResources->GetRenderTargetView(),
                                     m_deviceResources->GetDepthStencilView());
-        m_renderer.Clear(BLACK_COLOR);
+        m_renderer.Clear(CLEAR_COLOR);
         m_actors[1].m_isVisible = true;
         m_renderer.SetRasterizerState(nullptr);
         m_renderer.SetDepthStencilState(nullptr);
