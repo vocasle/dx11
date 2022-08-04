@@ -152,7 +152,6 @@ public:
             if (key == inName) {
                 *static_cast<T *>(value.Ptr) = inValue;
                 isSet = true;
-                UpdateConstantBuffer();
                 break;
             }
         }
@@ -168,7 +167,6 @@ public:
     [[nodiscard]] const std::vector<uint8_t> &GetBytes() const;
 
 private:
-    void RecalculateHash();
 
     struct Value {
         NodeType Type;
@@ -179,6 +177,4 @@ private:
     std::unordered_map<std::string, Value> mValues;
     Microsoft::WRL::ComPtr<ID3D11Buffer> mBuffer;
     DeviceResources *mDeviceResources;
-    bool mIsDirty;
-    size_t mHash;
 };

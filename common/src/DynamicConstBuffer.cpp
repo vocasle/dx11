@@ -23,22 +23,9 @@ NodeTypeToString(NodeType inType) {
             return "None";
     }
 }
-void
-DynamicConstBuffer::RecalculateHash() {
-    std::size_t seed = mBytes.size();
-    for (auto &i : mBytes) {
-        seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-    }
-    mIsDirty = seed != mHash;
-    mHash = seed;
-}
 
 void
 DynamicConstBuffer::UpdateConstantBuffer() {
-    RecalculateHash();
-    if (!mIsDirty)
-        return;
-
     D3D11_MAPPED_SUBRESOURCE mapped = {};
 
     if (FAILED(mDeviceResources->GetDeviceContext()->Map(
@@ -47,8 +34,6 @@ DynamicConstBuffer::UpdateConstantBuffer() {
     }
     memcpy(mapped.pData, mBytes.data(), mBytes.size());
     mDeviceResources->GetDeviceContext()->Unmap(mBuffer.Get(), 0);
-    RecalculateHash();
-    mIsDirty = false;
 }
 
 void
@@ -79,9 +64,7 @@ DynamicConstBuffer::Get() const {
 }
 DynamicConstBuffer::DynamicConstBuffer(const DynamicConstBufferDesc &desc,
                                        DeviceResources &deviceResources)
-    : mDeviceResources(&deviceResources),
-      mIsDirty(false),
-      mHash(0) {
+    : mDeviceResources(&deviceResources) {
     size_t sz = 0;
     for (auto &node : desc.GetNodes()) {
         auto visitor = [&sz](const Node &node) -> void {
