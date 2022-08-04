@@ -42,11 +42,11 @@ class DeviceResources {
 	}
 	uint32_t GetBackBufferWidth() const
 	{
-		return m_BackbufferWidth;
+		return m_OutputSize.right;
 	}
 	uint32_t GetBackBufferHeight() const
 	{
-		return m_BackbufferHeight;
+		return m_OutputSize.bottom;
 	}
 	ID3D11RasterizerState *GetRasterizerState() const
 	{
