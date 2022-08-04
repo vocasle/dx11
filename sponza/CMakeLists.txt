@@ -6,7 +6,8 @@ set(app_source_files
         "src/SponzaGame.cpp"
         "src/AssetManager.cpp"
         "src/ParticleSystem.cpp"
-        "src/ShadowMap.cpp")
+        "src/ShadowMap.cpp"
+        "src/DynamicCubeMap.cpp")
 
 set(app_header_files
         "include/ModelLoader.h"
@@ -14,7 +15,8 @@ set(app_header_files
         "include/Buffer.h"
         "include/AssetManager.h"
         "include/ParticleSystem.h"
-        "include/ShadowMap.h")
+        "include/ShadowMap.h"
+        "include/DynamicCubeMap.h")
 
 set(pixel_shader_files
         "shader/PhongPS.hlsl"
