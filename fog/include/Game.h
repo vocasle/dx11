@@ -9,7 +9,6 @@
 #include "Keyboard.h"
 #include "LightHelper.h"
 #include "NE_Math.h"
-#include "ParticleSystem.h"
 #include "Renderer.h"
 #include "ShaderManager.h"
 #include "ShadowMap.h"

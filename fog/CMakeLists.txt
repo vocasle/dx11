@@ -8,7 +8,7 @@ set(source_files
 	"src/ShadowMap.cpp"
 	"src/dx11.cpp"
 	"src/DynamicCubeMap.cpp"
-	"src/ParticleSystem.cpp")
+        )
 
 set(header_files
 	"include/CubeMap.h"
@@ -19,7 +19,7 @@ set(header_files
 	"include/framework.h"
 	"include/targetver.h"
 	"include/DynamicCubeMap.h"
-	"include/ParticleSystem.h")
+		)
 
 set(pixel_shader_files
 	shader/ShadowPS.hlsl

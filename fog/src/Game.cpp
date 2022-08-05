@@ -394,7 +394,7 @@ void Game::Update()
 						&m_PerSceneData.fogColor));
 	g_FogCBuf->SetValue("fogEnd", m_PerSceneData.fogEnd);
 	g_FogCBuf->SetValue("fogStart", m_PerSceneData.fogStart);
-	g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+	g_FogCBuf->UpdateConstantBuffer();
 
 #if WITH_IMGUI
 	static float totalTime = 0.0f;
@@ -421,7 +421,7 @@ void Game::Render()
 	m_Renderer.SetBlendState(nullptr);
 	m_Renderer.SetDepthStencilState(nullptr);
 	m_Renderer.SetPrimitiveTopology(R_DEFAULT_PRIMTIVE_TOPOLOGY);
-	m_Renderer.SetRasterizerState(m_rasterizerState.Get());
+	m_Renderer.SetRasterizerState(nullptr);
 	m_Renderer.SetSamplerState(m_DefaultSampler.Get(), 0);
 
 	m_DR->PIXBeginEvent(L"Shadow pass");
@@ -440,7 +440,9 @@ void Game::Render()
 		GameUpdateConstantBuffer(m_DR->GetDeviceContext(),
 					 sizeof(PerFrameConstants),
 					 &m_PerFrameData, m_PerFrameCB.Get());
+                m_Renderer.SetRasterizerState(m_rasterizerState.Get());
 		DrawScene();
+                m_Renderer.SetRasterizerState(nullptr);
 		m_ShadowMap.Unbind(m_DR->GetDeviceContext());
 	}
 	m_DR->PIXEndEvent();
@@ -525,7 +527,7 @@ void Game::Render()
 	m_DR->PIXBeginEvent(L"Fog");
 	{
 		g_FogCBuf->SetValue("world", MathMat4X4RotateX(90.0f));
-		g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+		g_FogCBuf->UpdateConstantBuffer();
 
 		m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(),
 					    m_DR->GetDepthStencilView());
@@ -730,7 +732,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 				 m_PerSceneCB.Get());
 
 	CreateDefaultSampler();
-	g_rasterizerDesc.DepthBias = 500;
+	g_rasterizerDesc.DepthBias = 5000;
+        g_rasterizerDesc.CullMode = D3D11_CULL_FRONT;
 	CreateRasterizerState();
 
 	m_Renderer.SetDeviceResources(m_DR.get());
@@ -752,10 +755,10 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		desc.AddNode({ "projInverse", NodeType::Float4X4 });
 		desc.AddNode({ "cameraPos", NodeType::Float3 });
 		desc.AddNode({ "_pad1", NodeType::Float });
-		g_FogCBuf = std::make_unique<DynamicConstBuffer>(desc);
+		g_FogCBuf = std::make_unique<DynamicConstBuffer>(desc, *m_DR);
 		g_FogCBuf->SetValue("width", m_DR->GetOutputSize().right);
 		g_FogCBuf->SetValue("height", m_DR->GetOutputSize().bottom);
-		g_FogCBuf->CreateConstantBuffer(m_DR->GetDevice());
+		g_FogCBuf->CreateConstantBuffer();
 	}
 
 	m_PerSceneData.fogColor = { 0.8f, 0.8f, 0.8f, 1.0f };
