@@ -38,7 +38,8 @@ float4 main(VSOut In) : SV_TARGET
             [unroll]
             for (int y = -1; y <= 1; ++y) {
 //                const float pcfDepth = shadowTexture.Sample(defaultSampler, shadowUV + float2(x,y) * texelSize).r;
-                const float pcfDepth = shadowTexture.SampleCmpLevelZero(shadowSampler, shadowUV + float2(x,y) * texelSize, In.ShadowPosH.z).r;
+//                const float pcfDepth = shadowTexture.SampleCmpLevelZero(shadowSampler, shadowUV + float2(x,y) * texelSize, In.ShadowPosH.z).r;
+                const float pcfDepth = CalcShadowFactor(shadowSampler, shadowTexture, In.ShadowPosH);
                 shadow += pcfDepth;
             }
         }
