@@ -59,9 +59,10 @@ struct BloomSettings {
 	bool isOnlyColor;
 	bool isOnlyBlur;
 	float threshold;
+        int iterations;
 };
 
-BloomSettings g_BloomSettings = { false, false, false, false, 1.0f };
+BloomSettings g_BloomSettings = { false, false, false, false, 1.0f, 10 };
 };
 
 static void GameUpdateConstantBuffer(ID3D11DeviceContext *context,
@@ -189,12 +190,13 @@ void Game::UpdateImgui()
 
 	if (ImGui::CollapsingHeader("Bloom settings")) {
 		ImGui::Checkbox("Enabled", &g_BloomSettings.isEnabled);
-		ImGui::Checkbox("Only brightness",
-				&g_BloomSettings.isOnlyBrightness);
-		ImGui::Checkbox("Only blur", &g_BloomSettings.isOnlyBlur);
-		ImGui::Checkbox("Only color", &g_BloomSettings.isOnlyColor);
-		ImGui::SliderFloat("Threshold", &g_BloomSettings.threshold,
-				   0.0f, 5.0f);
+                ImGui::InputInt("Blur iterations##Blur", &g_BloomSettings.iterations);
+//		ImGui::Checkbox("Only brightness",
+//				&g_BloomSettings.isOnlyBrightness);
+//		ImGui::Checkbox("Only blur", &g_BloomSettings.isOnlyBlur);
+//		ImGui::Checkbox("Only color", &g_BloomSettings.isOnlyColor);
+//		ImGui::SliderFloat("Threshold", &g_BloomSettings.threshold,
+//				   0.0f, 5.0f);
 	}
 
 	if (ImGui::CollapsingHeader("Rasterizer settings")) {
@@ -572,7 +574,7 @@ void Game::Render()
 
 		bool isHorizontal = true;
 		bool isFirstRun = true;
-		for (int i = 0; i < 10; ++i) {
+		for (int i = 0; i < g_BloomSettings.iterations; ++i) {
 			g_BlurCBuf->SetValue("isHorizontal",
 					     isHorizontal ? 1 : 0);
 			g_BlurCBuf->UpdateConstantBuffer();
