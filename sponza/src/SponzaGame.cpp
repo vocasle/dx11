@@ -328,10 +328,6 @@ Game::Render() {
         m_perPassCB->UpdateConstantBuffer();
         m_renderer.BindConstantBuffer(
             BindTargets::PixelShader, m_perPassCB->Get(), 3);
-        m_perObjectCB->SetValue("world", MathMat4X4Identity());
-        m_perObjectCB->SetValue("worldInvTranspose", MathMat4X4Identity());
-        m_perObjectCB->SetValue("shadowTransform",
-                                MathMat4X4Identity() * shadowView * shadowProj);
 
         m_renderer.SetSamplerState(m_defaultSampler.Get(), 0);
         m_renderer.SetInputLayout(m_shaderManager.GetInputLayout());
@@ -478,7 +474,7 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
         pointLight.AddChild("Specular", NodeType::Float4);
         pointLight.AddChild("Position", NodeType::Float4);
         Node pointLightsArr = Node("pointLights", NodeType::Array);
-        pointLightsArr.AddChildN(pointLight, 4);
+        pointLightsArr.AddChildN(pointLight, 6);
 
         Node spotLight = Node("spotLight", NodeType::Struct);
         spotLight.AddChild("Ambient", NodeType::Float4);
@@ -506,13 +502,20 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
 
         m_perSceneCB->SetValue("dirLight.Diffuse",
                                Vec4D(1.0f, 1.0f, 1.0f, 1.0f));
-        m_perSceneCB->SetValue("dirLight.Position", Vec4D(0, 10000, 0, 10000));
+        m_perSceneCB->SetValue("dirLight.Position", Vec4D(10, 150, 10, 150));
 
         DynamicConstBufferDesc perPassDesc;
         perPassDesc.AddNode(Node("calcReflection", NodeType::Float));
 
         m_perPassCB = std::make_unique<DynamicConstBuffer>(perPassDesc,
                                                            *m_deviceResources);
+
+        m_perSceneCB->SetValue("pointLights[0].Position", Vec4D(100,10,0,100));
+        m_perSceneCB->SetValue("pointLights[1].Position", Vec4D(-100,10,0,100));
+        m_perSceneCB->SetValue("pointLights[2].Position", Vec4D(0,10,50,100));
+        m_perSceneCB->SetValue("pointLights[3].Position", Vec4D(0,10,7-50,100));
+        m_perSceneCB->SetValue("pointLights[4].Position", Vec4D(40,50,50,100));
+        m_perSceneCB->SetValue("pointLights[5].Position", Vec4D(-40,50,-50,100));
     }
 
 #if WITH_IMGUI
@@ -618,10 +621,16 @@ Game::BuildShadowTransform(Mat4X4 &view, Mat4X4 &proj) {
 }
 void
 Game::DrawActors() {
+    Mat4X4 shadowView = {};
+    Mat4X4 shadowProj = {};
+    BuildShadowTransform(shadowView, shadowProj);
     for (const Actor &actor : m_actors) {
         if (actor.IsVisible()) {
             m_perObjectCB->SetValue("material.roughness", actor.GetRoughness());
             m_perObjectCB->SetValue("world", actor.GetWorld());
+            m_perObjectCB->SetValue("worldInvTranspose", actor.GetWorld());
+            m_perObjectCB->SetValue("shadowTransform",
+                                    actor.GetWorld() * shadowView * shadowProj);
             m_perObjectCB->UpdateConstantBuffer();
             DrawMeshes(actor.GetMeshes());
         }

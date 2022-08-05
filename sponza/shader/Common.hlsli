@@ -34,7 +34,7 @@ cbuffer PerFrameConstants : register(b1)
 cbuffer PerSceneConstants : register(b2)
 {
 	DirectionalLight dirLight;
-	PointLight pointLights[4];
+	PointLight pointLights[6];
 	SpotLight spotLights[2];
 };
 

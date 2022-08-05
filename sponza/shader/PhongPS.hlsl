@@ -19,13 +19,15 @@ float4 main(VSOut In) : SV_TARGET
     float3 diffuseResult = {0,0,0};
     float3 specularResult = {0,0,0};
 
-    LightIntensity intensities[5];
+    LightIntensity intensities[7];
 
     intensities[0] = DirectionalLightIntensity(dirLight, normal, viewDir);
     intensities[1] = PointLightIntensity(pointLights[0], normal, In.PosW.xyz, viewDir);
     intensities[2] = PointLightIntensity(pointLights[1], normal, In.PosW.xyz, viewDir);
     intensities[3] = PointLightIntensity(pointLights[2], normal, In.PosW.xyz, viewDir);
     intensities[4] = PointLightIntensity(pointLights[3], normal, In.PosW.xyz, viewDir);
+    intensities[5] = PointLightIntensity(pointLights[4], normal, In.PosW.xyz, viewDir);
+    intensities[6] = PointLightIntensity(pointLights[5], normal, In.PosW.xyz, viewDir);
 
     const float strength = dot(diffuseResult, specularResult);
     float shadow = 1;
@@ -48,7 +50,7 @@ float4 main(VSOut In) : SV_TARGET
 
     float3 lightDiffuseResult = {1,1,1};
     [unroll]
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 7; ++i) {
         float diff = max(dot(intensities[i].L, normal), 0);
         float3 diffuseColor = diffuseSampled.rgb * diff;
         float spec = pow(max(dot(normal, intensities[i].H), 0), 16);
