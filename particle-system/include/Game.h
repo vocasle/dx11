@@ -26,13 +26,11 @@ struct PerFrameConstants {
 		: view{}
 		, proj{}
 		, cameraPosW{}
-		, shadowTransform{}
 		, pad{ 0 }
 	{
 	}
 	Mat4X4 view;
 	Mat4X4 proj;
-	Mat4X4 shadowTransform;
 	Vec3D cameraPosW;
 	float pad;
 };
