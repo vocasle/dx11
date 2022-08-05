@@ -17,3 +17,4 @@ out/
 .vscode/
 /sponza/log.txt
 /sponza.cap
+/cmake-build-release-visual-studio/
