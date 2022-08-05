@@ -3,7 +3,7 @@
 
 #include <array>
 #include <string>
-#include <vector>
+#include <array>
 
 #include "Camera.h"
 #include "NE_Math.h"
@@ -144,9 +144,9 @@ class ParticleSystem {
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_sampler;
 
 	std::string m_name;
-	std::vector<Particle> m_particles;
-	std::vector<Particle::Vertex> m_vertices;
-	std::vector<uint32_t> m_indices;
+	std::array<Particle, MAX_PARTICLES> m_particles;
+	std::array<Particle::Vertex, MAX_PARTICLES> m_vertices;
+	std::array<uint32_t, MAX_PARTICLES * 3> m_indices;
 	Particle m_emitter;
 
 	Vec3D m_origin;
