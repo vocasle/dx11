@@ -18,6 +18,27 @@
 
 using namespace Microsoft::WRL;
 
+struct SponzaSettings
+{
+    std::array<ParticleSystemOptions, 4> firePSOpts;
+};
+
+namespace {
+    SponzaSettings gSettings;
+};
+
+static void InitSponzaSettings()
+{
+    ParticleSystemOptions &fire1 = gSettings.firePSOpts[0];
+    fire1.isEnabled = true;
+    fire1.maxParticles = 100;
+    fire1.initVelRandFact = 2;
+    fire1.burst = 5;
+    fire1.accel = {0,1.5f,0};
+    fire1.origin = {112,12,45};
+    fire1.particleSize = {12,12};
+}
+
 void
 Game::CreateRasterizerState() {
     throw std::runtime_error("Not implemented");
@@ -387,6 +408,7 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
     m_deviceResources->SetWindow(hWnd, width, height);
     m_deviceResources->CreateDeviceResources();
     m_deviceResources->CreateWindowSizeDependentResources();
+    InitSponzaSettings();
     TimerInitialize(&m_timer);
     Mouse::Get().SetWindowDimensions(m_deviceResources->GetBackBufferWidth(),
                                      m_deviceResources->GetBackBufferHeight());
@@ -416,6 +438,7 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
                   m_deviceResources->GetDeviceContext(),
                   UtilsFormatStr("%s/textures/particlePack_1.1/flame_05.png",
                                  ASSETS_ROOT));
+    m_firePS.SetOptions(gSettings.firePSOpts[0]);
 
     const int shadowMapSize = 2048;
     m_shadowMap.InitResources(
