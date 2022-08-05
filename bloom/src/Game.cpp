@@ -412,7 +412,7 @@ void Game::Update()
 						&m_PerSceneData.fogColor));
 	g_FogCBuf->SetValue("fogEnd", m_PerSceneData.fogEnd);
 	g_FogCBuf->SetValue("fogStart", m_PerSceneData.fogStart);
-	g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+	g_FogCBuf->UpdateConstantBuffer();
 
 #if WITH_IMGUI
 	static float totalTime = 0.0f;
@@ -484,7 +484,7 @@ void Game::Render()
 
 		g_LightCBuf->SetValue("color",
 				      m_PerSceneData.pointLights[i].Diffuse);
-		g_LightCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+		g_LightCBuf->UpdateConstantBuffer();
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader,
 					      g_LightCBuf->Get(), 0);
 		m_Renderer.BindPixelShader(
@@ -510,7 +510,7 @@ void Game::Render()
 					 &m_PerObjectData, m_PerObjectCB.Get());
 
 		g_LightCBuf->SetValue("color", Vec4D(1.0f, 1.0f, 1.0f, 1.0f));
-		g_LightCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+		g_LightCBuf->UpdateConstantBuffer();
 		m_Renderer.BindConstantBuffer(BindTargets::PixelShader,
 					      g_LightCBuf->Get(), 0);
 		m_Renderer.BindPixelShader(
@@ -575,8 +575,7 @@ void Game::Render()
 		for (int i = 0; i < 10; ++i) {
 			g_BlurCBuf->SetValue("isHorizontal",
 					     isHorizontal ? 1 : 0);
-			g_BlurCBuf->UpdateConstantBuffer(
-				m_DR->GetDeviceContext());
+			g_BlurCBuf->UpdateConstantBuffer();
 			m_Renderer.BindConstantBuffer(BindTargets::PixelShader,
 						      g_BlurCBuf->Get(), 0);
 			if (isHorizontal) {
@@ -611,7 +610,7 @@ void Game::Render()
 	m_DR->PIXBeginEvent(L"Bloom");
 	{
 		g_FogCBuf->SetValue("world", MathMat4X4RotateX(90.0f));
-		g_FogCBuf->UpdateConstantBuffer(m_DR->GetDeviceContext());
+		g_FogCBuf->UpdateConstantBuffer();
 		m_Renderer.SetRenderTargets(m_DR->GetRenderTargetView(),
 					    m_DR->GetDepthStencilView());
 		m_Renderer.BindVertexShader(
@@ -842,10 +841,10 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		desc.AddNode({ "projInverse", NodeType::Float4X4 });
 		desc.AddNode({ "cameraPos", NodeType::Float3 });
 		desc.AddNode({ "_pad1", NodeType::Float });
-		g_FogCBuf = std::make_unique<DynamicConstBuffer>(desc);
+		g_FogCBuf = std::make_unique<DynamicConstBuffer>(desc, *m_DR);
 		g_FogCBuf->SetValue("width", m_DR->GetOutputSize().right);
 		g_FogCBuf->SetValue("height", m_DR->GetOutputSize().bottom);
-		g_FogCBuf->CreateConstantBuffer(m_DR->GetDevice());
+		g_FogCBuf->CreateConstantBuffer();
 	}
 
 	{
@@ -854,8 +853,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		// desc.AddNode({"world", NodeType::Float4X4});
 		// desc.AddNode({"view", NodeType::Float4X4});
 		// desc.AddNode({"projection", NodeType::Float4X4});
-		g_LightCBuf = std::make_unique<DynamicConstBuffer>(desc);
-		g_LightCBuf->CreateConstantBuffer(m_DR->GetDevice());
+		g_LightCBuf = std::make_unique<DynamicConstBuffer>(desc, *m_DR);
+		g_LightCBuf->CreateConstantBuffer();
 	}
 
 	{
@@ -864,8 +863,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		desc.AddNode({ "height", NodeType::Float });
 		desc.AddNode({ "isHorizontal", NodeType::Bool });
 		desc.AddNode({ "pad", NodeType::Float });
-		g_BlurCBuf = std::make_unique<DynamicConstBuffer>(desc);
-		g_BlurCBuf->CreateConstantBuffer(m_DR->GetDevice());
+		g_BlurCBuf = std::make_unique<DynamicConstBuffer>(desc, *m_DR);
+		g_BlurCBuf->CreateConstantBuffer();
 	}
 
 	m_PerSceneData.fogColor = { 0.8f, 0.8f, 0.8f, 1.0f };
