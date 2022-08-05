@@ -58,6 +58,7 @@ private:
     std::unique_ptr<DynamicConstBuffer> m_perFrameCB;
     std::unique_ptr<DynamicConstBuffer> m_perSceneCB;
     std::unique_ptr<DynamicConstBuffer> m_perObjectCB;
+    std::unique_ptr<DynamicConstBuffer> m_perPassCB;
     std::unique_ptr<AssetManager> m_assetManager;
     ParticleSystem m_firePS;
     ShadowMap m_shadowMap;

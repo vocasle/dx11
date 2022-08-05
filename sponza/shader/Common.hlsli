@@ -38,6 +38,11 @@ cbuffer PerSceneConstants : register(b2)
 	SpotLight spotLights[2];
 };
 
+cbuffer PerPassConstants : register(b3)
+{
+    bool calcReflection;
+};
+
 sampler defaultSampler					: register(s0);
 SamplerComparisonState shadowSampler	: register(s1);
 

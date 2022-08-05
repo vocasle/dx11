@@ -263,6 +263,11 @@ Game::Render() {
         m_actors[1].SetVisible(false);
         m_renderer.BindVertexShader(m_shaderManager.GetVertexShader("ColorVS"));
         m_renderer.BindPixelShader(m_shaderManager.GetPixelShader("PhongPS"));
+        m_perPassCB->SetValue("calcReflection", 0);
+        m_perPassCB->UpdateConstantBuffer();
+        m_renderer.BindConstantBuffer(
+            BindTargets::PixelShader, m_perPassCB->Get(), 3);
+
         for (int i = 0; i < 6; ++i) {
             // Bind cube map face as render target.
             m_renderer.SetRenderTargets(m_dynamicCubeMap.GetRTV(i),
@@ -298,13 +303,15 @@ Game::Render() {
     m_deviceResources->PIXBeginEvent(L"Color pass");
     // reset view proj matrix back to camera
     {
+        m_perPassCB->SetValue("calcReflection", 1);
+        m_perPassCB->UpdateConstantBuffer();
+        m_renderer.BindConstantBuffer(
+            BindTargets::PixelShader, m_perPassCB->Get(), 3);
         m_perObjectCB->SetValue("world", MathMat4X4Identity());
         m_perObjectCB->SetValue("worldInvTranspose", MathMat4X4Identity());
         m_perObjectCB->SetValue("shadowTransform",
                                 MathMat4X4Identity() * shadowView * shadowProj);
 
-        m_renderer.BindVertexShader(m_shaderManager.GetVertexShader("ColorVS"));
-        m_renderer.BindPixelShader(m_shaderManager.GetPixelShader("PhongPS"));
         m_renderer.SetSamplerState(m_defaultSampler.Get(), 0);
         m_renderer.SetInputLayout(m_shaderManager.GetInputLayout());
 
@@ -400,7 +407,7 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
         UtilsFormatStr("%s/Sponza.gltf", SPONZA_ROOT)));
     m_actors.emplace_back(m_assetManager->LoadModel(
         UtilsFormatStr("%s/Suzanne/glTF/Suzanne.gltf", ASSETS_ROOT)));
-    m_actors[0].SetWorld(MathMat4X4ScaleFromVec3D({0.5f, 0.5f, 0.5f}));
+    m_actors[0].SetWorld(MathMat4X4ScaleFromVec3D({0.1f, 0.1f, 0.1f}));
     m_actors[1].SetRoughness(0.1f);
     m_actors[1].SetWorld(MathMat4X4ScaleFromVec3D({10, 10, 10}) *
                          MathMat4X4TranslateFromVec3D({0, 20, 0}));
@@ -471,6 +478,12 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
         m_perSceneCB->SetValue("dirLight.Diffuse",
                                Vec4D(1.0f, 1.0f, 1.0f, 1.0f));
         m_perSceneCB->SetValue("dirLight.Position", Vec4D(0, 10000, 0, 10000));
+
+        DynamicConstBufferDesc perPassDesc;
+        perPassDesc.AddNode(Node("calcReflection", NodeType::Float));
+
+        m_perPassCB = std::make_unique<DynamicConstBuffer>(perPassDesc,
+                                                           *m_deviceResources);
     }
 
 #if WITH_IMGUI

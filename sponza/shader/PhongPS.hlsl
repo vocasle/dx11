@@ -60,6 +60,14 @@ float4 main(VSOut In) : SV_TARGET
     }
 
 //    return float4(float3(0.5,0.5,0.5) * intensities[0].intensity, 1); diffuse shading for debug purposes
+    float4 reflColor = (float4)0;
+    if (calcReflection) {
+        float3 incident = -viewDir;
+    	float3 reflVector = normalize(reflect(incident, normal));
+    	reflColor = envTexture.Sample(defaultSampler, reflVector);
+    }
 
-    return float4(AMBIENT * lightDiffuseResult + shadow * (diffuseResult + specularResult), 1);
+    float4 fragmentColor = float4(AMBIENT * lightDiffuseResult + shadow * (diffuseResult + specularResult), 1);
+    fragmentColor += reflColor * (1.0 - material.roughness);
+    return fragmentColor;
 }
