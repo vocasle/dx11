@@ -400,7 +400,8 @@ ParticleSystemOptions::ParticleSystemOptions()
       accelRandFact(0),
       initVelRandFact(0),
       burst(1),
-      particleSize(1, 1) {
+      particleSize(1, 1),
+      color(1, 1, 1, 1) {
 }
 
 ID3D11SamplerState *

@@ -73,6 +73,7 @@ struct ParticleSystemOptions {
     Vec3D accel;
     Vec3D origin;
     Vec2D particleSize;
+    Vec4D color;
 };
 
 class ParticleSystem {

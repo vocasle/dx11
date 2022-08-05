@@ -19,7 +19,7 @@
 using namespace Microsoft::WRL;
 
 struct SponzaSettings {
-    std::array<ParticleSystemOptions, 4> firePSOpts;
+    ParticleSystemOptions firePSOpts;
 };
 
 namespace {
@@ -28,7 +28,7 @@ SponzaSettings gSettings;
 
 static void
 InitSponzaSettings() {
-    ParticleSystemOptions &fire1 = gSettings.firePSOpts[0];
+    ParticleSystemOptions &fire1 = gSettings.firePSOpts;
     fire1.isEnabled = true;
     fire1.maxParticles = 100;
     fire1.initVelRandFact = 2;
@@ -111,7 +111,10 @@ Game::UpdateImgui() {
 
     if (ImGui::CollapsingHeader("Fire")) {
         ImGui::Checkbox("Enable fire", &m_firePS.GetOptions().isEnabled);
-        ImGui::InputFloat("Fire lifespan", &m_firePS.GetOptions().lifespan);
+        ImGui::InputFloat("Lifespan##FirePS", &m_firePS.GetOptions().lifespan);
+        ImGui::ColorEdit4(
+            "Color##FirePS",
+            reinterpret_cast<float *>(&gSettings.firePSOpts.color));
 
         ImGui::InputInt("Fire num particles",
                         &m_firePS.GetOptions().maxParticles);
@@ -377,7 +380,13 @@ Game::Render() {
         m_renderer.BindShaderResource(
             BindTargets::PixelShader, m_firePS.GetSRV(), 0);
         m_renderer.SetSamplerState(m_firePS.GetSamplerState(), 0);
+        const Vec4D prevCamVal = *m_perFrameCB->GetValue<Vec4D>("cameraPosW");
+        m_perFrameCB->SetValue("cameraPosW", gSettings.firePSOpts.color);
+        m_perFrameCB->UpdateConstantBuffer();
+        m_renderer.BindConstantBuffer(
+            BindTargets::PixelShader, m_perFrameCB->Get(), 0);
         m_renderer.DrawIndexed(m_firePS.GetNumIndices(), 0, 0);
+        m_perFrameCB->SetValue("cameraPosW", prevCamVal);
         m_deviceResources->PIXEndEvent();
     }
 
@@ -435,7 +444,7 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
                   m_deviceResources->GetDeviceContext(),
                   UtilsFormatStr("%s/textures/particlePack_1.1/flame_05.png",
                                  ASSETS_ROOT));
-    m_firePS.SetOptions(gSettings.firePSOpts[0]);
+    m_firePS.SetOptions(gSettings.firePSOpts);
 
     const int shadowMapSize = 2048;
     m_shadowMap.InitResources(
