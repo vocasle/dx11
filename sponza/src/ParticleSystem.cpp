@@ -442,6 +442,11 @@ void
 ParticleSystem::Reset() {
     ResetParticles();
 }
+void
+ParticleSystem::SetOptions(const ParticleSystemOptions &options) {
+    m_options = options;
+    ResetParticles();
+}
 
 const Vec3D &
 Particle::GetAccel() const {

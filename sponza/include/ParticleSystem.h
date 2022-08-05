@@ -104,6 +104,8 @@ public:
     ParticleSystemOptions &GetOptions();
     [[nodiscard]] const ParticleSystemOptions &GetOptions() const;
 
+    void SetOptions(const ParticleSystemOptions &options);
+
 private:
     void CreateTexture(ID3D11Device *device,
                        ID3D11DeviceContext *context,
