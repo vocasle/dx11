@@ -18,25 +18,24 @@
 
 using namespace Microsoft::WRL;
 
-struct SponzaSettings
-{
+struct SponzaSettings {
     std::array<ParticleSystemOptions, 4> firePSOpts;
 };
 
 namespace {
-    SponzaSettings gSettings;
+SponzaSettings gSettings;
 };
 
-static void InitSponzaSettings()
-{
+static void
+InitSponzaSettings() {
     ParticleSystemOptions &fire1 = gSettings.firePSOpts[0];
     fire1.isEnabled = true;
     fire1.maxParticles = 100;
     fire1.initVelRandFact = 2;
     fire1.burst = 5;
-    fire1.accel = {0,1.5f,0};
-    fire1.origin = {112,12,45};
-    fire1.particleSize = {12,12};
+    fire1.accel = {0, 1.5f, 0};
+    fire1.origin = {112, 12, 45};
+    fire1.particleSize = {12, 12};
 }
 
 void
@@ -65,11 +64,10 @@ Game::UpdateImgui() {
 
         ImGui::InputFloat("z far", &zFar);
         ImGui::InputFloat("z near", &zNear);
-
-        if (zFar != m_camera.GetZFar())
+        if (ImGui::Button("Apply##Camera")) {
             m_camera.SetZFar(zFar);
-        if (zNear != m_camera.GetZNear())
             m_camera.SetZNear(zNear);
+        }
     }
 
     if (ImGui::CollapsingHeader("Lights setting")) {
@@ -80,16 +78,15 @@ Game::UpdateImgui() {
                     m_perSceneCB->GetValue<Vec4D>("dirLight.Position")));
         }
 
-        static int e = 0;
-        ImGui::RadioButton("First", &e, 0);
-        ImGui::SameLine();
-        ImGui::RadioButton("Second", &e, 1);
-        ImGui::SameLine();
-        ImGui::RadioButton("Third", &e, 2);
-        ImGui::SameLine();
-        ImGui::RadioButton("Fourth", &e, 3);
-
         if (ImGui::CollapsingHeader("Point light settings")) {
+            static int e = 0;
+            ImGui::RadioButton("First", &e, 0);
+            ImGui::SameLine();
+            ImGui::RadioButton("Second", &e, 1);
+            ImGui::SameLine();
+            ImGui::RadioButton("Third", &e, 2);
+            ImGui::SameLine();
+            ImGui::RadioButton("Fourth", &e, 3);
             //            ImGui::ColorPicker4(
             //                "Ambient",
             //                reinterpret_cast<float *>(
@@ -106,7 +103,7 @@ Game::UpdateImgui() {
             //                    m_perSceneCB->GetValue<Vec4D>("pointLights[0].Specular")));
 
             ImGui::InputFloat4(
-                "Position",
+                UtilsFormatStr("Position##PointLight_No_%s", e).c_str(),
                 reinterpret_cast<float *>(m_perSceneCB->GetValue<Vec4D>(
                     UtilsFormatStr("pointLights[%d].Position", e))));
         }
