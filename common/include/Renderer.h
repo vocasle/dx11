@@ -6,7 +6,7 @@
 #include "DeviceResources.h"
 
 #define R_MAX_SRV_NUM 7
-#define R_MAX_CB_NUM 3
+#define R_MAX_CB_NUM 4
 #define R_MAX_SAMPLERS 2
 
 #define R_DEFAULT_PRIMTIVE_TOPOLOGY D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
