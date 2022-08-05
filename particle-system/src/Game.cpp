@@ -786,6 +786,29 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		Globals::RainOptions =
 			std::make_unique<Globals::ParticleSystemOptions>(
 				m_rain);
+
+                Globals::FireOptions->accel = {0,2,0};
+                Globals::FireOptions->burst = 15;
+                Globals::FireOptions->randomFactor = 0.5;
+                Globals::FireOptions->maxParticles = 500;
+                Globals::FireOptions->lifespan = 1;
+                m_fire.SetAccel(Globals::FireOptions->accel);
+                m_fire.SetBurst(Globals::FireOptions->burst);
+                m_fire.SetRandomFactor(Globals::FireOptions->randomFactor);
+                m_fire.SetLifespan(Globals::FireOptions->lifespan);
+                m_fire.SetMaxParticles(Globals::FireOptions->maxParticles);
+
+                Globals::RainOptions->accel = {0,-20,0};
+                Globals::RainOptions->burst = 100;
+                Globals::RainOptions->randomFactor = 2;
+                Globals::RainOptions->maxParticles = 10000;
+                Globals::RainOptions->lifespan = 5;
+
+                m_rain.SetAccel(Globals::RainOptions->accel);
+                m_rain.SetBurst(Globals::RainOptions->burst);
+                m_rain.SetRandomFactor(Globals::RainOptions->randomFactor);
+                m_rain.SetLifespan(Globals::RainOptions->lifespan);
+                m_rain.SetMaxParticles(Globals::RainOptions->maxParticles);
 	}
 
 #if WITH_IMGUI
