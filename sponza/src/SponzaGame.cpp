@@ -107,6 +107,24 @@ Game::UpdateImgui() {
                 reinterpret_cast<float *>(m_perSceneCB->GetValue<Vec4D>(
                     UtilsFormatStr("pointLights[%d].Position", e))));
         }
+
+        if (ImGui::CollapsingHeader("Spot lights settings")) {
+            static float spot = 10;
+            static float range = 10;
+            ImGui::InputFloat("Range##Spot1", &range);
+            ImGui::InputFloat("Spot##Spot1", &spot);
+            if (ImGui::Button("Apply##Spot1")) {
+                Vec4D pos =
+                    *m_perSceneCB->GetValue<Vec4D>("spotLights[0].Position");
+                pos.W = range;
+                m_perSceneCB->SetValue("spotLights[0].Position", pos);
+
+                Vec4D dir =
+                    *m_perSceneCB->GetValue<Vec4D>("spotLights[0].Direction");
+                dir.W = spot;
+                m_perSceneCB->SetValue("spotLights[0].Direction", dir);
+            }
+        }
     }
 
     if (ImGui::CollapsingHeader("Fire")) {
@@ -204,6 +222,11 @@ Game::Update() {
     m_perFrameCB->SetValue("view", m_camera.GetViewMat());
     m_perFrameCB->SetValue("proj", m_camera.GetProjMat());
     m_perFrameCB->SetValue("cameraPosW", Vec4D(m_camera.GetPos(), 0));
+
+    m_perSceneCB->SetValue("spotLights[0].Position",
+                           Vec4D(m_camera.GetPos(), 10));
+    m_perSceneCB->SetValue("spotLights[0].Direction",
+                           Vec4D(m_camera.GetAt(), 10));
 
     static float elapsedTime = 0.0f;
     const auto deltaSeconds = static_cast<float>(m_timer.DeltaMillis / 1000.0);
@@ -510,12 +533,18 @@ Game::Initialize(HWND hWnd, uint32_t width, uint32_t height) {
         m_perPassCB = std::make_unique<DynamicConstBuffer>(perPassDesc,
                                                            *m_deviceResources);
 
-        m_perSceneCB->SetValue("pointLights[0].Position", Vec4D(100,10,0,100));
-        m_perSceneCB->SetValue("pointLights[1].Position", Vec4D(-100,10,0,100));
-        m_perSceneCB->SetValue("pointLights[2].Position", Vec4D(0,10,50,100));
-        m_perSceneCB->SetValue("pointLights[3].Position", Vec4D(0,10,7-50,100));
-        m_perSceneCB->SetValue("pointLights[4].Position", Vec4D(40,50,50,100));
-        m_perSceneCB->SetValue("pointLights[5].Position", Vec4D(-40,50,-50,100));
+        m_perSceneCB->SetValue("pointLights[0].Position",
+                               Vec4D(100, 10, 0, 100));
+        m_perSceneCB->SetValue("pointLights[1].Position",
+                               Vec4D(-100, 10, 0, 100));
+        m_perSceneCB->SetValue("pointLights[2].Position",
+                               Vec4D(0, 10, 50, 100));
+        m_perSceneCB->SetValue("pointLights[3].Position",
+                               Vec4D(0, 10, 7 - 50, 100));
+        m_perSceneCB->SetValue("pointLights[4].Position",
+                               Vec4D(40, 50, 50, 100));
+        m_perSceneCB->SetValue("pointLights[5].Position",
+                               Vec4D(-40, 50, -50, 100));
     }
 
 #if WITH_IMGUI
