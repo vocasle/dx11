@@ -135,7 +135,7 @@ void RClear(struct Renderer* renderer)
 	ID3D11RenderTargetView* rtv = renderer->DR->RenderTargetView;
 	ID3D11DepthStencilView* dsv = renderer->DR->DepthStencilView;
 
-	static const float CLEAR_COLOR[4] = { 0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f };
+	static const float CLEAR_COLOR[4] = { 0, 0, 0, 1 };
 
 	ctx->lpVtbl->Flush(ctx);
 

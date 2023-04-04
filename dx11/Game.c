@@ -108,7 +108,7 @@ void GameFree(Game* game)
 		ModelFree(game->Models[i]);
 	}
 	free(game->Models);
-	
+
 	memset(game, 0, sizeof(Game));
 	free(game);
 	DRReportLiveObjects();
@@ -120,7 +120,7 @@ static void GameClear(Game* game)
 	ID3D11RenderTargetView* rtv = game->DR->RenderTargetView;
 	ID3D11DepthStencilView* dsv = game->DR->DepthStencilView;
 
-	static const float CLEAR_COLOR[4] = {0.392156899f, 0.584313750f, 0.929411829f, 1.000000000f};
+	static const float CLEAR_COLOR[4] = { 0, 0, 0, 1 };
 
 	ctx->lpVtbl->Flush(ctx);
 
@@ -231,7 +231,7 @@ void GameUpdate(Game* game)
 
 	game->gViewMat = CameraGetViewMat(&game->Cam);
 	game->gProjMat = MathMat4X4PerspectiveFov(MathToRadians(45.0f), width / height, 0.1f, 100.0f);
-	
+
 	game->PerFrameConstants.World = game->gWorldMat;
 	game->PerFrameConstants.View = game->gViewMat;
 	game->PerFrameConstants.Proj = game->gProjMat;
@@ -249,11 +249,11 @@ static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
 {
 	D3D11_MAPPED_SUBRESOURCE mapped = { 0 };
 
-	if (FAILED(context->lpVtbl->Map(context, 
-		(ID3D11Resource*)dest, 
-		0, 
-		D3D11_MAP_WRITE_DISCARD, 
-		0, 
+	if (FAILED(context->lpVtbl->Map(context,
+		(ID3D11Resource*)dest,
+		0,
+		D3D11_MAP_WRITE_DISCARD,
+		0,
 		&mapped)))
 	{
 		UtilsFatalError("ERROR: Failed to map constant buffer\n");
@@ -264,8 +264,8 @@ static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
 
 static void GameUpdatePerFrameConstants(Game* game)
 {
-	GameUpdateConstantBuffer(game->DR->Context, 
-		sizeof(PerFrameConstants), 
+	GameUpdateConstantBuffer(game->DR->Context,
+		sizeof(PerFrameConstants),
 		&game->PerFrameConstants,
 		game->RenderData.VSConstBuffers[0]);
 }
@@ -302,7 +302,7 @@ static void GameRenderNew(Game* game)
 
 	size_t offset = 0;
 	const struct Mesh* cube = GameFindMeshByName(game, "Cube", &offset);
-	
+
 	RDrawIndexed(r, game->IndexBuffer, game->VertexBuffer, sizeof(struct Vertex), cube->NumFaces, offset, offset);
 
 	// Light properties
@@ -447,7 +447,7 @@ static void GameCreateSharedBuffers(Game* game)
 	game->RenderData.Vertices = vertices;
 	game->RenderData.Indices = indices;
 
-	
+
 }
 
 void GameGenerateRandomOffsets(Game* game)
@@ -587,10 +587,10 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 
 	GameLoadModel(game, "assets/meshes/cube.obj");
 	GameLoadModel(game, "assets/meshes/sphere.obj");
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_COL_VAR1_1K.jpg", &game->RenderData.DefaultTexture);
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_REFL_1K.jpg", &game->RenderData.SpecularTexture);
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_GLOSS_1K.jpg", &game->RenderData.GlossTexture);
-	GameLoadTextureFromFile(game->DR, "assets/textures/BricksFlemishRed001_NRM_1K.png", &game->RenderData.NormalTexture);
+	GameLoadTextureFromFile(game->DR, "assets/textures/bricks_diffuse.jpg", &game->RenderData.DefaultTexture);
+	GameLoadTextureFromFile(game->DR, "assets/textures/bricks_reflection.jpg", &game->RenderData.SpecularTexture);
+	GameLoadTextureFromFile(game->DR, "assets/textures/bricks_gloss.jpg", &game->RenderData.GlossTexture);
+	GameLoadTextureFromFile(game->DR, "assets/textures/bricks_normal.png", &game->RenderData.NormalTexture);
 	GameCreateSharedBuffers(game);
 	GameGenerateRandomOffsets(game);
 	ID3D11Device1* device = game->DR->Device;
