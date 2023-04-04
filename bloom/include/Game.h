@@ -14,7 +14,6 @@
 #include "ShaderManager.h"
 #include "ShadowMap.h"
 #include "Timer.h"
-#include "RenderTexture.h"
 
 #include <memory>
 #include <vector>
@@ -107,5 +106,4 @@ class Game {
 	DynamicCubeMap m_dynamicCubeMap;
 	ShaderManager m_shaderManager;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerState;
-	std::unique_ptr<DX::RenderTexture> m_hdrBackBuffer;
 };

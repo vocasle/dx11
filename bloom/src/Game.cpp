@@ -345,7 +345,6 @@ Game::Game()
 
 Game::~Game()
 {
-	m_hdrBackBuffer->ReleaseDevice();
 #if WITH_IMGUI
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
@@ -812,22 +811,23 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 
 	m_Renderer.SetDeviceResources(m_DR.get());
 
-	g_OffscreenRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
+	g_OffscreenRTV = std::make_unique<Texture>(DXGI_FORMAT_R16G16B16A16_FLOAT,
 						   m_DR->GetOutputSize().right,
 						   m_DR->GetOutputSize().bottom,
 						   m_DR->GetDevice());
 
-	g_BrightessRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
+	g_BrightessRTV =
+            std::make_unique<Texture>(DXGI_FORMAT_R16G16B16A16_FLOAT,
 						   m_DR->GetOutputSize().right,
 						   m_DR->GetOutputSize().bottom,
 						   m_DR->GetDevice());
 
-	g_BlurRTV = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
+	g_BlurRTV = std::make_unique<Texture>(DXGI_FORMAT_R16G16B16A16_FLOAT,
 					      m_DR->GetOutputSize().right,
 					      m_DR->GetOutputSize().bottom,
 					      m_DR->GetDevice());
 
-	g_BlurRTV2 = std::make_unique<Texture>(DXGI_FORMAT_B8G8R8A8_UNORM,
+	g_BlurRTV2 = std::make_unique<Texture>(DXGI_FORMAT_R16G16B16A16_FLOAT,
 					       m_DR->GetOutputSize().right,
 					       m_DR->GetOutputSize().bottom,
 					       m_DR->GetDevice());
@@ -873,8 +873,6 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_PerSceneData.fogColor = { 0.8f, 0.8f, 0.8f, 1.0f };
 	m_PerSceneData.fogStart = 0;
 	m_PerSceneData.fogEnd = 1;
-
-	m_hdrBackBuffer = std::make_unique<DX::RenderTexture>(DXGI_FORMAT_R16G16B16A16_FLOAT);
 
 #if WITH_IMGUI
 	ImGui::CreateContext();
