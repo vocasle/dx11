@@ -13,7 +13,7 @@ struct PSIn
 
 cbuffer Constants : register(b0)
 {
-    float fogEnd;
+    float zFar;
     float fogStart;
     float width;
     float height;
@@ -22,7 +22,7 @@ cbuffer Constants : register(b0)
     float4x4 viewInverse;
     float4x4 projInverse;
     float3 cameraPos;
-    float _pad1;
+    float fogDensity;
 };
 
 Texture2D<float4> backBuffer : register(t0);

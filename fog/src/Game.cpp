@@ -167,16 +167,18 @@ void Game::UpdateImgui()
 					   &m_PerSceneData.dirLight.Position));
 		m_Camera.SetZFar(zFar);
 		m_Camera.SetZNear(zNear);
+		m_PerSceneData.zFar = zFar;
 	}
 
 	if (ImGui::CollapsingHeader("Fog settings")) {
-		ImGui::SliderFloat("Fog end", &m_PerSceneData.fogEnd, 0.0f,
-				   1.0f);
-		ImGui::SliderFloat("Fog start", &m_PerSceneData.fogStart, 0.0f,
-				   1.0f);
+		//ImGui::SliderFloat("Fog end", &m_PerSceneData.fogEnd, 0.0f,
+		//		   1.0f);
+		//ImGui::SliderFloat("Fog start", &m_PerSceneData.fogStart, 0.0f,
+		//		   1.0f);
 		ImGui::ColorPicker4(
 			"Fog color",
 			reinterpret_cast<float *>(&m_PerSceneData.fogColor));
+		ImGui::SliderFloat("Fog density", &m_PerSceneData.fogDensity, 0.0f, 1.0f);
 	}
 
 	if (ImGui::CollapsingHeader("Rasterizer settings")) {
@@ -315,6 +317,7 @@ void Game::InitPerSceneConstants()
 	spotLight.Range = 5.0f;
 	spotLight.Spot = 32.0f;
 	m_PerSceneData.spotLights[0] = spotLight;
+	m_PerSceneData.fogDensity = 1.0f;
 }
 
 Game::Game()
@@ -392,8 +395,9 @@ void Game::Update()
 	g_FogCBuf->SetValue("cameraPos", Vec3D(camPos.X, camPos.Y, camPos.Z));
 	g_FogCBuf->SetValue("fogColor", *reinterpret_cast<Vec4D *>(
 						&m_PerSceneData.fogColor));
-	g_FogCBuf->SetValue("fogEnd", m_PerSceneData.fogEnd);
+	g_FogCBuf->SetValue("zFar", m_PerSceneData.zFar);
 	g_FogCBuf->SetValue("fogStart", m_PerSceneData.fogStart);
+    g_FogCBuf->SetValue("fogDensity", m_PerSceneData.fogDensity);
 	g_FogCBuf->UpdateConstantBuffer();
 
 #if WITH_IMGUI
@@ -745,7 +749,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 
 	{
 		DynamicConstBufferDesc desc = {};
-		desc.AddNode({ "fogEnd", NodeType::Float });
+		desc.AddNode({ "zFar", NodeType::Float });
 		desc.AddNode({ "fogStart", NodeType::Float });
 		desc.AddNode({ "width", NodeType::Float });
 		desc.AddNode({ "height", NodeType::Float });
@@ -754,16 +758,19 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		desc.AddNode({ "viewInverse", NodeType::Float4X4 });
 		desc.AddNode({ "projInverse", NodeType::Float4X4 });
 		desc.AddNode({ "cameraPos", NodeType::Float3 });
-		desc.AddNode({ "_pad1", NodeType::Float });
+		desc.AddNode({ "fogDensity", NodeType::Float });
 		g_FogCBuf = std::make_unique<DynamicConstBuffer>(desc, *m_DR);
 		g_FogCBuf->SetValue("width", m_DR->GetOutputSize().right);
 		g_FogCBuf->SetValue("height", m_DR->GetOutputSize().bottom);
+        g_FogCBuf->SetValue("fogDensity", 1);
+		g_FogCBuf->SetValue("zFar", 1000.0f);
 		g_FogCBuf->CreateConstantBuffer();
 	}
 
 	m_PerSceneData.fogColor = { 0.8f, 0.8f, 0.8f, 1.0f };
 	m_PerSceneData.fogStart = 0;
-	m_PerSceneData.fogEnd = 1;
+	m_PerSceneData.zFar = 1000.0f;
+	m_PerSceneData.fogDensity = 1;
 
 #if WITH_IMGUI
 	ImGui::CreateContext();

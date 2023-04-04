@@ -48,13 +48,13 @@ struct PerSceneConstants {
 		, spotLights{}
 	{
 	}
-	PointLight pointLights[4];
-	DirectionalLight dirLight;
-	SpotLight spotLights[2];
-	Color fogColor;
-	float fogStart;
-	float fogEnd;
-	float pad[2];
+	alignas(16) PointLight pointLights[4];
+    alignas(16) DirectionalLight dirLight;
+    alignas(16) SpotLight spotLights[2];
+    alignas(16) Color fogColor;
+    alignas(4) float fogStart;
+    alignas(4) float zFar;
+    alignas(4) float fogDensity;
 };
 
 class Game {
