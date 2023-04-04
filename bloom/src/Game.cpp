@@ -832,6 +832,16 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 					       m_DR->GetOutputSize().bottom,
 					       m_DR->GetDevice());
 
+	// generate mip maps
+    m_DR->PIXBeginEvent(L"Generate mips");
+    {
+        const auto ctx = m_DR->GetDeviceContext();
+        //g_OffscreenRTV->GenerateMips(ctx);
+        g_BlurRTV->GenerateMips(ctx);
+        g_BlurRTV2->GenerateMips(ctx);
+    }
+    m_DR->PIXEndEvent();
+
 	{
 		DynamicConstBufferDesc desc = {};
 		desc.AddNode({ "fogEnd", NodeType::Float });
