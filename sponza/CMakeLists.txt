@@ -59,7 +59,7 @@ target_compile_definitions("${app_name}"
         PRIVATE SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}"
         PRIVATE ASSETS_ROOT="${CMAKE_SOURCE_DIR}/assets"
         PRIVATE SPONZA_ROOT="${CMAKE_SOURCE_DIR}/assets/Sponza/glTF"
-        PRIVATE SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}"
+        PRIVATE SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/shaders"
         PRIVATE MATH_TEST=1)
 
 target_include_directories(${app_name} PRIVATE
