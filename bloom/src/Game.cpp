@@ -8,6 +8,7 @@
 #include "Utils.h"
 
 #include <d3dcompiler.h>
+#include <algorithm>
 
 #if WITH_IMGUI
 #include <backends/imgui_impl_dx11.h>
@@ -574,9 +575,12 @@ void Game::Render()
 
 		bool isHorizontal = true;
 		bool isFirstRun = true;
+        const int maxMipLevel =
+            std::log2(std::max(m_DR->GetOutputSize().right, m_DR->GetOutputSize().bottom)) + 1;
 		for (int i = 0; i < g_BloomSettings.iterations; ++i) {
 			g_BlurCBuf->SetValue("isHorizontal",
 					     isHorizontal ? 1 : 0);
+			g_BlurCBuf->SetValue("mipLevel", std::clamp(i, 0, maxMipLevel));
 			g_BlurCBuf->UpdateConstantBuffer();
 			m_Renderer.BindConstantBuffer(BindTargets::PixelShader,
 						      g_BlurCBuf->Get(), 0);
@@ -875,7 +879,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 		desc.AddNode({ "width", NodeType::Float });
 		desc.AddNode({ "height", NodeType::Float });
 		desc.AddNode({ "isHorizontal", NodeType::Bool });
-		desc.AddNode({ "pad", NodeType::Float });
+		desc.AddNode({ "mipLevel", NodeType::Float });
 		g_BlurCBuf = std::make_unique<DynamicConstBuffer>(desc, *m_DR);
 		g_BlurCBuf->CreateConstantBuffer();
 	}

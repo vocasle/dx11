@@ -6,7 +6,7 @@ cbuffer Constants : register(b0)
     float width;
     float height;
     int isHorizontal;
-    float pad;
+    int mipLevel;
 };
 
 struct VSOut
