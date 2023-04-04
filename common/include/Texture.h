@@ -39,6 +39,14 @@ public:
     GetDepthSRV() const {
         return mDepthSRV.Get();
     }
+    [[nodiscard]] int
+    GetWidth() const {
+        return mWidth;
+    }
+    [[nodiscard]] int
+    GetHeight() const {
+        return mHeight;
+    }
 
 private:
     Microsoft::WRL::ComPtr<ID3D11Texture2D> mTexture;
