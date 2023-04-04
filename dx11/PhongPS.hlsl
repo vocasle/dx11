@@ -42,5 +42,7 @@ float4 main(PSIn In) : SV_TARGET
 	float4 S = sp.Specular * PL.Specular;
 	float4 Kspec = SpecularReflection(S, Atten, N, H, 32.0f);
 
-	return Kdiff + Kspec;
+	float4 KAmbient = float4(0.03, 0.03, 0.03, 1.0);
+
+	return float4(KAmbient.rgb + Kdiff.rgb + Kspec.rgb, 1.0);
 }
