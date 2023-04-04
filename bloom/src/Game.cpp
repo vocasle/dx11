@@ -345,6 +345,7 @@ Game::Game()
 
 Game::~Game()
 {
+	m_hdrBackBuffer->ReleaseDevice();
 #if WITH_IMGUI
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
@@ -872,6 +873,8 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_PerSceneData.fogColor = { 0.8f, 0.8f, 0.8f, 1.0f };
 	m_PerSceneData.fogStart = 0;
 	m_PerSceneData.fogEnd = 1;
+
+	m_hdrBackBuffer = std::make_unique<DX::RenderTexture>(DXGI_FORMAT_R16G16B16A16_FLOAT);
 
 #if WITH_IMGUI
 	ImGui::CreateContext();
