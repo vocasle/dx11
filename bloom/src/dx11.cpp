@@ -85,7 +85,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 	}
 
-	fclose(hLog);
+	if (hLog) {
+		fclose(hLog);
+	}
 	return (int)msg.wParam;
 }
 
