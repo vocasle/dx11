@@ -84,33 +84,31 @@ Material ComputePointLight(Material mat, PointLight L, float3 pos, float3 normal
 
     float d = length(lightVec);
 
-    if (d > L.Range)
-        return material;
-
-    lightVec /= d;
-
-    ambient = mat.Ambient * L.Ambient;
-
-    float diffuseFactor = dot(lightVec, normal);
-
-    [flatten]
-    if (diffuseFactor > 0.0f)
+    if (d < L.Range)
     {
-        float3 v = reflect(-lightVec, normal);
-        float specFactor = pow(max(dot(v, toEye), 0.0f), mat.Specular.w);
+        lightVec /= d;
 
-        diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
-        spec = specFactor * mat.Specular * L.Specular;
+        ambient = mat.Ambient * L.Ambient;
+
+        float diffuseFactor = dot(lightVec, normal);
+
+        [flatten] if (diffuseFactor > 0.0f) {
+            float3 v = reflect(-lightVec, normal);
+            float specFactor = pow(max(dot(v, toEye), 0.0f), mat.Specular.w);
+
+            diffuse = diffuseFactor * mat.Diffuse * L.Diffuse;
+            spec = specFactor * mat.Specular * L.Specular;
+        }
+
+        float att = 1.0f / dot(L.Att, float3(1.0f, d, d * d));
+
+        diffuse *= att;
+        spec *= att;
+
+        material.Ambient = ambient;
+        material.Diffuse = diffuse;
+        material.Specular = spec;
     }
-
-    float att = 1.0f / dot(L.Att, float3(1.0f, d, d * d));
-
-    diffuse *= att;
-    spec *= att;
-
-    material.Ambient = ambient;
-    material.Diffuse = diffuse;
-    material.Specular = spec;
 
     return material;
 }

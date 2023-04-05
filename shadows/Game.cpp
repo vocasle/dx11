@@ -37,7 +37,8 @@ static void GameCreatePixelShader(const char *filepath, ID3D11Device *device,
 				  ID3D11PixelShader **ps)
 {
 	unsigned int bufferSize = 0;
-	unsigned char *bytes = UtilsReadData(filepath, &bufferSize);
+	const auto absPath = UtilsFormatStr("%s/%s", SHADER_BLOB_DIR, filepath);
+	unsigned char *bytes = UtilsReadData(absPath.c_str(), &bufferSize);
 
 	if (FAILED(device->CreatePixelShader(bytes, bufferSize, NULL, ps))) {
 		UTILS_FATAL_ERROR("Failed to create pixel shader from %s",
@@ -97,7 +98,9 @@ static void GameCreateVertexShader(const char *filepath, ID3D11Device *device,
 				   ID3D11InputLayout **il)
 {
 	unsigned int bufferSize = 0;
-	unsigned char *bytes = UtilsReadData(filepath, &bufferSize);
+	const auto absPath =
+            UtilsFormatStr("%s/%s", SHADER_BLOB_DIR, filepath);
+	unsigned char *bytes = UtilsReadData(absPath.c_str(), &bufferSize);
 
 	if (FAILED(device->CreateVertexShader(bytes, bufferSize, NULL, vs))) {
 		UTILS_FATAL_ERROR("Failed to create vertex shader from %s",
@@ -526,13 +529,13 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 
 	ID3D11Device *device = m_DR->GetDevice();
 
-	GameCreatePixelShader("PixelShader.cso", (ID3D11Device *)device,
+	GameCreatePixelShader("PixelShaderPS.cso", (ID3D11Device *)device,
 			      m_PS.ReleaseAndGetAddressOf());
 	GameCreatePixelShader("PhongPS.cso", (ID3D11Device *)device,
 			      m_PhongPS.ReleaseAndGetAddressOf());
 	GameCreatePixelShader("LightPS.cso", (ID3D11Device *)device,
 			      m_LightPS.ReleaseAndGetAddressOf());
-	GameCreateVertexShader("VertexShader.cso", (ID3D11Device *)device,
+	GameCreateVertexShader("VertexShaderVS.cso", (ID3D11Device *)device,
 			       m_VS.ReleaseAndGetAddressOf(),
 			       m_InputLayout.ReleaseAndGetAddressOf());
 

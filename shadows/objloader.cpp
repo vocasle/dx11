@@ -224,10 +224,10 @@ void OLDumpModelToFile(const struct Model *model, const char *filename)
 	}
 
 	fprintf(f, "NumMeshes: %d\nDirectory: %s\n", model->Meshes.size(),
-		model->Directory);
+		model->Directory.c_str());
 	for (uint32_t i = 0; i < model->Meshes.size(); ++i) {
 		const Mesh *m = &model->Meshes[i];
-		fprintf(f, "MeshName: %s\n", m->Name);
+		fprintf(f, "MeshName: %s\n", m->Name.c_str());
 
 		fprintf(f, "NumPositions: %d\n", m->Positions.size());
 		for (uint32_t j = 0; j < m->Positions.size(); ++j) {

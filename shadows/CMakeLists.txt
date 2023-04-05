@@ -40,14 +40,16 @@ set(headers
 set(pixel_shaders
 	LightPS.hlsl
 	PhongPS.hlsl
-	PixelShader.hlsl)
+	PixelShaderPS.hlsl)
 
 set(vertex_shaders
-	VertexShader.hlsl)
+	VertexShaderVS.hlsl)
 
 set(shader_headers 
 	LightingHelper.hlsli
 	Common.hlsli)
+
+set(shader_source_files ${pixel_shaders} ${vertex_shaders})
 
 add_executable(${current_target} WIN32 ${sources} ${headers} ${pixel_shaders} ${vertex_shaders} ${shader_headers})
 
@@ -55,16 +57,7 @@ target_link_libraries(${current_target} d3d11.lib dxgi.lib dxguid.lib)
 
 target_compile_definitions(${current_target} PUBLIC 
 	ASSETS_ROOT="${assets_root}"
-	NOMINMAX=1)
+	NOMINMAX=1
+	SHADER_BLOB_DIR="${CMAKE_CURRENT_BINARY_DIR}/shaders")
 
-set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_TYPE Pixel)
-set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_ENTRYPOINT main)
-set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_MODEL 5.0)
-set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_FLAGS $<1:/DFLAGS_ADDED>)
-
-set_property(SOURCE ${vertex_shaders} PROPERTY VS_SHADER_TYPE Vertex)
-set_property(SOURCE ${vertex_shaders} PROPERTY VS_SHADER_ENTRYPOINT main)
-set_property(SOURCE ${vertex_shaders} PROPERTY VS_SHADER_MODEL 5.0)
-set_property(SOURCE ${vertex_shaders} PROPERTY VS_SHADER_FLAGS $<1:/DFLAGS_ADDED>)
-
-set_property(TARGET ${current_target} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$(OutDir)")
+compile_shaders(${current_target} ${shader_source_files})
