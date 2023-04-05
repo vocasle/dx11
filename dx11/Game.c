@@ -466,7 +466,8 @@ void GameGenerateRandomOffsets(Game* game)
 static void GameCreatePixelShader(const char* filepath, ID3D11Device* device, ID3D11PixelShader** ps)
 {
 	unsigned int bufferSize = 0;
-	unsigned char* bytes = UtilsReadData(filepath, &bufferSize);
+	const char *absPath = UtilsFormatStr("%s/%s", SHADER_BLOB_DIR, filepath);
+	unsigned char *bytes = UtilsReadData(absPath, &bufferSize);
 
 	if (FAILED(device->lpVtbl->CreatePixelShader(device, bytes, bufferSize, NULL, ps)))
 	{
@@ -516,7 +517,8 @@ static void GameCreateInputLayout(ID3D11Device* device, ID3D11InputLayout** il, 
 static void GameCreateVertexShader(const char* filepath, ID3D11Device* device, ID3D11VertexShader** vs, ID3D11InputLayout** il)
 {
 	unsigned int bufferSize = 0;
-	unsigned char* bytes = UtilsReadData(filepath, &bufferSize);
+	const char *absPath = UtilsFormatStr("%s/%s", SHADER_BLOB_DIR, filepath);
+	unsigned char *bytes = UtilsReadData(absPath, &bufferSize);
 
 	if (FAILED(device->lpVtbl->CreateVertexShader(device, bytes, bufferSize, NULL, vs)))
 	{
@@ -598,10 +600,10 @@ void GameInitialize(Game* game, HWND hWnd, int width, int height)
 	game->gProjMat = MathMat4X4Identity();
 	game->gViewMat = MathMat4X4Identity();
 
-	GameCreatePixelShader("PixelShader.cso", (ID3D11Device*)device, &game->PS);
+	GameCreatePixelShader("PixelShaderPS.cso", (ID3D11Device*)device, &game->PS);
 	GameCreatePixelShader("PhongPS.cso", (ID3D11Device*)device, &game->PhongPS);
 	GameCreatePixelShader("LightPS.cso", (ID3D11Device*)device, &game->LightPS);
-	GameCreateVertexShader("VertexShader.cso", (ID3D11Device*)device, &game->VS, &game->InputLayout);
+	GameCreateVertexShader("VertexShaderVS.cso", (ID3D11Device*)device, &game->VS, &game->InputLayout);
 
 	assert(game->RenderData.Vertices);
 	assert(game->RenderData.Indices);
