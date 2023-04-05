@@ -84,8 +84,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			gGame->Tick();
 		}
 	}
-
-	fclose(hLog);
+    if (hLog) {
+		fclose(hLog); 
+	}
 	return (int)msg.wParam;
 }
 
