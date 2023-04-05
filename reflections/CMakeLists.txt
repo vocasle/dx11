@@ -48,17 +48,19 @@ set(headers
 set(pixel_shaders
 	LightPS.hlsl
 	PhongPS.hlsl
-	PixelShader.hlsl
+	PixelShaderPS.hlsl
 	SkyPS.hlsl)
 
 set(vertex_shaders
 	SkyVS.hlsl
-	VertexShader.hlsl)
+	VertexShaderVS.hlsl)
 
 set(shader_headers 
 	Sky.hlsli
 	LightingHelper.hlsli
 	Common.hlsli)
+
+set(shader_source_files ${pixel_shaders} ${vertex_shaders})
 
 add_executable(${current_target} WIN32 ${sources} ${headers} ${pixel_shaders} ${vertex_shaders} ${shader_headers})
 
@@ -72,20 +74,6 @@ target_compile_definitions(${current_target} PUBLIC
 	ASSETS_ROOT="${assets_root}"
 	NOMINMAX=1
 	WITH_IMGUI=1
-	SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
+	SHADERS_ROOT="${CMAKE_CURRENT_BINARY_DIR}/shaders")
 
-set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_TYPE Pixel)
-set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_ENTRYPOINT main)
-set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_MODEL 5.0)
-set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_FLAGS $<1:/DFLAGS_ADDED>)
-set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_ENABLE_DEBUG true)
-set_property(SOURCE ${pixel_shaders} PROPERTY VS_SHADER_DISABLE_OPTIMIZATIONS true)
-
-set_property(SOURCE ${vertex_shaders} PROPERTY VS_SHADER_TYPE Vertex)
-set_property(SOURCE ${vertex_shaders} PROPERTY VS_SHADER_ENTRYPOINT main)
-set_property(SOURCE ${vertex_shaders} PROPERTY VS_SHADER_MODEL 5.0)
-set_property(SOURCE ${vertex_shaders} PROPERTY VS_SHADER_FLAGS $<1:/DFLAGS_ADDED>)
-set_property(SOURCE ${vertex_shaders} PROPERTY VS_SHADER_ENABLE_DEBUG true)
-set_property(SOURCE ${vertex_shaders} PROPERTY VS_SHADER_DISABLE_OPTIMIZATIONS true)
-
-set_property(TARGET ${current_target} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "$(OutDir)")
+compile_shaders(${current_target} ${shader_source_files})

@@ -692,7 +692,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 	m_CubeMap.CreateCube(*FindActorByName("Cube"), device);
 	InitPerSceneConstants();
 
-	CreatePixelShader("PixelShader.cso", device,
+	CreatePixelShader("PixelShaderPS.cso", device,
 			  m_PS.ReleaseAndGetAddressOf());
 	CreatePixelShader("PhongPS.cso", device,
 			  m_PhongPS.ReleaseAndGetAddressOf());
@@ -700,7 +700,7 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 			  m_LightPS.ReleaseAndGetAddressOf());
 	CreatePixelShader("SkyPS.cso", device,
 			  m_SkyPS.ReleaseAndGetAddressOf());
-	auto bytes = CreateVertexShader("VertexShader.cso", device,
+	auto bytes = CreateVertexShader("VertexShaderVS.cso", device,
 					m_VS.ReleaseAndGetAddressOf());
 	m_InputLayout.CreateDefaultLayout(device, &bytes[0], bytes.size());
 	bytes = CreateVertexShader("SkyVS.cso", device,
