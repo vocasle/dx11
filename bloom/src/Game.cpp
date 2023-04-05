@@ -54,9 +54,6 @@ std::unique_ptr<DynamicConstBuffer> g_FogCBuf;
 std::unique_ptr<DynamicConstBuffer> g_LightCBuf;
 std::unique_ptr<DynamicConstBuffer> g_BlurCBuf;
 
-std::vector<std::unique_ptr<Texture>> g_BlurRenderTargets;
-std::vector<D3D11_VIEWPORT> g_BlurViewports;
-
 struct BloomSettings {
 	bool isEnabled;
 	bool isOnlyBrightness;
@@ -569,78 +566,84 @@ void Game::Render()
 		m_Renderer.SetVertexBuffer(fogPlane->GetVertexBuffer(),
 					   sizeof(Vertex), 0);
 		m_Renderer.SetIndexBuffer(fogPlane->GetIndexBuffer(), 0);
-		g_BlurCBuf->SetValue(
-			"width",
-			static_cast<float>(m_DR->GetOutputSize().right));
-		g_BlurCBuf->SetValue(
-			"height",
-			static_cast<float>(m_DR->GetOutputSize().bottom));
 
 		bool isHorizontal = true;
 		bool isFirstRun = true;
 
-		for (int i = 0; i < g_BlurRenderTargets.size(); ++i) {
-        	g_BlurCBuf->SetValue("isHorizontal",
-        			     isHorizontal ? 1 : 0);
-        	g_BlurCBuf->UpdateConstantBuffer();
-        	m_Renderer.BindConstantBuffer(BindTargets::PixelShader,
-        				      g_BlurCBuf->Get(), 0);
-                m_Renderer.SetRenderTargets(g_BlurRenderTargets.at(i)->GetRTV(),
-        					    nullptr);
-			m_Renderer.SetViewport(g_BlurViewports.at(i));
-        	if (isFirstRun) 
-			{
-        		isFirstRun = false;
-        		m_Renderer.BindShaderResource(
-        			BindTargets::PixelShader,
-        			g_BrightessRTV->GetSRV(), 0);
-        	} 
-			else {
-        		m_Renderer.BindShaderResource(
-        			BindTargets::PixelShader,
-        			g_BlurRenderTargets.at(i - 1)->GetSRV(), 0);
-        	}
-        	m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
-        	m_Renderer.BindShaderResource(BindTargets::PixelShader,
-        				      nullptr, 0);
-        	m_Renderer.SetRenderTargets(nullptr, nullptr);
-        	isHorizontal = !isHorizontal;
-        }
+		//for (int i = 1; i < g_BlurRenderTargets.size(); ++i) {
+  //          g_BlurCBuf->SetValue("mipLevel", i);
+  //      	g_BlurCBuf->SetValue("isHorizontal",
+  //      			     isHorizontal ? 1 : 0);
+  //          g_BlurCBuf->SetValue(
+  //              "width",
+  //              static_cast<float>(
+  //                      g_BlurRenderTargets.at(i - 1)
+  //                          ->GetWidth()));
+  //          g_BlurCBuf->SetValue(
+  //              "height",
+  //              static_cast<float>(g_BlurRenderTargets.at(i - 1)->GetHeight()));
+  //      	g_BlurCBuf->UpdateConstantBuffer();
+  //      	m_Renderer.BindConstantBuffer(BindTargets::PixelShader,
+  //      				      g_BlurCBuf->Get(), 0);
+  //              m_Renderer.SetRenderTargets(g_BlurRenderTargets.at(i)->GetRTV(),
+  //      					    nullptr);
+		//	m_Renderer.SetViewport(g_BlurViewports.at(i));
+  //      	if (isFirstRun) 
+		//	{
+  //      		isFirstRun = false;
+  //      		m_Renderer.BindShaderResource(
+  //      			BindTargets::PixelShader,
+  //      			g_BrightessRTV->GetSRV(), 0);
+  //      	} 
+		//	else {
+  //      		m_Renderer.BindShaderResource(
+  //      			BindTargets::PixelShader,
+  //      			g_BlurRenderTargets.at(i - 1)->GetSRV(), 0);
+  //      	}
+  //      	m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
+  //      	m_Renderer.BindShaderResource(BindTargets::PixelShader,
+  //      				      nullptr, 0);
+  //      	m_Renderer.SetRenderTargets(nullptr, nullptr);
+  //      	isHorizontal = !isHorizontal;
+  //      }
 
-
-		//for (int i = 0; i < g_BloomSettings.iterations; ++i) {
-		//	g_BlurCBuf->SetValue("isHorizontal",
-		//			     isHorizontal ? 1 : 0);
-		//	g_BlurCBuf->SetValue("mipLevel", std::clamp(i, 0, maxMipLevel));
-		//	g_BlurCBuf->UpdateConstantBuffer();
-		//	m_Renderer.BindConstantBuffer(BindTargets::PixelShader,
-		//				      g_BlurCBuf->Get(), 0);
-		//	if (isHorizontal) {
-		//		m_Renderer.SetRenderTargets(g_BlurRTV->GetRTV(),
-		//					    nullptr);
-		//		if (isFirstRun) {
-		//			isFirstRun = false;
-		//			m_Renderer.BindShaderResource(
-		//				BindTargets::PixelShader,
-		//				g_BrightessRTV->GetSRV(), 0);
-		//		} else {
-		//			m_Renderer.BindShaderResource(
-		//				BindTargets::PixelShader,
-		//				g_BlurRTV2->GetSRV(), 0);
-		//		}
-		//	} else {
-		//		m_Renderer.SetRenderTargets(
-		//			g_BlurRTV2->GetRTV(), nullptr);
-		//		m_Renderer.BindShaderResource(
-		//			BindTargets::PixelShader,
-		//			g_BlurRTV->GetSRV(), 0);
-		//	}
-		//	m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
-		//	m_Renderer.BindShaderResource(BindTargets::PixelShader,
-		//				      nullptr, 0);
-		//	m_Renderer.SetRenderTargets(nullptr, nullptr);
-		//	isHorizontal = !isHorizontal;
-		//}
+		g_BlurCBuf->SetValue("width",
+                                     static_cast<float>(g_BlurRTV->GetWidth()));
+        g_BlurCBuf->SetValue(
+            "height", static_cast<float>(g_BlurRTV->GetHeight()));
+		for (int i = 0; i < g_BloomSettings.iterations; ++i) {
+			g_BlurCBuf->SetValue("isHorizontal",
+					     isHorizontal ? 1 : 0);
+			//g_BlurCBuf->SetValue("mipLevel", std::clamp(i, 0, maxMipLevel));
+			g_BlurCBuf->UpdateConstantBuffer();
+			m_Renderer.BindConstantBuffer(BindTargets::PixelShader,
+						      g_BlurCBuf->Get(), 0);
+			if (isHorizontal) {
+				m_Renderer.SetRenderTargets(g_BlurRTV->GetRTV(),
+							    nullptr);
+				if (isFirstRun) {
+					isFirstRun = false;
+					m_Renderer.BindShaderResource(
+						BindTargets::PixelShader,
+						g_BrightessRTV->GetSRV(), 0);
+				} else {
+					m_Renderer.BindShaderResource(
+						BindTargets::PixelShader,
+						g_BlurRTV2->GetSRV(), 0);
+				}
+			} else {
+				m_Renderer.SetRenderTargets(
+					g_BlurRTV2->GetRTV(), nullptr);
+				m_Renderer.BindShaderResource(
+					BindTargets::PixelShader,
+					g_BlurRTV->GetSRV(), 0);
+			}
+			m_Renderer.DrawIndexed(fogPlane->GetNumIndices(), 0, 0);
+			m_Renderer.BindShaderResource(BindTargets::PixelShader,
+						      nullptr, 0);
+			m_Renderer.SetRenderTargets(nullptr, nullptr);
+			isHorizontal = !isHorizontal;
+		}
 	}
 	m_DR->PIXEndEvent();
 
@@ -787,38 +790,6 @@ void Game::CreateActors()
 	c->SetTextures(p->GetShaderResources());
 }
 
-static void
-GenerateBlurRenderTargets(uint32_t width, uint32_t height, ID3D11Device *device) 
-{
-    const int maxMipLevel =
-        std::log2(std::max(width,
-                            height)) + 1;
-
-	g_BlurRenderTargets.resize(3);
-    g_BlurRenderTargets.at(0) = std::make_unique<Texture>(DXGI_FORMAT_R16G16B16A16_FLOAT, width, height, device);
-
-	int mipWidth = width;
-	int mipHeight = height;
-    for (int i = 1; i < g_BlurRenderTargets.size(); ++i) {
-		if (mipWidth > 1) {
-			mipWidth /= 2;
-		}
-		if (mipHeight > 1) {
-			mipHeight /= 2;
-		}
-
-        g_BlurRenderTargets.at(i) = std::make_unique<Texture>(
-            DXGI_FORMAT_R16G16B16A16_FLOAT, mipWidth, mipHeight, device);
-	}
-	g_BlurViewports.reserve(g_BlurRenderTargets.size());
-	for (auto &rt : g_BlurRenderTargets) {
-        D3D11_VIEWPORT viewport = {};
-        viewport.Width = rt->GetWidth();
-        viewport.Height = rt->GetHeight();
-        g_BlurViewports.push_back(viewport);
-	}
-}
-
 void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 {
 	using namespace Microsoft::WRL;
@@ -898,7 +869,6 @@ void Game::Initialize(HWND hWnd, uint32_t width, uint32_t height)
 					       m_DR->GetOutputSize().right,
 					       m_DR->GetOutputSize().bottom,
 					       m_DR->GetDevice());
-	GenerateBlurRenderTargets(width, height, m_DR->GetDevice());
 
 	{
 		DynamicConstBufferDesc desc = {};

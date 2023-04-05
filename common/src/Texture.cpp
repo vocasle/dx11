@@ -6,7 +6,8 @@
 Texture::Texture(DXGI_FORMAT format,
                  int width,
                  int height,
-                 ID3D11Device *device)
+                 ID3D11Device *device,
+                 uint32_t mipSlice)
     : mWidth(width),
       mHeight(height),
       mFormat(format) {
@@ -39,6 +40,7 @@ Texture::Texture(DXGI_FORMAT format,
     D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
     rtvDesc.Format = format;
     rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    rtvDesc.Texture2D.MipSlice = mipSlice;
 
     HR(device->CreateRenderTargetView(
         mTexture.Get(), &rtvDesc, mRTV.ReleaseAndGetAddressOf()))

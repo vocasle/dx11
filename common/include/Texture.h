@@ -8,7 +8,7 @@
 
 class Texture {
 public:
-    Texture(DXGI_FORMAT format, int width, int height, ID3D11Device *device);
+    Texture(DXGI_FORMAT format, int width, int height, ID3D11Device *device, uint32_t mipSlice = 0);
     Texture(DXGI_FORMAT format,
             int width,
             int height,
