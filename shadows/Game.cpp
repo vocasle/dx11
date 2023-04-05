@@ -4,10 +4,6 @@
 #include "Camera.h"
 #include "MeshGenerator.h"
 
-#if _DEBUG
-#include <vld.h>
-#endif
-
 static void GameUpdateConstantBuffer(ID3D11DeviceContext* context,
 	size_t bufferSize,
 	void* data,
