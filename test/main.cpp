@@ -11,6 +11,9 @@ int main()
 {
 	fopen_s(&hLog, "log.txt", "w");
 
+	DeviceResources deviceResources;
+	deviceResources.CreateDeviceResources();
+
 	DynamicConstBufferDesc desc;
 
 	Node f("float", NodeType::Float);
@@ -25,7 +28,7 @@ int main()
 	desc.AddNode(s);
 	desc.Print();
 
-	DynamicConstBuffer buffer(desc);
+	DynamicConstBuffer buffer(desc, deviceResources);
 	*buffer.GetValue<float>("float") = 3.14f;
 	*buffer.GetValue<Vec2D>("float2") = { 10.0f, 20.0f };
 	*buffer.GetValue<Vec4D>("material.ambient") = { 0.5f, 0.5f, 0.5f,
@@ -34,5 +37,7 @@ int main()
 	Material *mat = buffer.GetValue<Material>("material");
 	UtilsDebugPrint("{ ambient: %s }\n", mat->Ambient.ToString().c_str());
 
-	fclose(hLog);
+	if (hLog) {
+		fclose(hLog);
+	}
 }
